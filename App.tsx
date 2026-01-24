@@ -1,11 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont } from './types';
+import React, { useState, useRef, useEffect } from 'react';
+import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType } from './types';
 import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION, IPOD_SCREEN_HEIGHT, IPOD_SCREEN_WIDTH } from './constants';
 import { EditorCanvas } from './components/EditorCanvas';
 import { PropertyPanel } from './components/PropertyPanel';
 import { SimulationPanel } from './components/SimulationPanel';
 import { CodePreview } from './components/CodePreview';
+import { RemixModal } from './components/RemixModal';
+import { FileBrowser } from './components/FileBrowser';
 import { generateZip } from './services/rockboxCompiler';
+import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
 import { applyThemeToProject } from './services/layoutEngine';
 import { useHistory } from './hooks/useHistory';
@@ -23,9 +26,12 @@ export default function App() {
   const [song, setSong] = useState<SongMetadata>(DEFAULT_SONG);
   const [sim, setSim] = useState<SimulationState>(DEFAULT_SIMULATION);
   
+  const [activeScreen, setActiveScreen] = useState<ScreenType>('wps');
+  const [rightPanelMode, setRightPanelMode] = useState<'inspector' | 'files'>('inspector');
   const [showGrid, setShowGrid] = useState(true);
   const [showGuides, setShowGuides] = useState(true);
   const [showCode, setShowCode] = useState(false);
+  const [showRemixModal, setShowRemixModal] = useState(false);
   const [zoom, setZoom] = useState(1.5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
@@ -33,6 +39,25 @@ export default function App() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadProjectInputRef = useRef<HTMLInputElement>(null);
+  const resourceInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard Shortcuts (Delete)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (['Delete', 'Backspace'].includes(e.key)) {
+            // Check if we are focusing an input, if so, don't delete element
+            const activeTag = document.activeElement?.tagName.toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+            
+            if (project.selectedElementIds.length > 0) {
+                const idToDelete = project.selectedElementIds[0];
+                handleDeleteElement(idToDelete);
+            }
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [project.selectedElementIds, project.elements]);
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -46,6 +71,8 @@ export default function App() {
       ...project,
       selectedElementIds: id ? [id] : []
     });
+    // If selecting an element, switch to inspector to edit it
+    if (id) setRightPanelMode('inspector');
   };
 
   const handleUpdateProjectSettings = (updates: Partial<ProjectState['settings']>, newAsset?: { name: string, data: string }) => {
@@ -66,6 +93,7 @@ export default function App() {
     const base = {
         id: Math.random().toString(36).substr(2, 9),
         name: `New ${type}`,
+        screen: activeScreen,
         x: 10, y: 10,
         visible: true, locked: false,
     };
@@ -103,6 +131,7 @@ export default function App() {
               id: Math.random().toString(36).substr(2, 9),
               name: file.name,
               type: ElementType.IMAGE,
+              screen: activeScreen,
               x: 0, y: 0,
               width: 100, height: 100, 
               visible: true, locked: false,
@@ -119,6 +148,26 @@ export default function App() {
       };
       reader.readAsDataURL(file);
       e.target.value = ''; 
+  };
+  
+  const handleResourceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Simulates loading firmware resources by adding them to assets
+      const files = e.target.files;
+      if (!files) return;
+
+      const newAssets = { ...project.assets };
+      
+      Array.from(files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+              newAssets[file.name] = ev.target?.result as string;
+              // If last file
+              setProject({ ...project, assets: newAssets });
+          };
+          reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+      alert(`${files.length} resources loaded. Images/Fonts are now available in the asset pool.`);
   };
 
   const handleDeleteElement = (id: string) => {
@@ -156,19 +205,34 @@ export default function App() {
       document.body.removeChild(a);
   };
 
-  const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoadProject = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-          try {
-              const loaded = JSON.parse(ev.target?.result as string);
-              setProject(loaded);
-          } catch (err) {
-              alert("Invalid Project JSON");
+
+      // Handle ZIP import
+      if (file.name.endsWith('.zip')) {
+          const importedProject = await parseZipTheme(file);
+          if (importedProject) {
+              setProject(importedProject);
+              setShowRemixModal(true);
           }
-      };
-      reader.readAsText(file);
+      } 
+      // Handle JSON import (native project format)
+      else if (file.name.endsWith('.json')) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+              try {
+                  const loaded = JSON.parse(ev.target?.result as string);
+                  setProject(loaded);
+              } catch (err) {
+                  alert("Invalid Project JSON");
+              }
+          };
+          reader.readAsText(file);
+      } else {
+          alert("Please upload a valid .json project file or a Rockbox theme .zip");
+      }
+      
       e.target.value = '';
   };
 
@@ -234,6 +298,9 @@ export default function App() {
       
       {/* Code Preview Overlay */}
       {showCode && <CodePreview project={project} onClose={() => setShowCode(false)} />}
+      
+      {/* Remix Etiquette Modal */}
+      <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
 
       {/* AI Prompt Modal */}
       {promptOpen && (
@@ -302,6 +369,14 @@ export default function App() {
         </div>
 
         <div className="flex-1" />
+        
+        <button 
+            onClick={() => resourceInputRef.current?.click()}
+            className="w-10 h-10 rounded-sm border border-black flex items-center justify-center hover:bg-white hover:shadow-sm transition-colors bg-[#d4d4d4] group"
+            title="Load Firmware Resources (Images/Fonts)"
+        >
+             <span className="text-lg">📦</span>
+        </button>
 
         <button 
             onClick={() => setPromptOpen(true)}
@@ -314,11 +389,12 @@ export default function App() {
         <div className="flex flex-col gap-2 w-full px-2 pb-2">
             <ToolButton icon="💾" label="Save" onClick={handleSaveProject} />
             <ToolButton icon="📂" label="Open" onClick={() => loadProjectInputRef.current?.click()} />
-            <ToolButton icon="⬇" label="Zip" onClick={handleExport} active />
+            <ToolButton icon="⬇" label="Zip" onClick={handleExport} />
         </div>
         
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-        <input type="file" ref={loadProjectInputRef} className="hidden" accept=".json" onChange={handleLoadProject} />
+        <input type="file" ref={loadProjectInputRef} className="hidden" accept=".json,.zip" onChange={handleLoadProject} />
+        <input type="file" ref={resourceInputRef} className="hidden" multiple onChange={handleResourceUpload} />
       </div>
 
       {/* MAIN WORKSPACE */}
@@ -330,9 +406,25 @@ export default function App() {
                     <div className="w-2 h-2 rounded-full bg-green-500 border border-black/20"></div>
                     {project.settings.name}
                  </div>
+
+                 {/* View Switcher (WPS / SBS) */}
+                 <div className="flex bg-[#d4d4d4] p-0.5 rounded border border-[#999] shadow-inner">
+                    <button 
+                        onClick={() => setActiveScreen('wps')}
+                        className={`px-3 py-0.5 text-[10px] font-bold rounded-sm ${activeScreen === 'wps' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                    >
+                        WPS
+                    </button>
+                    <button 
+                        onClick={() => setActiveScreen('sbs')}
+                        className={`px-3 py-0.5 text-[10px] font-bold rounded-sm ${activeScreen === 'sbs' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                    >
+                        SBS
+                    </button>
+                 </div>
                  
                  {/* Alignment Controls */}
-                 {selectedElement && (
+                 {selectedElement && rightPanelMode === 'inspector' && (
                      <div className="flex gap-0.5 border-l border-black/20 pl-4">
                         <ToolIconBtn onClick={() => alignElement('left')} title="Align Left">⇤</ToolIconBtn>
                         <ToolIconBtn onClick={() => alignElement('center')} title="Align Center">↔</ToolIconBtn>
@@ -373,7 +465,8 @@ export default function App() {
         {/* Canvas Scroll Area */}
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
             <EditorCanvas 
-                project={project} 
+                project={project}
+                activeScreen={activeScreen}
                 song={song}
                 sim={sim}
                 scale={zoom}
@@ -393,41 +486,63 @@ export default function App() {
         />
       </div>
 
-      {/* PROPERTIES (Right) */}
+      {/* RIGHT PANEL (Inspector / Files) */}
       <div className="w-64 pinstripe border-l border-black flex flex-col z-20">
-          <div className="h-10 metal-gradient border-b border-black flex items-center px-4 text-[10px] font-bold uppercase tracking-wider text-gray-700 shadow-sm">
-              /// INSPECTOR
+          <div className="h-10 metal-gradient border-b border-black flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-700 shadow-sm pl-4 pr-1">
+              <span className="mr-2 opacity-50">///</span>
+              <div className="flex bg-[#d4d4d4] rounded border border-[#999] p-0.5">
+                  <button 
+                    onClick={() => setRightPanelMode('inspector')}
+                    className={`px-3 py-1 rounded-sm ${rightPanelMode === 'inspector' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  >
+                      Inspector
+                  </button>
+                  <button 
+                    onClick={() => setRightPanelMode('files')}
+                    className={`px-3 py-1 rounded-sm ${rightPanelMode === 'files' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  >
+                      Files
+                  </button>
+              </div>
           </div>
+
           <div className="flex-1 overflow-y-auto">
-            <PropertyPanel 
-                element={selectedElement} 
-                project={project} 
-                onUpdate={handleUpdateElement}
-                onUpdateProject={handleUpdateProjectSettings}
-                onDelete={handleDeleteElement}
-            />
-          </div>
-          
-          <div className="h-1/3 border-t border-black flex flex-col bg-[#e0e0e0]">
-             <div className="h-8 bg-[#d4d4d4] border-b border-black flex items-center px-4 text-[10px] font-bold uppercase tracking-wider text-gray-600">
-                Layer_Stack
-             </div>
-             <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                 {project.elements.map(el => (
-                     <div 
-                        key={el.id}
-                        onClick={() => handleSelectElement(el.id)}
-                        className={`text-[10px] px-2 py-2 border border-transparent cursor-pointer flex items-center gap-2 font-mono ${project.selectedElementIds.includes(el.id) ? 'bg-orange-600 text-white border-black shadow-sm' : 'text-gray-600 hover:bg-white hover:border-gray-300'}`}
-                     >
-                        <span className="opacity-50 w-4 text-center font-bold">
-                            {el.type === ElementType.TEXT ? 'T' : 
-                             el.type === ElementType.RECT ? '□' : 
-                             el.type === ElementType.IMAGE ? 'IMG' : '='}
-                        </span>
-                        <span className="truncate uppercase">{el.name}</span>
-                     </div>
-                 ))}
-             </div>
+             {rightPanelMode === 'inspector' ? (
+                <>
+                    <PropertyPanel 
+                        element={selectedElement} 
+                        project={project} 
+                        onUpdate={handleUpdateElement}
+                        onUpdateProject={handleUpdateProjectSettings}
+                        onDelete={handleDeleteElement}
+                    />
+                    
+                    {/* Layer Stack (Bottom of Inspector) */}
+                    <div className="h-1/3 border-t border-black flex flex-col bg-[#e0e0e0] mt-auto sticky bottom-0">
+                         <div className="h-8 bg-[#d4d4d4] border-b border-black flex items-center px-4 text-[10px] font-bold uppercase tracking-wider text-gray-600">
+                            Layer_Stack ({activeScreen.toUpperCase()})
+                         </div>
+                         <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                             {project.elements.filter(el => el.screen === activeScreen).map(el => (
+                                 <div 
+                                    key={el.id}
+                                    onClick={() => handleSelectElement(el.id)}
+                                    className={`text-[10px] px-2 py-2 border border-transparent cursor-pointer flex items-center gap-2 font-mono ${project.selectedElementIds.includes(el.id) ? 'bg-orange-600 text-white border-black shadow-sm' : 'text-gray-600 hover:bg-white hover:border-gray-300'}`}
+                                 >
+                                    <span className="opacity-50 w-4 text-center font-bold">
+                                        {el.type === ElementType.TEXT ? 'T' : 
+                                         el.type === ElementType.RECT ? '□' : 
+                                         el.type === ElementType.IMAGE ? 'IMG' : '='}
+                                    </span>
+                                    <span className="truncate uppercase">{el.name}</span>
+                                 </div>
+                             ))}
+                         </div>
+                    </div>
+                </>
+             ) : (
+                 <FileBrowser project={project} />
+             )}
           </div>
       </div>
 
@@ -439,9 +554,11 @@ const ToolButton = ({ icon, label, onClick, active, disabled, className }: any) 
     <button 
         onClick={onClick}
         disabled={disabled}
-        className={`w-full h-8 rounded-sm border border-transparent flex items-center justify-center gap-2 transition-all te-button
-            ${active ? 'bg-orange-600 text-white border-black' : 'bg-[#d4d4d4] text-black border-b border-r border-[#999] hover:bg-white'} 
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        className={`w-full h-8 rounded-sm flex items-center justify-center gap-2 transition-all te-button
+            ${active 
+                ? 'bg-orange-600 text-white border border-black shadow-none translate-y-[1px]' 
+                : 'bg-white text-black border border-gray-400 border-b-gray-600 border-r-gray-600 hover:bg-gray-50'} 
+            ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-200 border-gray-300' : ''}
             ${className}`}
         title={label}
     >
@@ -452,7 +569,7 @@ const ToolButton = ({ icon, label, onClick, active, disabled, className }: any) 
 const ToolIconBtn = ({ children, onClick, title }: any) => (
     <button 
         onClick={onClick} 
-        className="w-6 h-6 hover:bg-black/10 rounded-sm text-black text-sm flex items-center justify-center leading-none"
+        className="w-6 h-6 hover:bg-black/10 rounded-sm text-black text-sm flex items-center justify-center leading-none active:translate-y-[1px]"
         title={title}
     >
         {children}

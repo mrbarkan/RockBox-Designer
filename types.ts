@@ -8,10 +8,13 @@ export enum ElementType {
   PROGRESS_BAR = 'progress_bar'
 }
 
+export type ScreenType = 'wps' | 'sbs';
+
 export interface BaseElement {
   id: string;
   name: string;
   type: ElementType;
+  screen: ScreenType; // New: Which screen does this belong to?
   x: number;
   y: number;
   width: number;

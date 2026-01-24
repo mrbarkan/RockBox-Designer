@@ -12,8 +12,6 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
     // Helper to generate ID
     const genId = (prefix: string) => `${prefix}-${Math.random().toString(36).substr(2, 5)}`;
 
-    // 1. Background (simulated via project setting, but we also ensure a base rect for consistency in export if needed)
-    // Actually, Rockbox viewport clearing handles background, so we just update project settings.
     const newSettings = {
         ...project.settings,
         name: theme.name,
@@ -21,9 +19,6 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
         statusBarTop: theme.statusBar
     };
 
-    // 2. Status Bar (If enabled, usually Rockbox handles it, but we might want custom elements)
-    // For this engine, we assume the native status bar is used if theme.statusBar is true.
-    
     // 3. Layout Logic
     let artY = 0;
     let artH = 0;
@@ -36,6 +31,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
                 id: genId('art'),
                 name: 'Album Art',
                 type: ElementType.IMAGE,
+                screen: 'wps',
                 x: 10, y: 30, width: 100, height: 100,
                 visible: true, locked: true,
                 src: '', // Placeholder, logic handles actual art render in canvas
@@ -51,6 +47,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('title'),
             name: 'Title',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: theme.showAlbumArt ? 120 : 10, 
             y: textY, 
             width: theme.showAlbumArt ? 190 : 300, 
@@ -67,6 +64,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('artist'),
             name: 'Artist',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: theme.showAlbumArt ? 120 : 10, 
             y: textY + 25, 
             width: theme.showAlbumArt ? 190 : 300, 
@@ -85,6 +83,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
                 id: genId('art'),
                 name: 'Album Art (Viewport)',
                 type: ElementType.IMAGE,
+                screen: 'wps',
                 x: 0, y: 20, width: 320, height: 130,
                 visible: true, locked: true,
                 src: '', 
@@ -97,6 +96,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('meta-bg'),
             name: 'Metadata Background',
             type: ElementType.RECT,
+            screen: 'wps',
             x: 0, y: 150, width: 320, height: 90,
             visible: true, locked: true,
             color: colors.barBackground // Use bar/accent color for split
@@ -107,6 +107,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('title'),
             name: 'Title',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: 10, y: 160, width: 300, height: 24,
             visible: true, locked: false,
             content: '%s',
@@ -120,6 +121,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('artist'),
             name: 'Artist',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: 10, y: 185, width: 300, height: 20,
             visible: true, locked: false,
             content: '%a',
@@ -130,14 +132,12 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
 
     } else {
         // FULL_ART (or default)
-        // In editor, difficult to represent full screen art without an image. 
-        // We will assume standard layout but with overlay text.
-        
         // Title (Overlay)
         newElements.push({
             id: genId('title-bg'),
             name: 'Title Backdrop',
             type: ElementType.RECT,
+            screen: 'wps',
             x: 0, y: 180, width: 320, height: 60,
             visible: true, locked: true,
             color: 'rgba(0,0,0,0.5)' // Semi transparent black usually, but we use hex.
@@ -147,6 +147,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('title'),
             name: 'Title',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: 10, y: 190, width: 300, height: 20,
             visible: true, locked: false,
             content: '%s',
@@ -161,6 +162,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
         id: genId('pb'),
         name: 'Progress',
         type: ElementType.PROGRESS_BAR,
+        screen: 'wps',
         x: 0, y: IPOD_SCREEN_HEIGHT - 8, width: IPOD_SCREEN_WIDTH, height: 8,
         visible: true, locked: false,
         foreColor: colors.accent,
@@ -173,6 +175,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             id: genId('vol'),
             name: 'Volume',
             type: ElementType.TEXT,
+            screen: 'wps',
             x: 260, y: IPOD_SCREEN_HEIGHT - 25, width: 50, height: 15,
             visible: true, locked: false,
             content: 'Vol: %pv',
@@ -181,6 +184,20 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             color: colors.foreground
         });
     }
+    
+    // 6. Default SBS Bar
+    newElements.push({
+        id: genId('sbs'),
+        name: 'SBS Status',
+        type: ElementType.TEXT,
+        screen: 'sbs',
+        x: 5, y: 0, width: 310, height: 16,
+        visible: true, locked: false,
+        content: '%?mp<Stop|Play|Pause> %ac%cH:%cM %ar%bl%%',
+        fontId: font,
+        align: 'center',
+        color: colors.foreground
+    });
 
     return {
         ...project,

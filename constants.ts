@@ -40,6 +40,7 @@ export const DEFAULT_PROJECT: ProjectState = {
       id: 'bg-rect',
       name: 'Header Background',
       type: ElementType.RECT,
+      screen: 'wps',
       x: 0, y: 0, width: 320, height: 24,
       visible: true, locked: true,
       color: "#333333"
@@ -48,6 +49,7 @@ export const DEFAULT_PROJECT: ProjectState = {
       id: 'title-txt',
       name: 'Song Title',
       type: ElementType.TEXT,
+      screen: 'wps',
       x: 10, y: 40, width: 300, height: 20,
       visible: true, locked: false,
       content: "%s",
@@ -59,6 +61,7 @@ export const DEFAULT_PROJECT: ProjectState = {
       id: 'artist-txt',
       name: 'Artist',
       type: ElementType.TEXT,
+      screen: 'wps',
       x: 10, y: 65, width: 300, height: 18,
       visible: true, locked: false,
       content: "%a",
@@ -70,6 +73,7 @@ export const DEFAULT_PROJECT: ProjectState = {
       id: 'status-txt',
       name: 'Status Logic',
       type: ElementType.TEXT,
+      screen: 'wps',
       x: 10, y: 150, width: 300, height: 18,
       visible: true, locked: false,
       content: "%?mp<Stop|Play|Pause>",
@@ -81,10 +85,24 @@ export const DEFAULT_PROJECT: ProjectState = {
       id: 'pb',
       name: 'Progress Bar',
       type: ElementType.PROGRESS_BAR,
+      screen: 'wps',
       x: 10, y: 200, width: 300, height: 10,
       visible: true, locked: false,
       foreColor: "#FFFFFF",
       backColor: "#444444"
+    },
+    // Default SBS Element (Simulated)
+    {
+      id: 'sbs-status',
+      name: 'SBS Status',
+      type: ElementType.TEXT,
+      screen: 'sbs',
+      x: 5, y: 0, width: 310, height: 16,
+      visible: true, locked: false,
+      content: "%?mp<Stop|Play|Pause> %ac%cH:%cM %ar%bl%%",
+      fontId: "14-Nimbus.fnt",
+      align: "center",
+      color: "#FFFFFF"
     }
   ]
 };

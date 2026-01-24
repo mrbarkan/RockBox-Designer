@@ -1,71 +1,67 @@
-import { ProjectState, ElementType, TextElement, WpsElement, ImageElement } from '../types';
+import { ProjectState, ElementType, TextElement, WpsElement, ImageElement, ScreenType } from '../types';
 
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex.replace('#', '');
 
 /**
- * Compiles the visual ProjectState into a Rockbox .wps file string.
+ * Compiles the visual ProjectState into a Rockbox .wps or .sbs file string.
  */
-export const compileWps = (project: ProjectState): string => {
+export const compileScreen = (project: ProjectState, screen: ScreenType): string => {
   const { elements, settings } = project;
   const safeName = settings.name.replace(/\s+/g, '_').toLowerCase();
   
-  let wps = `%wd\n`; // Clear display
+  let code = `%wd\n`; // Clear display
 
-  // 1. Background / Backdrop
-  // If a backdrop is set in settings, we load it efficiently using %X
-  if (settings.backdrop) {
-      wps += `%X|${safeName}_bg.bmp|\n`;
-  } else {
-      // If no image, we rely on the viewport clear color
-      // But purely for safety in Rockbox, we might want to ensure the main viewport has the BG color
+  // 1. Background / Backdrop (Only for WPS usually, unless SBS has one)
+  if (screen === 'wps' && settings.backdrop) {
+      code += `%X|${safeName}_bg.bmp|\n`;
   }
   
   // 2. Viewports and Elements
-  elements.forEach(el => {
+  elements.filter(el => el.screen === screen).forEach(el => {
     if (!el.visible) return;
 
-    // Viewport setup for this element
-    // %V(x,y,width,height,font)
-    const fontIndex = (el.type === ElementType.TEXT) ? '-' : '-'; 
-    wps += `\n# Element: ${el.name}\n`;
-    wps += `%V(${el.x},${el.y},${el.width},${el.height},${fontIndex})\n`;
+    // Viewport setup
+    const fontIndex = '-'; 
+    code += `\n# Element: ${el.name}\n`;
+    code += `%V(${el.x},${el.y},${el.width},${el.height},${fontIndex})\n`;
 
-    // Content based on type
+    // Content
     switch (el.type) {
       case ElementType.RECT:
-        wps += `%Vf(${toRbHex(el.color)})\n`; // Set FG color
-        wps += `%Cl(0,0,${el.width},${el.height},c,c)\n`; // Clear rect with FG color (fill)
+        code += `%Vf(${toRbHex(el.color)})\n`; 
+        code += `%Cl(0,0,${el.width},${el.height},c,c)\n`; 
         break;
 
       case ElementType.TEXT:
         const textEl = el as TextElement;
-        wps += `%Vf(${toRbHex(textEl.color)})\n`;
-        // Alignment tags
+        code += `%Vf(${toRbHex(textEl.color)})\n`;
         let alignTag = '%ac';
         if (textEl.align === 'left') alignTag = '%al';
         if (textEl.align === 'right') alignTag = '%ar';
-        wps += `${alignTag}${textEl.content}\n`;
+        code += `${alignTag}${textEl.content}\n`;
         break;
 
       case ElementType.PROGRESS_BAR:
-        wps += `%Vf(${toRbHex((el as any).foreColor)})\n`;
-        wps += `%Vb(${toRbHex((el as any).backColor)})\n`;
-        wps += `%pb(0,0,${el.width},${el.height},-)\n`;
+        code += `%Vf(${toRbHex((el as any).foreColor)})\n`;
+        code += `%Vb(${toRbHex((el as any).backColor)})\n`;
+        code += `%pb(0,0,${el.width},${el.height},-)\n`;
         break;
         
       case ElementType.IMAGE:
-        // We assume images are placed in /.rockbox/wps/ThemeName_img/
         const imgEl = el as ImageElement;
         if (imgEl.filename) {
-             wps += `%x|${safeName}_img/${imgEl.filename}|\n`;
+             code += `%x|${safeName}_img/${imgEl.filename}|\n`;
         }
         break;
     }
   });
 
-  return wps;
+  return code;
 };
+
+export const compileWps = (project: ProjectState) => compileScreen(project, 'wps');
+export const compileSbs = (project: ProjectState) => compileScreen(project, 'sbs');
 
 /**
  * Generates the .cfg file
@@ -116,22 +112,17 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     // 2. WPS file
     zip.file(`.rockbox/wps/${themeName}.wps`, compileWps(project));
     
-    // 3. SBS file (Dummy for now)
-    zip.file(`.rockbox/wps/${themeName}.sbs`, `%wd\n%V(0,0,320,16,-)\n%al%t %ar%bl%%`);
+    // 3. SBS file
+    zip.file(`.rockbox/wps/${themeName}.sbs`, compileSbs(project));
 
     // 4. Assets (Images layers)
     const imgFolder = zip.folder(`.rockbox/wps/${assetsFolder}`);
     if (imgFolder) {
         Object.keys(project.assets).forEach(filename => {
-            // Check if this is the backdrop (stored as special key or just by name?)
-            // We store backdrop in assets map too.
             const base64 = project.assets[filename];
             
-            // Check if this is the main backdrop
+            // Check if this is the backdrop
             if (filename === project.settings.backdrop) {
-                // Save at root wps folder as ThemeName_bg.bmp (assuming user provided BMP/compatible, or we just save raw)
-                // Realistically Rockbox prefers BMP. Browsers give us PNG/JPEG base64. 
-                // Conversion to BMP in JS is heavy, we'll save as uploaded for now and assume user knows or rockbox handles it (Rockbox does support bmp)
                 zip.file(`.rockbox/wps/${themeName}_bg.bmp`, dataURItoBlob(base64)); 
             } else {
                 imgFolder.file(filename, dataURItoBlob(base64));

@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ROCKBOX_FONTS } from '../types';
+import React, { useRef, useState, useEffect } from 'react';
+import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ROCKBOX_FONTS, ScreenType } from '../types';
 import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT } from '../constants';
 import { parseRockboxString } from '../services/rockboxTagParser';
 
 interface EditorCanvasProps {
   project: ProjectState;
+  activeScreen: ScreenType;
   song: SongMetadata;
   sim: SimulationState;
   onSelectElement: (id: string) => void;
@@ -16,6 +17,7 @@ interface EditorCanvasProps {
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   project,
+  activeScreen,
   song,
   sim,
   onSelectElement,
@@ -25,55 +27,85 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   showGrid
 }) => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [resizingId, setResizingId] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [elementStart, setElementStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
+  
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const getFontCss = (fontId: string) => {
+      // 1. Try to find exact match in known fonts
       const f = ROCKBOX_FONTS.find(font => font.id === fontId);
+      if (f) {
+          return {
+              fontFamily: f.css,
+              fontSize: `${f.size}px`
+          };
+      }
+      
+      // 2. Fallback: Parse size from filename (e.g., "16-Terminus.fnt" -> 16px)
+      const sizeMatch = fontId.match(/^(\d+)-/);
+      const parsedSize = sizeMatch ? parseInt(sizeMatch[1]) : 12;
+      
       return {
-          fontFamily: f ? f.css : 'sans-serif',
-          fontSize: f ? `${f.size}px` : '12px'
+          fontFamily: 'sans-serif',
+          fontSize: `${parsedSize}px`,
+          fontWeight: fontId.toLowerCase().includes('bold') ? 'bold' : 'normal'
       };
   };
 
   const handleMouseDown = (e: React.MouseEvent, el: WpsElement) => {
     if (el.locked) return;
-    e.stopPropagation();
+    e.stopPropagation(); // Stop clicking canvas (mousedown)
     onSelectElement(el.id);
     setDraggingId(el.id);
-    
-    // Calculate offset within the element
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    });
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ x: el.x, y: el.y, w: el.width, h: el.height });
   };
 
+  const handleClick = (e: React.MouseEvent, el: WpsElement) => {
+      // Critical: Prevent click from bubbling to the background which would deselect the element
+      if (!el.locked) {
+          e.stopPropagation();
+      }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, el: WpsElement) => {
+    e.stopPropagation();
+    setResizingId(el.id);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ x: el.x, y: el.y, w: el.width, h: el.height });
+  }
+
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!draggingId || !canvasRef.current) return;
+    if ((!draggingId && !resizingId) || !canvasRef.current) return;
     
-    const canvasRect = canvasRef.current.getBoundingClientRect();
-    
-    // Calculate new position relative to canvas, accounting for scale
-    let newX = (e.clientX - canvasRect.left - dragOffset.x) / scale;
-    let newY = (e.clientY - canvasRect.top - dragOffset.y) / scale;
+    // Calculate delta relative to zoom scale
+    const deltaX = (e.clientX - dragStart.x) / scale;
+    const deltaY = (e.clientY - dragStart.y) / scale;
 
-    // Snap to grid (10px)
-    if (showGrid) {
-        newX = Math.round(newX / 10) * 10;
-        newY = Math.round(newY / 10) * 10;
+    const snap = (val: number) => showGrid ? Math.round(val / 10) * 10 : Math.round(val);
+
+    if (resizingId) {
+        onUpdateElement(resizingId, {
+            width: Math.max(10, snap(elementStart.w + deltaX)),
+            height: Math.max(10, snap(elementStart.h + deltaY))
+        });
+    } else if (draggingId) {
+        onUpdateElement(draggingId, {
+            x: snap(elementStart.x + deltaX),
+            y: snap(elementStart.y + deltaY)
+        });
     }
-
-    onUpdateElement(draggingId, {
-        x: Math.round(newX),
-        y: Math.round(newY)
-    });
   };
 
   const handleMouseUp = () => {
     setDraggingId(null);
+    setResizingId(null);
   };
+
+  // Filter elements for current view
+  const activeElements = project.elements.filter(el => el.screen === activeScreen);
 
   return (
     <div 
@@ -97,9 +129,18 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 transformOrigin: 'top left',
                 backgroundColor: project.settings.backgroundColor
             }}
-            onClick={() => onSelectElement('')} // Deselect
+            onClick={() => onSelectElement('')} // Deselect when clicking background
         >
-            {project.elements.map(el => {
+            {/* Backdrop Layer */}
+            {project.settings.backdrop && project.assets[project.settings.backdrop] && (
+                 <img 
+                    src={project.assets[project.settings.backdrop]} 
+                    className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none opacity-100"
+                    alt="Backdrop"
+                 />
+            )}
+
+            {activeElements.map(el => {
                 if (!el.visible) return null;
                 const isSelected = project.selectedElementIds.includes(el.id);
                 
@@ -107,6 +148,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     <div
                         key={el.id}
                         onMouseDown={(e) => handleMouseDown(e, el)}
+                        onClick={(e) => handleClick(e, el)}
                         className={`absolute group hover:outline hover:outline-1 hover:outline-blue-400 ${isSelected ? 'outline outline-2 outline-blue-600 z-50' : 'z-10'}`}
                         style={{
                             left: el.x,
@@ -156,11 +198,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                              />
                         )}
 
-                        {/* Handles (Visual only for now) */}
+                        {/* Resize Handles (Only when selected and unlocked) */}
                         {isSelected && !el.locked && (
                             <>
                                 <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-600 border border-white" />
-                                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-600 border border-white" />
+                                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 border border-white" />
+                                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-600 border border-white" />
+                                <div 
+                                    className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-600 border border-white cursor-se-resize hover:scale-150 transition-transform" 
+                                    onMouseDown={(e) => handleResizeStart(e, el)}
+                                />
                             </>
                         )}
                     </div>
