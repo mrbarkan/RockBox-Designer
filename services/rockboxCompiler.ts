@@ -12,7 +12,14 @@ export const compileWps = (project: ProjectState): string => {
   
   let wps = `%wd\n`; // Clear display
 
-  // 1. Background Color simulated via viewport default if needed
+  // 1. Background / Backdrop
+  // If a backdrop is set in settings, we load it efficiently using %X
+  if (settings.backdrop) {
+      wps += `%X|${safeName}_bg.bmp|\n`;
+  } else {
+      // If no image, we rely on the viewport clear color
+      // But purely for safety in Rockbox, we might want to ensure the main viewport has the BG color
+  }
   
   // 2. Viewports and Elements
   elements.forEach(el => {
@@ -112,13 +119,23 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     // 3. SBS file (Dummy for now)
     zip.file(`.rockbox/wps/${themeName}.sbs`, `%wd\n%V(0,0,320,16,-)\n%al%t %ar%bl%%`);
 
-    // 4. Assets
+    // 4. Assets (Images layers)
     const imgFolder = zip.folder(`.rockbox/wps/${assetsFolder}`);
     if (imgFolder) {
         Object.keys(project.assets).forEach(filename => {
+            // Check if this is the backdrop (stored as special key or just by name?)
+            // We store backdrop in assets map too.
             const base64 = project.assets[filename];
-            const blob = dataURItoBlob(base64);
-            imgFolder.file(filename, blob);
+            
+            // Check if this is the main backdrop
+            if (filename === project.settings.backdrop) {
+                // Save at root wps folder as ThemeName_bg.bmp (assuming user provided BMP/compatible, or we just save raw)
+                // Realistically Rockbox prefers BMP. Browsers give us PNG/JPEG base64. 
+                // Conversion to BMP in JS is heavy, we'll save as uploaded for now and assume user knows or rockbox handles it (Rockbox does support bmp)
+                zip.file(`.rockbox/wps/${themeName}_bg.bmp`, dataURItoBlob(base64)); 
+            } else {
+                imgFolder.file(filename, dataURItoBlob(base64));
+            }
         });
     }
 

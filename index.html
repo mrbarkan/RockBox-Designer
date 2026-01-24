@@ -7,36 +7,95 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
       
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #1e1e1e; /* IDE Dark Mode */
-        color: #e0e0e0;
-        overflow: hidden; /* App-like feel */
+      :root {
+        --te-orange: #ff5800;
+        --te-dark: #2a2a2a;
+        --te-metal: #d1d1d6;
+        --te-border: #000000;
       }
 
-      /* Scrollbar styling */
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        overflow: hidden;
+      }
+
+      /* iTunes 2000s Brushed Metal */
+      .metal-gradient {
+        background: linear-gradient(to bottom, #f2f2f2 0%, #d4d4d4 100%);
+        border-bottom: 1px solid #999;
+      }
+      
+      /* iTunes Pinstripe Pattern (Modernized) */
+      .pinstripe {
+        background-color: #e5e5e5;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        background-size: 100% 3px;
+      }
+
+      /* TE Style Scrollbar */
       ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #2d2d2d;
+        background: #d4d4d4;
+        border-left: 1px solid #000;
       }
       ::-webkit-scrollbar-thumb {
-        background: #555;
-        border-radius: 3px;
+        background: #ff5800;
+        border: 1px solid #000;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #777;
+        background: #ff7a33;
       }
       
       .canvas-grid {
-        background-size: 10px 10px;
+        background-size: 20px 20px;
         background-image:
           linear-gradient(to right, #333 1px, transparent 1px),
           linear-gradient(to bottom, #333 1px, transparent 1px);
+      }
+
+      /* TE / Synth Fader Style for Range Inputs */
+      input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+      }
+      
+      input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 10px;
+        border: 1px solid #000;
+        border-radius: 0;
+        background: #ff5800;
+        cursor: pointer;
+        margin-top: -6px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+        box-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+      }
+
+      input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        cursor: pointer;
+        background: #000;
+        border-radius: 0;
+      }
+
+      /* TE Button Active State */
+      .te-button:active {
+        transform: translateY(1px);
+        box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+      }
+
+      .lcd-text {
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -0.5px;
       }
     </style>
   <script type="importmap">
