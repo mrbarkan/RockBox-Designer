@@ -50,7 +50,7 @@ export interface ProgressBarElement extends BaseElement {
   backColor: string;
 }
 
-export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarElement;
+export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarElement | BaseElement;
 
 export interface ProjectSettings {
   name: string;
@@ -58,6 +58,23 @@ export interface ProjectSettings {
   backgroundColor: string;
   statusBarTop: boolean;
   backdrop?: string; // filename
+  
+  // Global Menu / UI Settings
+  foregroundColor: string;     // Main text color
+  selectorColor: string;       // Cursor bar background (Start color)
+  selectorTextColor: string;   // Cursor text color
+  uiFont: string;             // Global UI font
+
+  // Advanced Appearance
+  showIcons: boolean;
+  scrollbar: 'off' | 'left' | 'right';
+  scrollbarWidth: number;
+  
+  volumeDisplay: 'graphic' | 'numeric';
+  batteryDisplay: 'graphic' | 'numeric';
+  
+  lineSelectorType: 'pointer' | 'bar_inverse' | 'bar_color' | 'bar_gradient';
+  lineSelectorEndColor?: string; // For gradient (End color)
 }
 
 export interface ProjectState {
@@ -100,6 +117,7 @@ export enum LayoutStyle {
   FULL_ART = 'FULL_ART'
 }
 
+// Legacy enum kept for compatibility with older generator logic if needed
 export enum ThemeFont {
   NIMBUS_14 = '14-Nimbus.fnt',
   TERMINUS_16 = '16-Terminus.fnt',
@@ -108,13 +126,11 @@ export enum ThemeFont {
   SYS_FIXED_12 = '12-Sys-Fixed.fnt'
 }
 
-export const ROCKBOX_FONTS = [
-    { id: ThemeFont.NIMBUS_14, label: 'Nimbus 14 (Sans)', css: '"Inter", sans-serif', size: 14 },
-    { id: ThemeFont.TERMINUS_16, label: 'Terminus 16 (Mono)', css: '"JetBrains Mono", monospace', size: 16 },
-    { id: ThemeFont.UNIFONT_16, label: 'Unifont 16 (Pixel)', css: '"Courier New", monospace', size: 16 },
-    { id: ThemeFont.SYS_PROPS_12, label: 'Sys Prop 12', css: 'sans-serif', size: 12 },
-    { id: ThemeFont.SYS_FIXED_12, label: 'Sys Fixed 12', css: 'monospace', size: 12 },
-];
+export interface FontDefinition {
+    family: string;
+    sizes: number[];
+    type: 'sans' | 'serif' | 'mono' | 'pixel';
+}
 
 export interface ThemeColors {
   background: string;

@@ -7,10 +7,13 @@ import { SimulationPanel } from './components/SimulationPanel';
 import { CodePreview } from './components/CodePreview';
 import { RemixModal } from './components/RemixModal';
 import { FileBrowser } from './components/FileBrowser';
+import { ElementLibraryModal } from './components/ElementLibraryModal';
+import { MainMenuModal } from './components/MainMenuModal';
 import { generateZip } from './services/rockboxCompiler';
 import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
 import { applyThemeToProject } from './services/layoutEngine';
+import { parseAudioFile } from './services/audioService';
 import { useHistory } from './hooks/useHistory';
 
 export default function App() {
@@ -32,6 +35,12 @@ export default function App() {
   const [showGuides, setShowGuides] = useState(true);
   const [showCode, setShowCode] = useState(false);
   const [showRemixModal, setShowRemixModal] = useState(false);
+  const [showLibModal, setShowLibModal] = useState(false);
+  const [showMainMenu, setShowMainMenu] = useState(false);
+  
+  // New state for Layer Stack
+  const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
+
   const [zoom, setZoom] = useState(1.5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
@@ -39,7 +48,9 @@ export default function App() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadProjectInputRef = useRef<HTMLInputElement>(null);
+  const importZipInputRef = useRef<HTMLInputElement>(null);
   const resourceInputRef = useRef<HTMLInputElement>(null);
+  const globalFontInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard Shortcuts (Delete)
   useEffect(() => {
@@ -82,6 +93,25 @@ export default function App() {
       assets: newAsset ? { ...project.assets, [newAsset.name]: newAsset.data } : project.assets
     };
     setProject(newState);
+  };
+
+  const handleAddPreset = (preset: Partial<WpsElement>) => {
+      const newEl = {
+          id: Math.random().toString(36).substr(2, 9),
+          screen: activeScreen,
+          x: 10, 
+          y: 10,
+          visible: true, 
+          locked: false,
+          fontId: '14-Nimbus.fnt', // Default font
+          ...preset
+      } as WpsElement;
+
+      setProject({
+        ...project,
+        elements: [...project.elements, newEl],
+        selectedElementIds: [newEl.id]
+    });
   };
 
   const handleAddElement = (type: ElementType) => {
@@ -170,6 +200,44 @@ export default function App() {
       alert(`${files.length} resources loaded. Images/Fonts are now available in the asset pool.`);
   };
 
+  const handleGlobalFontUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.fnt')) {
+          alert("Please upload a .fnt file");
+          return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+          const result = ev.target?.result as string;
+          // Add to assets, don't change selection
+          setProject({
+              ...project,
+              assets: { ...project.assets, [file.name]: result }
+          });
+          alert(`Font "${file.name}" imported to Assets.`);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+  };
+
+  const handleTrackUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+        const metadata = await parseAudioFile(file);
+        setSong(metadata);
+        // Reset simulation to start
+        setSim(prev => ({ ...prev, playStatus: 'play' }));
+    } catch (error) {
+        console.error(error);
+        alert("Failed to load audio file.");
+    }
+    e.target.value = '';
+  };
+
   const handleDeleteElement = (id: string) => {
     setProject({
         ...project,
@@ -209,16 +277,8 @@ export default function App() {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Handle ZIP import
-      if (file.name.endsWith('.zip')) {
-          const importedProject = await parseZipTheme(file);
-          if (importedProject) {
-              setProject(importedProject);
-              setShowRemixModal(true);
-          }
-      } 
       // Handle JSON import (native project format)
-      else if (file.name.endsWith('.json')) {
+      if (file.name.endsWith('.json')) {
           const reader = new FileReader();
           reader.onload = (ev) => {
               try {
@@ -230,10 +290,31 @@ export default function App() {
           };
           reader.readAsText(file);
       } else {
-          alert("Please upload a valid .json project file or a Rockbox theme .zip");
+          alert("Please upload a valid .json project file.");
       }
-      
       e.target.value = '';
+  };
+
+  const handleImportZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+       const file = e.target.files?.[0];
+       if (!file) return;
+       
+       if (file.name.endsWith('.zip')) {
+          const importedProject = await parseZipTheme(file);
+          if (importedProject) {
+              setProject(importedProject);
+              setShowRemixModal(true);
+          }
+      } else {
+          alert("Please select a valid Rockbox .zip theme file.");
+      }
+      e.target.value = '';
+  };
+
+  const handleNewProject = () => {
+      if (confirm("Create new project? Unsaved changes will be lost.")) {
+          setProject(DEFAULT_PROJECT);
+      }
   };
 
   const handleAiGenerate = async () => {
@@ -302,6 +383,26 @@ export default function App() {
       {/* Remix Etiquette Modal */}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
 
+      {/* Main Menu Modal */}
+      <MainMenuModal 
+        isOpen={showMainMenu} 
+        onClose={() => setShowMainMenu(false)}
+        onNew={handleNewProject}
+        onOpen={() => loadProjectInputRef.current?.click()}
+        onSave={handleSaveProject}
+        onExport={handleExport}
+        onImportZip={() => importZipInputRef.current?.click()}
+        onImportFont={() => globalFontInputRef.current?.click()}
+      />
+
+      {/* Basic Elements Library Modal */}
+      <ElementLibraryModal 
+        isOpen={showLibModal} 
+        onClose={() => setShowLibModal(false)} 
+        onAddElement={handleAddPreset}
+        activeScreen={activeScreen}
+      />
+
       {/* AI Prompt Modal */}
       {promptOpen && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -336,10 +437,24 @@ export default function App() {
 
       {/* TOOLBAR (Left) */}
       <div className="w-18 pinstripe border-r border-black flex flex-col items-center py-4 gap-4 z-20">
-        <div className="w-10 h-10 bg-orange-600 flex items-center justify-center font-bold text-white text-xl border border-black shadow-[2px_2px_0px_black]">R</div>
+        <button 
+            onClick={() => setShowMainMenu(true)}
+            className="w-10 h-10 bg-orange-600 flex items-center justify-center font-bold text-white text-xl border border-black shadow-[2px_2px_0px_black] hover:bg-orange-500 active:translate-y-[1px] active:shadow-none transition-all"
+        >
+            R
+        </button>
         
         <div className="flex flex-col gap-2 w-full px-2">
             <div className="text-[9px] font-bold text-center uppercase opacity-50 tracking-wider">Tools</div>
+            {/* New Library Button */}
+            <ToolButton 
+                icon="⊕" 
+                label="Library" 
+                onClick={() => setShowLibModal(true)} 
+                active={showLibModal}
+                className="mb-2"
+            />
+            
             <ToolButton icon="T" label="Text" onClick={() => handleAddElement(ElementType.TEXT)} />
             <ToolButton icon="□" label="Rect" onClick={() => handleAddElement(ElementType.RECT)} />
             <ToolButton icon="=" label="Bar" onClick={() => handleAddElement(ElementType.PROGRESS_BAR)} />
@@ -388,13 +503,14 @@ export default function App() {
 
         <div className="flex flex-col gap-2 w-full px-2 pb-2">
             <ToolButton icon="💾" label="Save" onClick={handleSaveProject} />
-            <ToolButton icon="📂" label="Open" onClick={() => loadProjectInputRef.current?.click()} />
             <ToolButton icon="⬇" label="Zip" onClick={handleExport} />
         </div>
         
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-        <input type="file" ref={loadProjectInputRef} className="hidden" accept=".json,.zip" onChange={handleLoadProject} />
+        <input type="file" ref={loadProjectInputRef} className="hidden" accept=".json" onChange={handleLoadProject} />
+        <input type="file" ref={importZipInputRef} className="hidden" accept=".zip" onChange={handleImportZip} />
         <input type="file" ref={resourceInputRef} className="hidden" multiple onChange={handleResourceUpload} />
+        <input type="file" ref={globalFontInputRef} className="hidden" accept=".fnt" onChange={handleGlobalFontUpload} />
       </div>
 
       {/* MAIN WORKSPACE */}
@@ -483,6 +599,7 @@ export default function App() {
             meta={song}
             onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))}
             onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))}
+            onLoadTrack={handleTrackUpload}
         />
       </div>
 
@@ -506,22 +623,39 @@ export default function App() {
               </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-             {rightPanelMode === 'inspector' ? (
-                <>
-                    <PropertyPanel 
-                        element={selectedElement} 
-                        project={project} 
-                        onUpdate={handleUpdateElement}
-                        onUpdateProject={handleUpdateProjectSettings}
-                        onDelete={handleDeleteElement}
-                    />
-                    
-                    {/* Layer Stack (Bottom of Inspector) */}
-                    <div className="h-1/3 border-t border-black flex flex-col bg-[#e0e0e0] mt-auto sticky bottom-0">
-                         <div className="h-8 bg-[#d4d4d4] border-b border-black flex items-center px-4 text-[10px] font-bold uppercase tracking-wider text-gray-600">
-                            Layer_Stack ({activeScreen.toUpperCase()})
-                         </div>
+          <div className="flex-1 flex flex-col overflow-hidden">
+             <div className="flex-1 overflow-y-auto">
+                 {rightPanelMode === 'inspector' ? (
+                    <>
+                        <PropertyPanel 
+                            element={selectedElement} 
+                            project={project} 
+                            onUpdate={handleUpdateElement}
+                            onUpdateProject={handleUpdateProjectSettings}
+                            onDelete={handleDeleteElement}
+                            onDeselect={() => handleSelectElement('')}
+                        />
+                    </>
+                 ) : (
+                     <FileBrowser project={project} />
+                 )}
+             </div>
+
+             {/* Minimizable Layer Stack */}
+             {rightPanelMode === 'inspector' && (
+                <div 
+                    className={`border-t border-black flex flex-col bg-[#e0e0e0] sticky bottom-0 flex-shrink-0 transition-all duration-300 ease-in-out
+                    ${isLayerStackCollapsed ? 'h-8' : 'h-1/3'}`}
+                >
+                     <div 
+                        onClick={() => setIsLayerStackCollapsed(!isLayerStackCollapsed)}
+                        className="h-8 bg-[#d4d4d4] border-b border-black flex items-center justify-between px-4 text-[10px] font-bold uppercase tracking-wider text-gray-600 cursor-pointer hover:bg-gray-300 select-none"
+                     >
+                        <span>Layer_Stack ({activeScreen.toUpperCase()})</span>
+                        <span>{isLayerStackCollapsed ? '▲' : '▼'}</span>
+                     </div>
+                     
+                     {!isLayerStackCollapsed && (
                          <div className="flex-1 overflow-y-auto p-2 space-y-1">
                              {project.elements.filter(el => el.screen === activeScreen).map(el => (
                                  <div 
@@ -538,10 +672,8 @@ export default function App() {
                                  </div>
                              ))}
                          </div>
-                    </div>
-                </>
-             ) : (
-                 <FileBrowser project={project} />
+                     )}
+                </div>
              )}
           </div>
       </div>

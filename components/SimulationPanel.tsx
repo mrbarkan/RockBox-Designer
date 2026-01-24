@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { SimulationState, SongMetadata } from '../types';
 
 interface SimulationPanelProps {
@@ -6,9 +6,12 @@ interface SimulationPanelProps {
   meta: SongMetadata;
   onUpdateSim: (updates: Partial<SimulationState>) => void;
   onUpdateMeta: (updates: Partial<SongMetadata>) => void;
+  onLoadTrack?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const SimulationPanel: React.FC<SimulationPanelProps> = ({ sim, meta, onUpdateSim, onUpdateMeta }) => {
+export const SimulationPanel: React.FC<SimulationPanelProps> = ({ sim, meta, onUpdateSim, onUpdateMeta, onLoadTrack }) => {
+  const trackInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <div className="bg-[#1a1a1a] border-t border-black p-4 grid grid-cols-4 gap-4 text-[10px] text-gray-400 font-mono select-none shadow-[0_-5px_10px_rgba(0,0,0,0.3)] z-10">
       
@@ -32,7 +35,23 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({ sim, meta, onU
             ))}
         </div>
         
-        <div className="mt-2">
+        <div className="mt-2 flex items-center gap-2">
+            <button 
+                onClick={() => trackInputRef.current?.click()}
+                className="px-2 py-1 bg-[#444] hover:bg-[#555] text-white border border-black text-[9px] uppercase font-bold flex-1 truncate"
+            >
+                Load Track...
+            </button>
+            <input 
+                type="file" 
+                ref={trackInputRef} 
+                onChange={onLoadTrack} 
+                accept="audio/*" 
+                className="hidden" 
+            />
+        </div>
+
+        <div>
              <div className="flex justify-between mb-1 text-gray-500">
                 <span>SEEK</span>
                 <span className="text-orange-500">{Math.floor(meta.currentSec / 60)}:{(meta.currentSec % 60).toString().padStart(2,'0')}</span>

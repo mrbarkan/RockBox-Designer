@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ROCKBOX_FONTS, ScreenType } from '../types';
-import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT } from '../constants';
+import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ScreenType } from '../types';
+import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, ROCKBOX_STANDARD_FONTS } from '../constants';
 import { parseRockboxString } from '../services/rockboxTagParser';
 
 interface EditorCanvasProps {
@@ -34,23 +34,35 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const getFontCss = (fontId: string) => {
-      // 1. Try to find exact match in known fonts
-      const f = ROCKBOX_FONTS.find(font => font.id === fontId);
-      if (f) {
-          return {
-              fontFamily: f.css,
-              fontSize: `${f.size}px`
-          };
+      const match = fontId.match(/^(\d+)-(.+?)(?:\.fnt)?$/);
+      let size = 12;
+      let family = 'Nimbus';
+      
+      if (match) {
+          size = parseInt(match[1]);
+          family = match[2];
+      }
+
+      // Map Rockbox families to CSS generic families for preview
+      let cssFamily = 'sans-serif';
+      
+      const stdFont = ROCKBOX_STANDARD_FONTS[family];
+      if (stdFont) {
+          if (stdFont.type === 'mono') cssFamily = '"JetBrains Mono", monospace';
+          else if (stdFont.type === 'serif') cssFamily = '"Times New Roman", serif';
+          else if (stdFont.type === 'pixel') cssFamily = '"Courier New", monospace';
+          else cssFamily = '"Inter", sans-serif';
+      } else {
+          // Fallback for custom fonts - try to guess based on name
+          if (family.toLowerCase().includes('fixed') || family.toLowerCase().includes('term')) {
+              cssFamily = '"JetBrains Mono", monospace';
+          }
       }
       
-      // 2. Fallback: Parse size from filename (e.g., "16-Terminus.fnt" -> 16px)
-      const sizeMatch = fontId.match(/^(\d+)-/);
-      const parsedSize = sizeMatch ? parseInt(sizeMatch[1]) : 12;
-      
       return {
-          fontFamily: 'sans-serif',
-          fontSize: `${parsedSize}px`,
-          fontWeight: fontId.toLowerCase().includes('bold') ? 'bold' : 'normal'
+          fontFamily: cssFamily,
+          fontSize: `${size}px`,
+          fontWeight: family.toLowerCase().includes('bold') ? 'bold' : 'normal'
       };
   };
 
@@ -106,6 +118,31 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   // Filter elements for current view
   const activeElements = project.elements.filter(el => el.screen === activeScreen);
+
+  // Helper to get selector bar style
+  const getSelectorStyle = (isSelected: boolean) => {
+      if (!isSelected) return { backgroundColor: 'transparent', color: project.settings.foregroundColor };
+      
+      const type = project.settings.lineSelectorType || 'bar_color';
+      
+      if (type === 'pointer') {
+          return { backgroundColor: 'transparent', color: project.settings.foregroundColor };
+      }
+      
+      if (type === 'bar_inverse') {
+          return { backgroundColor: project.settings.foregroundColor, color: project.settings.backgroundColor };
+      }
+      
+      if (type === 'bar_gradient') {
+          return { 
+              background: `linear-gradient(to bottom, ${project.settings.selectorColor}, ${project.settings.lineSelectorEndColor || project.settings.selectorColor})`,
+              color: project.settings.selectorTextColor
+          };
+      }
+      
+      // Default: bar_color
+      return { backgroundColor: project.settings.selectorColor, color: project.settings.selectorTextColor };
+  };
 
   return (
     <div 
@@ -196,6 +233,58 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                                 className="w-full h-full object-contain pointer-events-none select-none"
                                 draggable={false}
                              />
+                        )}
+
+                        {/* Viewport / Menu Simulator */}
+                        {el.type === ElementType.VIEWPORT && (
+                            <div className="w-full h-full overflow-hidden flex flex-col pointer-events-none border border-dashed border-gray-600/30 relative">
+                                <div className="absolute top-0 right-0 bg-gray-500 text-white text-[9px] px-1 font-mono opacity-50 z-20">Menu_Area</div>
+                                
+                                <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
+                                    {['Files', 'Database', 'Resume Playback', 'Settings', 'Recording', 'Plugins'].map((item, i) => {
+                                         // Simulate selection on "Settings"
+                                         const isSelectedRow = i === 3; 
+                                         const style = getSelectorStyle(isSelectedRow);
+                                         
+                                         return (
+                                            <div 
+                                                key={i} 
+                                                className="px-2 flex items-center w-full relative"
+                                                style={{ 
+                                                    height: '24px', 
+                                                    ...style,
+                                                    ...getFontCss(project.settings.uiFont)
+                                                }}
+                                            >
+                                                {/* Pointer Style */}
+                                                {project.settings.lineSelectorType === 'pointer' && isSelectedRow && (
+                                                    <span className="mr-1">►</span>
+                                                )}
+                                                
+                                                {/* Icons if enabled */}
+                                                {project.settings.showIcons && (
+                                                    <span className="mr-2 text-[10px] opacity-70">
+                                                        {i === 0 ? '📁' : i === 1 ? '💿' : i === 3 ? '⚙️' : '📄'}
+                                                    </span>
+                                                )}
+
+                                                <span className="truncate w-full">{item}</span>
+                                                {item === 'Database' || item === 'Settings' ? <span>▶</span> : null}
+                                            </div>
+                                         );
+                                    })}
+                                </div>
+
+                                {/* Scrollbar Simulation */}
+                                {project.settings.scrollbar !== 'off' && (
+                                    <div 
+                                        className={`absolute top-0 bottom-0 ${project.settings.scrollbar === 'right' ? 'right-0' : 'left-0'} bg-gray-600/30`}
+                                        style={{ width: project.settings.scrollbarWidth || 6 }}
+                                    >
+                                        <div className="w-full h-1/2 bg-gray-400 mt-8 opacity-80" />
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {/* Resize Handles (Only when selected and unlocked) */}
