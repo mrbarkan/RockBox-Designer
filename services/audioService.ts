@@ -1,3 +1,4 @@
+
 import { SongMetadata } from '../types';
 
 declare global {
@@ -8,31 +9,22 @@ declare global {
 
 export const parseAudioFile = (file: File): Promise<SongMetadata> => {
   return new Promise((resolve, reject) => {
-    // 1. Get Duration via HTML Audio Element
-    const objectUrl = URL.createObjectURL(file);
-    const audio = new Audio(objectUrl);
+    // Default metadata based on filename
+    const metadata: SongMetadata = {
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      artist: "Unknown Artist",
+      album: "Unknown Album",
+      trackNum: 1,
+      totalTracks: 1,
+      currentSec: 0,
+      totalSec: 180, // Default 3 mins if duration read fails
+      format: file.name.split('.').pop()?.toUpperCase() || "MP3",
+      kbps: 128,
+      albumArt: undefined
+    };
 
-    audio.onloadedmetadata = () => {
-      const duration = Math.floor(audio.duration);
-      
-      // Calculate estimated bitrate: (Size in bits) / (Duration in seconds) / 1000 = kbps
-      const kbps = Math.floor((file.size * 8) / duration / 1000);
-      
-      // Default metadata structure
-      const metadata: SongMetadata = {
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        artist: "Unknown Artist",
-        album: "Unknown Album",
-        trackNum: 1,
-        totalTracks: 1,
-        currentSec: 0,
-        totalSec: duration || 180,
-        format: file.name.split('.').pop()?.toUpperCase() || "MP3",
-        kbps: kbps || 128,
-        albumArt: undefined
-      };
-
-      // 2. Attempt to read ID3 tags if library is loaded
+    // Helper to read ID3 tags using jsmediatags if available
+    const readTags = () => {
       if (window.jsmediatags) {
         window.jsmediatags.read(file, {
           onSuccess: (tag: any) => {
@@ -60,25 +52,43 @@ export const parseAudioFile = (file: File): Promise<SongMetadata> => {
             }
 
             resolve(metadata);
-            URL.revokeObjectURL(objectUrl); // Clean up
           },
           onError: (error: any) => {
             console.warn("ID3 read error:", error);
-            // Resolve with basic file info if tags fail
+            // Resolve with basic file info if tags fail, don't reject
             resolve(metadata); 
-            URL.revokeObjectURL(objectUrl);
           }
         });
       } else {
         // Fallback if jsmediatags is missing
         resolve(metadata);
-        URL.revokeObjectURL(objectUrl);
       }
     };
 
+    // 1. Get Duration via HTML Audio Element
+    const objectUrl = URL.createObjectURL(file);
+    const audio = new Audio(objectUrl);
+
+    audio.onloadedmetadata = () => {
+      const duration = Math.floor(audio.duration);
+      
+      // Calculate estimated bitrate if duration is valid
+      if (duration && !isNaN(duration) && duration !== Infinity) {
+          metadata.totalSec = duration;
+          const kbps = Math.floor((file.size * 8) / duration / 1000);
+          metadata.kbps = kbps || 128;
+      }
+      
+      URL.revokeObjectURL(objectUrl); // Clean up
+      readTags();
+    };
+
     audio.onerror = () => {
-        reject(new Error("Could not load audio file."));
+        // Warning instead of Reject: allows unsupported formats (like FLAC on some browsers) 
+        // to still display metadata extracted via jsmediatags, even if duration is unknown.
+        console.warn("Browser could not decode audio stream for duration calculation.");
         URL.revokeObjectURL(objectUrl);
+        readTags();
     };
   });
 };

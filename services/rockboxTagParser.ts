@@ -1,3 +1,4 @@
+
 import { SimulationState, SongMetadata } from '../types';
 
 /**
@@ -14,32 +15,64 @@ export const parseRockboxString = (
     output = output.replace(/%s/g, meta.title);
     output = output.replace(/%a/g, meta.artist);
     output = output.replace(/%id/g, meta.album);
-    output = output.replace(/%It/g, "Next Song Title"); // Placeholder for next track
-    output = output.replace(/%Ia/g, "Next Artist");
+    output = output.replace(/%it/g, meta.title); // Track Title
+    output = output.replace(/%ia/g, meta.artist);
+    output = output.replace(/%ic/g, "Composer Name"); // Placeholder
+    output = output.replace(/%iA/g, "Album Artist"); // Placeholder
+    output = output.replace(/%iG/g, "Grouping");
+    output = output.replace(/%ig/g, "Genre");
+    output = output.replace(/%in/g, meta.trackNum.toString());
+    output = output.replace(/%ik/g, "1"); // Disc Num
+    output = output.replace(/%iy/g, "1981"); // Year
+    output = output.replace(/%iv/g, "2.3"); // ID3 Ver
+    output = output.replace(/%iC/g, "Comment");
 
-    // 2. Technical Metadata
+    // 2. Next Track
+    output = output.replace(/%It/g, "Next Song Title"); 
+    output = output.replace(/%Ia/g, "Next Artist");
+    output = output.replace(/%Id/g, "Next Album");
+    output = output.replace(/%If/g, "next_song.mp3");
+
+    // 3. Technical Metadata
+    output = output.replace(/%fn/g, "filename.mp3");
+    output = output.replace(/%fp/g, "/Music/Kraftwerk/Computer World/filename.mp3");
     output = output.replace(/%fc/g, meta.format);
     output = output.replace(/%fb/g, meta.kbps.toString());
+    output = output.replace(/%fz/g, "4.2 MB");
     
-    // 3. Time & Progress
-    // %pc = percent current
-    const pct = Math.floor((meta.currentSec / meta.totalSec) * 100);
-    output = output.replace(/%pc/g, pct.toString());
-    
-    // %pt = time elapsed, %pt = time total (simulated)
+    // 4. Time & Progress
     const fmtTime = (s: number) => {
         const m = Math.floor(s / 60);
         const sec = s % 60;
         return `${m}:${sec.toString().padStart(2, '0')}`;
     };
-    output = output.replace(/%pt/g, fmtTime(meta.currentSec));
-    output = output.replace(/%pt/g, fmtTime(meta.totalSec)); // This tag is context dependent in reality, usually %pt is elapsed. %tt is total.
-    output = output.replace(/%tt/g, fmtTime(meta.totalSec));
 
-    // 4. System Status
+    // Calculate Percentage
+    const pct = meta.totalSec > 0 ? Math.floor((meta.currentSec / meta.totalSec) * 100) : 0;
+
+    output = output.replace(/%pc/g, fmtTime(meta.currentSec)); // Current Time
+    output = output.replace(/%pt/g, fmtTime(meta.totalSec));   // Total Time
+    output = output.replace(/%tt/g, fmtTime(meta.totalSec));   // Alias for Total
+    output = output.replace(/%pr/g, "-" + fmtTime(meta.totalSec - meta.currentSec)); // Remaining
+    output = output.replace(/%px/g, pct.toString()); // Percentage
+    output = output.replace(/%pp/g, meta.trackNum.toString()); // Playlist Pos
+    output = output.replace(/%pe/g, meta.totalTracks.toString()); // Playlist End/Total
+
+    // 5. System Status
     output = output.replace(/%bl/g, sim.batteryLevel.toString());
+    output = output.replace(/%bv/g, "3.75V");
+    output = output.replace(/%bt/g, "10h 20m");
     output = output.replace(/%pv/g, sim.volume + "dB");
     
+    // 6. DB / FM
+    output = output.replace(/%rp/g, "42"); // Play count
+    output = output.replace(/%rr/g, "5"); // Rating
+    output = output.replace(/%Rg/g, "-1.5 dB"); // ReplayGain
+    
+    output = output.replace(/%tf/g, "104.5 MHz");
+    output = output.replace(/%ti/g, "Rock FM");
+    output = output.replace(/%ts/g, "Strong");
+
     // Clock
     const [hh, mm] = sim.currentTime.split(':');
     output = output.replace(/%cH/g, hh);
@@ -47,12 +80,14 @@ export const parseRockboxString = (
     // 12h format simulation
     const h12 = parseInt(hh) % 12 || 12;
     output = output.replace(/%cl/g, h12.toString());
+    output = output.replace(/%cP/g, parseInt(hh) >= 12 ? 'PM' : 'AM');
     output = output.replace(/%cp/g, parseInt(hh) >= 12 ? 'pm' : 'am');
+    output = output.replace(/%cb/g, "Oct");
+    output = output.replace(/%cd/g, "24");
+    output = output.replace(/%cY/g, "2023");
+    output = output.replace(/%ca/g, "Tue");
 
-
-    // 5. Conditionals: %?xx<true|false|option3...>
-    // Regex to find %?tag<...> content
-    // Note: Nested conditionals are hard with regex, we do single level here for preview.
+    // 7. Conditionals: %?xx<true|false>
     const conditionalRegex = /%\?([a-zA-Z0-9]+)<([^>]+)>/g;
     
     output = output.replace(conditionalRegex, (match, tag, content) => {
@@ -60,32 +95,37 @@ export const parseRockboxString = (
         let selectedIndex = 0;
 
         switch(tag) {
-            case 'mp': // Play status: Stop|Play|Pause|Ffwd|Rew...
-                // Rockbox order: Stop, Play, Pause, Ffwd, Rew, Rec, Rec Pause, FM, FM Pause
+            case 'mp': // Play status
                 if (sim.playStatus === 'stop') selectedIndex = 0;
                 else if (sim.playStatus === 'play') selectedIndex = 1;
                 else if (sim.playStatus === 'pause') selectedIndex = 2;
                 else if (sim.playStatus === 'ffwd') selectedIndex = 3;
                 else if (sim.playStatus === 'rew') selectedIndex = 4;
                 break;
-            
-            case 'bl': // Battery Level? Usually %?bl is not a conditional like this, but %bp is charging.
-                // Let's assume %?bc (Battery Charging) for this example or custom logic
+            case 'cf': // Crossfade
+                selectedIndex = 0; // Off
                 break;
-            
+            case 'tS': // FM Stereo
+                selectedIndex = 1; // Stereo
+                break;
             case 'ps': // Shuffle
                 selectedIndex = sim.shuffle ? 1 : 0;
                 break;
-
-            case 'mm': // Repeat mode: Off, All, One, Shuffle
+            case 'mm': // Repeat mode
                  if (sim.repeat === 'off') selectedIndex = 0;
                  else if (sim.repeat === 'all') selectedIndex = 1;
                  else if (sim.repeat === 'one') selectedIndex = 2;
                  break;
+            case 'mh': // Hold
+                 selectedIndex = sim.isHold ? 1 : 0;
+                 break;
+            case 'lh': // LED
+                 selectedIndex = 0; // HDD inactive
+                 break;
         }
 
         // Return the selected option, or empty string if out of bounds
-        return options[selectedIndex] || options[0] || '';
+        return options[selectedIndex] !== undefined ? options[selectedIndex] : (options[0] || '');
     });
 
     return output;

@@ -1,3 +1,4 @@
+
 // IDE Data Structures
 
 export enum ElementType {
@@ -8,46 +9,58 @@ export enum ElementType {
   PROGRESS_BAR = 'progress_bar'
 }
 
-export type ScreenType = 'wps' | 'sbs';
+export type ScreenType = 'wps' | 'sbs' | 'fms' | 'usb';
 
 export interface BaseElement {
   id: string;
   name: string;
   type: ElementType;
-  screen: ScreenType; // New: Which screen does this belong to?
+  screen: ScreenType; 
   x: number;
   y: number;
   width: number;
   height: number;
   visible: boolean;
   locked: boolean;
-  // Rockbox conditional logic placeholder
-  condition?: string; 
+  
+  // Rockbox Logic
+  category?: string; // e.g. 'id3', 'power', 'rtc' - Defines the "Content Type" dropdown options
+  condition?: string; // e.g. "%?ps" (Shuffle) or "%?mv" (Volume active)
+  touchAction?: string; // e.g. "wps_play", "volume_up" for %T tag
 }
 
 export interface TextElement extends BaseElement {
   type: ElementType.TEXT;
-  content: string; // The Rockbox tag (e.g., "%s", "Static Text")
+  content: string; 
   fontId: string;
   align: 'left' | 'center' | 'right';
-  color: string; // Hex
+  color: string; 
+  scroll?: boolean; // New: Enable Scrolling
+  volumeFormat?: 'numeric' | 'db' | 'percent'; // New: For Volume Text elements
 }
 
 export interface RectElement extends BaseElement {
   type: ElementType.RECT;
-  color: string; // Hex
+  color: string; 
 }
 
 export interface ImageElement extends BaseElement {
   type: ElementType.IMAGE;
-  src: string; // Data URL for preview
-  filename: string; // filename for export
+  src: string; 
+  filename: string; 
+  
+  // Advanced Image Properties for Rockbox
+  imageType?: 'static' | 'battery_strip' | 'volume_strip' | 'shuffle_icon' | 'repeat_icon';
+  frameCount?: number; // How many frames in the strip?
+  preloadId?: string; // A, B, C... assigned during compile
 }
 
 export interface ProgressBarElement extends BaseElement {
   type: ElementType.PROGRESS_BAR;
   foreColor: string;
   backColor: string;
+  pbMode?: 'track' | 'volume' | 'auto'; // Auto = Volume Overlay on change
+  pbStyle?: 'flat' | 'rounded' | 'segmented' | 'adwaita';
 }
 
 export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarElement | BaseElement;
@@ -56,7 +69,7 @@ export interface ProjectSettings {
   name: string;
   target: 'ipod_video'; // 320x240
   backgroundColor: string;
-  statusBarTop: boolean;
+  statusBarTop: boolean; // Mapped to 'statusbar' in CFG
   backdrop?: string; // filename
   
   // Global Menu / UI Settings
@@ -65,7 +78,11 @@ export interface ProjectSettings {
   selectorTextColor: string;   // Cursor text color
   uiFont: string;             // Global UI font
 
-  // Advanced Appearance
+  // Iconsets
+  iconset?: string;          // /.rockbox/icons/...
+  viewersIconset?: string;   // /.rockbox/icons/...
+
+  // Advanced Appearance & Behavior
   showIcons: boolean;
   scrollbar: 'off' | 'left' | 'right';
   scrollbarWidth: number;
@@ -75,6 +92,21 @@ export interface ProjectSettings {
   
   lineSelectorType: 'pointer' | 'bar_inverse' | 'bar_color' | 'bar_gradient';
   lineSelectorEndColor?: string; // For gradient (End color)
+
+  // Scrolling & Backlight (New)
+  scrollSpeed?: number;
+  scrollDelay?: number;
+  scrollStep?: number;
+  backlightOnHold?: 'normal' | 'off' | 'on';
+  
+  // QuickScreen (New)
+  qsTop?: string;
+  qsBottom?: string;
+  qsLeft?: string;
+  qsRight?: string;
+
+  // Palette (New)
+  palette: string[];
 }
 
 export interface ProjectState {
@@ -82,6 +114,19 @@ export interface ProjectState {
   elements: WpsElement[];
   assets: Record<string, string>; // Map filename -> base64
   selectedElementIds: string[];
+}
+
+// User & Cloud Types
+export interface User {
+  username: string;
+  created: number;
+}
+
+export interface CloudProject {
+  id: string;
+  name: string;
+  updated: number;
+  data: ProjectState;
 }
 
 export interface SongMetadata {
@@ -103,10 +148,13 @@ export interface SimulationState {
   batteryLevel: number; // 0-100
   volume: number; // -100 to 0 (dB) or arbitrary scale
   isCharging: boolean;
+  isHold: boolean;
+  isUsb: boolean;
   playStatus: 'stop' | 'play' | 'pause' | 'ffwd' | 'rew';
   currentTime: string; // HH:MM
   shuffle: boolean;
   repeat: 'off' | 'all' | 'one';
+  volumeLastChanged?: number; // Timestamp for overlay simulation
 }
 
 // Service / Generator Types
@@ -117,7 +165,6 @@ export enum LayoutStyle {
   FULL_ART = 'FULL_ART'
 }
 
-// Legacy enum kept for compatibility with older generator logic if needed
 export enum ThemeFont {
   NIMBUS_14 = '14-Nimbus.fnt',
   TERMINUS_16 = '16-Terminus.fnt',
