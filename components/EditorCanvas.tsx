@@ -1,6 +1,5 @@
-
-import React, { useRef, useState, useEffect } from 'react';
-import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ScreenType, ProgressBarElement } from '../types';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
+import { ProjectState, WpsElement, ElementType, SongMetadata, ImageElement, SimulationState, ScreenType, ProgressBarElement, TextElement } from '../types';
 import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, ROCKBOX_STANDARD_FONTS, GRAPHIC_ASSETS } from '../constants';
 import { parseRockboxString } from '../services/rockboxTagParser';
 
@@ -15,6 +14,59 @@ interface EditorCanvasProps {
   showGuides: boolean;
   showGrid: boolean;
 }
+
+const RockboxTextElement: React.FC<{ 
+    element: TextElement, 
+    sim: SimulationState, 
+    song: SongMetadata, 
+    style: React.CSSProperties,
+    fontCss: React.CSSProperties
+}> = ({ element, sim, song, style, fontCss }) => {
+    const textRef = useRef<HTMLDivElement>(null);
+    const [shouldScroll, setShouldScroll] = useState(false);
+    const textContent = parseRockboxString(element.content, sim, song);
+
+    useLayoutEffect(() => {
+        if (textRef.current && element.scroll) {
+            // Check if content overflows width
+            if (textRef.current.scrollWidth > textRef.current.clientWidth) {
+                setShouldScroll(true);
+            } else {
+                setShouldScroll(false);
+            }
+        } else {
+            setShouldScroll(false);
+        }
+    }, [textContent, element.scroll, element.width, fontCss]);
+
+    return (
+        <div className="w-full h-full overflow-hidden relative">
+            <div 
+                ref={textRef}
+                className={`whitespace-nowrap ${shouldScroll ? 'animate-rock' : ''}`}
+                style={{
+                    color: element.color,
+                    textAlign: element.align,
+                    lineHeight: '1.2',
+                    width: '100%',
+                    ...fontCss
+                }}
+            >
+                {textContent}
+            </div>
+            <style>{`
+                @keyframes rock { 
+                    0%, 20% { transform: translateX(0); } 
+                    80%, 100% { transform: translateX(calc(-100% + ${element.width}px)); } 
+                }
+                .animate-rock { 
+                    display: inline-block; 
+                    animation: rock 6s linear infinite alternate; 
+                }
+            `}</style>
+        </div>
+    );
+};
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   project,
@@ -31,31 +83,40 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [elementStart, setElementStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
-  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
-  
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Trigger simulated "Volume Change" state if simulation volume updates
-  // In a real app we'd have a timer, here we just use the 'auto' mode check
-  // For Editor visualization: If mouse is hovering canvas, we show Track Progress. 
-  // If we want to preview Volume overlay, we can check sim.volumeLastChanged but for Editor ease
-  // let's just show Volume Overlay if the element is selected and mode is Auto.
-  
   const getFontCss = (fontId: string) => {
-      const match = fontId.match(/^(\d+)-(.+?)(?:\.fnt)?$/);
+      let match = fontId ? fontId.match(/^(\d+)-(.+?)(?:\.fnt)?$/) : null;
       let size = 12;
       let family = 'Nimbus';
       
       if (match) {
           size = parseInt(match[1]);
           family = match[2];
+      } else if (fontId && fontId !== '-') {
+          const sizeMatch = fontId.match(/(\d+)/);
+          if (sizeMatch) size = parseInt(sizeMatch[1]);
+          const nameMatch = fontId.replace(/\d+/g, '').replace(/[-.]/g, ' ').replace('fnt', '').trim();
+          if (nameMatch) family = nameMatch;
+      } else {
+           if (project.settings.uiFont) {
+               const pMatch = project.settings.uiFont.match(/^(\d+)-(.+?)(?:\.fnt)?$/);
+               if (pMatch) { size = parseInt(pMatch[1]); family = pMatch[2]; }
+           }
       }
+      
+      // Clean up family name for lookup (remove Bold, Italic, integers)
+      const cleanFamily = family.replace(/(Bold|Italic|Oblique|-|\d+)/gi, '').toLowerCase();
+      
       let cssFamily = 'sans-serif';
-      const stdFont = ROCKBOX_STANDARD_FONTS[family];
-      if (stdFont) {
-          if (stdFont.type === 'mono') cssFamily = '"JetBrains Mono", monospace';
-          else if (stdFont.type === 'serif') cssFamily = '"Times New Roman", serif';
-          else if (stdFont.type === 'pixel') cssFamily = '"Courier New", monospace';
+      // Find matching standard font key
+      const stdFontKey = Object.keys(ROCKBOX_STANDARD_FONTS).find(k => k.toLowerCase().replace(/-/g,'').includes(cleanFamily) || cleanFamily.includes(k.toLowerCase().replace(/-/g,'')));
+      const resolvedFont = stdFontKey ? ROCKBOX_STANDARD_FONTS[stdFontKey] : null;
+
+      if (resolvedFont) {
+          if (resolvedFont.type === 'mono') cssFamily = '"JetBrains Mono", monospace';
+          else if (resolvedFont.type === 'serif') cssFamily = '"Times New Roman", serif';
+          else if (resolvedFont.type === 'pixel') cssFamily = '"Courier New", monospace';
           else cssFamily = '"Inter", sans-serif';
       }
       return {
@@ -127,16 +188,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   };
 
   const renderImageElement = (el: ImageElement) => {
+      // 1. Album Art
       if (el.name === 'Album Art' || el.filename === 'cover_placeholder.bmp') {
           return <img src={song.albumArt || el.src} alt="Art" className="w-full h-full object-cover pointer-events-none select-none" draggable={false} />;
       }
 
+      // 2. Battery Strip Legacy
       if (el.imageType === 'battery_strip' || el.filename.startsWith('batt_')) {
-          // Charging Override
           if (sim.isCharging) {
              return <img src={GRAPHIC_ASSETS.CHARGING_ICON.src} className="w-full h-full object-contain" alt="Charging" />;
           }
-
           const frames = el.frameCount || 10;
           let frameIndex = Math.floor(sim.batteryLevel / (100 / frames));
           if (frameIndex >= frames) frameIndex = frames - 1;
@@ -147,40 +208,65 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
              </div>
           );
       }
+
+      // 3. Sprite Sheet / Strip Handling (General)
+      if (el.spriteConfig) {
+          const { offsetX, offsetY } = el.spriteConfig;
+          // To ensure the image is displayed even if it's a strip and viewport is weird, 
+          // we use a container that crops, but we DON'T force object-contain on the img.
+          // We let the img be its natural size and shift it.
+          return (
+              <div className="w-full h-full overflow-hidden relative pointer-events-none">
+                  <img 
+                    src={el.src} 
+                    alt={el.name}
+                    className="max-w-none absolute"
+                    style={{ 
+                        left: `-${offsetX}px`, 
+                        top: `-${offsetY}px`
+                    }}
+                    draggable={false} 
+                  />
+              </div>
+          );
+      }
+
       return <img src={el.src} alt={el.name} className="w-full h-full object-contain pointer-events-none select-none" draggable={false} />;
   };
 
   const renderProgressBar = (el: ProgressBarElement) => {
-      // Determine what we are showing
       const isVolume = el.pbMode === 'volume' || (el.pbMode === 'auto' && project.selectedElementIds.includes(el.id)); 
-      // ^ In Editor, show Volume overlay if element is selected for preview purposes, otherwise Track.
       
       const percent = isVolume 
-        ? Math.abs(sim.volume + 60) / 60 * 100 // Map -60dB...0dB to 0..100 roughly
+        ? Math.abs(sim.volume + 60) / 60 * 100 
         : (song.currentSec / song.totalSec) * 100;
         
       const clampedPercent = Math.min(100, Math.max(0, percent));
 
+      if (el.pbStyle === 'image' && el.backgroundImage) {
+           return (
+               <div className="w-full h-full relative overflow-hidden bg-transparent">
+                   <div className="w-full h-full absolute top-0 left-0 bg-transparent" />
+                   <div className="h-full absolute top-0 left-0 overflow-hidden" style={{ width: `${clampedPercent}%` }}>
+                       <img src={el.backgroundImage} className="max-w-none h-full" alt="PB" />
+                   </div>
+               </div>
+           );
+      }
+
       if (el.pbStyle === 'adwaita') {
           const { BACKDROP, ICONS, SLIDER_BG, SLIDER_FG } = GRAPHIC_ASSETS.VOLUME_OVERLAY;
-          // Retrieve actual assets or fallback
           const backdropSrc = project.assets[BACKDROP.filename] || BACKDROP.src;
           const sliderBgSrc = project.assets[SLIDER_BG.filename] || SLIDER_BG.src;
           const sliderFgSrc = project.assets[SLIDER_FG.filename] || SLIDER_FG.src;
           const iconsSrc = project.assets[ICONS.filename] || ICONS.src;
           
-          // Adwaita style is strictly a volume overlay structure
-          // It expects specific relative positioning.
           return (
               <div className="w-full h-full relative flex items-center justify-center">
                   <img src={backdropSrc} className="absolute inset-0 w-full h-full" alt="bg" />
-                  
-                  {/* Icon */}
                   <div className="absolute left-[12px] top-[10px] w-[24px] h-[21px] overflow-hidden">
                       <img src={iconsSrc} className="absolute top-0 left-0 w-full max-w-none" style={{ top: sim.volume > -10 ? '-63px' : sim.volume > -30 ? '-42px' : sim.volume > -60 ? '-21px' : '0' }} />
                   </div>
-
-                  {/* Slider Track */}
                   <div className="absolute left-[46px] top-[20px] w-[117px] h-[5px]">
                       <img src={sliderBgSrc} className="absolute inset-0 w-full h-full" />
                       <div className="absolute top-0 left-0 h-full overflow-hidden" style={{ width: `${clampedPercent}%` }}>
@@ -212,14 +298,11 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       );
   };
 
-  // --- SYSTEM UI OVERLAYS ---
   const SystemOverlay = () => {
       const { settings } = project;
       const fg = settings.foregroundColor || '#ffffff';
-      
       return (
           <>
-              {/* Native Status Bar */}
               {settings.statusBarTop && (
                   <div 
                       className="absolute top-0 left-0 flex items-center justify-between px-1 z-30 font-mono text-[9px] pointer-events-none border-b border-black/10"
@@ -230,34 +313,14 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         backgroundColor: 'rgba(0,0,0,0.2)' 
                       }}
                   >
-                      {/* Left: Play State (Simulated) */}
                       <span className="font-bold">▶</span>
-                      
-                      {/* Center: Title/Time (Simulated) */}
                       <span className="opacity-80">12:30</span>
-
-                      {/* Right: Vol / Batt */}
                       <div className="flex gap-2 items-center">
-                          {/* Volume */}
-                          {settings.volumeDisplay === 'numeric' ? (
-                              <span>-20dB</span>
-                          ) : (
-                              <span className="text-[10px]">🔊</span>
-                          )}
-                          
-                          {/* Battery */}
-                          {settings.batteryDisplay === 'numeric' ? (
-                              <span>85%</span>
-                          ) : (
-                              <div className="w-4 h-2 border border-current relative flex p-[1px]">
-                                  <div className="h-full bg-current w-3/4"></div>
-                              </div>
-                          )}
+                          {settings.volumeDisplay === 'numeric' ? (<span>-20dB</span>) : (<span className="text-[10px]">🔊</span>)}
+                          {settings.batteryDisplay === 'numeric' ? (<span>85%</span>) : (<div className="w-4 h-2 border border-current relative flex p-[1px]"><div className="h-full bg-current w-3/4"></div></div>)}
                       </div>
                   </div>
               )}
-
-              {/* Native Scrollbar (Only on menus usually, but visualized here for feedback) */}
               {settings.scrollbar !== 'off' && activeScreen !== 'wps' && (
                   <div style={{
                       position: 'absolute',
@@ -271,7 +334,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                       borderLeft: settings.scrollbar === 'right' ? '1px solid rgba(0,0,0,0.1)' : 'none',
                       borderRight: settings.scrollbar === 'left' ? '1px solid rgba(0,0,0,0.1)' : 'none'
                   }}>
-                      {/* Thumb */}
                       <div style={{ width: '100%', height: '40px', backgroundColor: fg, opacity: 0.6, marginTop: '20px' }}></div>
                   </div>
               )}
@@ -285,7 +347,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             {project.settings.backdrop && project.assets[project.settings.backdrop] && (
                  <img src={project.assets[project.settings.backdrop]} className="absolute top-0 left-0 w-full h-full object-cover pointer-events-none opacity-100" alt="Backdrop" />
             )}
-            
             {activeScreen === 'usb' && !project.settings.backdrop && (
                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30"><span className="text-4xl font-bold text-gray-500">USB MODE</span></div>
             )}
@@ -304,34 +365,17 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                         style={{ left: el.x, top: el.y, width: el.width, height: el.height, cursor: el.locked ? 'default' : 'move', opacity: isConditionMet ? 1 : 0.2 }}
                     >
                         {el.type === ElementType.TEXT && (
-                            <div className="w-full h-full overflow-hidden relative">
-                                <div 
-                                    className={`whitespace-nowrap ${(el as any).scroll ? 'animate-rock' : ''}`}
-                                    style={{
-                                        color: (el as any).color,
-                                        textAlign: (el as any).align,
-                                        lineHeight: '1.2',
-                                        width: (el as any).scroll ? 'max-content' : '100%',
-                                        ...getFontCss((el as any).fontId)
-                                    }}
-                                >
-                                    {parseRockboxString((el as any).content, sim, song)}
-                                </div>
-                                <style>{`
-                                    @keyframes rock { 
-                                        0%, 25% { transform: translateX(0); } 
-                                        75%, 100% { transform: translateX(-50%); } 
-                                    }
-                                    .animate-rock { 
-                                        display: inline-block; 
-                                        min-width: 100%;
-                                        animation: rock 4s ease-in-out infinite alternate; 
-                                    }
-                                `}</style>
-                            </div>
+                            <RockboxTextElement 
+                                element={el as TextElement} 
+                                sim={sim} 
+                                song={song} 
+                                style={{}} 
+                                fontCss={getFontCss((el as any).fontId)}
+                            />
                         )}
                         
                         {el.type === ElementType.RECT && <div className="w-full h-full" style={{ backgroundColor: (el as any).color }} />}
+                        {el.type === ElementType.TOUCH_REGION && <div className="w-full h-full border border-red-500 bg-red-500/10 flex items-center justify-center"><span className="text-[9px] text-red-500 font-bold bg-white/50 px-1">TOUCH</span></div>}
                         {el.type === ElementType.PROGRESS_BAR && renderProgressBar(el as ProgressBarElement)}
                         {el.type === ElementType.IMAGE && renderImageElement(el as ImageElement)}
                         
@@ -360,7 +404,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     </div>
                 );
             })}
-            
             <SystemOverlay />
         </div>
         {showGuides && <div className="absolute inset-0 pointer-events-none opacity-50"><div className="absolute top-0 bottom-0 left-1/2 border-l border-cyan-400 border-dashed" /><div className="absolute left-0 right-0 top-1/2 border-t border-cyan-400 border-dashed" /></div>}

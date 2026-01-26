@@ -6,7 +6,8 @@ export enum ElementType {
   RECT = 'rect',
   IMAGE = 'image',
   VIEWPORT = 'viewport',
-  PROGRESS_BAR = 'progress_bar'
+  PROGRESS_BAR = 'progress_bar',
+  TOUCH_REGION = 'touch_region'
 }
 
 export type ScreenType = 'wps' | 'sbs' | 'fms' | 'usb';
@@ -53,6 +54,15 @@ export interface ImageElement extends BaseElement {
   imageType?: 'static' | 'battery_strip' | 'volume_strip' | 'shuffle_icon' | 'repeat_icon';
   frameCount?: number; // How many frames in the strip?
   preloadId?: string; // A, B, C... assigned during compile
+  
+  // Sprite Sheet Support
+  spriteConfig?: {
+      offsetX: number;
+      offsetY: number;
+      count: number;
+      frameWidth?: number;
+      frameHeight?: number;
+  };
 }
 
 export interface ProgressBarElement extends BaseElement {
@@ -60,7 +70,8 @@ export interface ProgressBarElement extends BaseElement {
   foreColor: string;
   backColor: string;
   pbMode?: 'track' | 'volume' | 'auto'; // Auto = Volume Overlay on change
-  pbStyle?: 'flat' | 'rounded' | 'segmented' | 'adwaita';
+  pbStyle?: 'flat' | 'rounded' | 'segmented' | 'adwaita' | 'image';
+  backgroundImage?: string; // For %pv(x,y,w,h,img)
 }
 
 export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarElement | BaseElement;

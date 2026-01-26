@@ -5,6 +5,111 @@ import { GRAPHIC_ASSETS } from '../constants';
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex ? hex.replace('#', '') : 'FFFFFF';
 
+/**
+ * Compiles a single WpsElement into Rockbox tag string
+ */
+const compileElement = (el: WpsElement, safeName: string): string => {
+    let code = ``;
+    
+    // 1. Auto Mode Progress Bar Special Case
+    if (el.type === ElementType.PROGRESS_BAR && (el as ProgressBarElement).pbMode === 'auto') {
+        const pb = el as ProgressBarElement;
+        const vId = `vol_${el.id.substr(0,4)}`;
+        const pId = `trk_${el.id.substr(0,4)}`;
+        
+        code += `\n# Auto Progress Bar (Volume Overlay)\n`;
+        code += `%?mv(1)<%Vd(${vId})|%Vd(${pId})>\n`;
+        
+        // Track Layer
+        code += `%Vl(${pId},${el.x},${el.y},${el.width},${el.height},-)\n`;
+        if (pb.pbStyle === 'flat' || pb.pbStyle === 'rounded') {
+            code += `%Vf(${toRbHex(pb.foreColor)})\n%Vb(${toRbHex(pb.backColor)})\n%pb(0,0,${el.width},${el.height},-)\n`;
+        } else {
+             code += `%Vf(${toRbHex(pb.foreColor)})\n%pb(0,0,${el.width},${el.height},-)\n`;
+        }
+
+        // Volume Layer
+        code += `%Vl(${vId},${el.x},${el.y},${el.width},${el.height},-)\n`;
+        if (pb.pbStyle === 'adwaita') {
+             code += `%xd(VolumeBackdrop)\n`;
+             code += `%?if(%pv, =, -90)<%xd(VolumeIcons,1)>\n`;
+             code += `%?and(%if(%pv, <=, -60),%if(%pv, >, -90))<%xd(VolumeIcons,2)>\n`;
+             code += `%?and(%if(%pv, <=, -30),%if(%pv, >, -60))<%xd(VolumeIcons,3)>\n`;
+             code += `%?if(%pv, >, -30)<%xd(VolumeIcons,4)>\n`;
+             code += `%Vl(slider_sub,46,20,117,5,-)\n%xd(VolumeSliderBackdrop)\n%pv(0,0,117,5,VolumeSlider.bmp)\n`;
+        } else {
+             code += `%Vf(${toRbHex(pb.foreColor)})\n%Vb(${toRbHex(pb.backColor)})\n%pv(0,0,${el.width},${el.height},-)\n`;
+        }
+        return code;
+    }
+
+    // 2. Standard Elements
+    code += `\n# Element: ${el.name}\n`;
+    
+    if (el.touchAction) {
+        code += `%T(${el.x},${el.y},${el.width},${el.height},${el.touchAction})\n`;
+    }
+
+    if (el.type === ElementType.VIEWPORT) {
+        code += `%Vi(${el.x},${el.y},${el.width},${el.height}, -)\n`;
+        return code; 
+    }
+
+    code += `%V(${el.x},${el.y},${el.width},${el.height},-)\n`;
+
+    if (el.condition) code += `${el.condition}<`; 
+
+    switch (el.type) {
+      case ElementType.RECT:
+        code += `%Vf(${toRbHex((el as RectElement).color)})\n`; 
+        code += `%Cl(0,0,${el.width},${el.height},c,c)\n`; 
+        break;
+
+      case ElementType.TEXT:
+        const textEl = el as TextElement;
+        code += `%Vf(${toRbHex(textEl.color)})\n`;
+        let alignTag = '%ac';
+        if (textEl.align === 'left') alignTag = '%al';
+        if (textEl.align === 'right') alignTag = '%ar';
+        
+        let content = textEl.content;
+        if (textEl.category === 'volume_text') {
+            if (textEl.volumeFormat === 'db') content = '%pv dB';
+            else if (textEl.volumeFormat === 'percent') content = '%pv%';
+            else content = '%pv'; 
+        }
+
+        code += `${alignTag}${content}\n`;
+        break;
+
+      case ElementType.PROGRESS_BAR:
+        const pb = el as ProgressBarElement;
+        code += `%Vf(${toRbHex(pb.foreColor)})\n`;
+        code += `%Vb(${toRbHex(pb.backColor)})\n`;
+        if (pb.pbMode === 'volume') {
+            code += `%pv(0,0,${el.width},${el.height},-)\n`;
+        } else {
+            code += `%pb(0,0,${el.width},${el.height},-)\n`;
+        }
+        break;
+        
+      case ElementType.IMAGE:
+        const imgEl = el as ImageElement;
+        if (imgEl.filename) {
+             if (imgEl.imageType === 'battery_strip' && imgEl.preloadId) {
+                 const frames = imgEl.frameCount || 10;
+                 code += `%xd(${imgEl.preloadId}, %bl, ${frames})\n`;
+             } else {
+                 code += `%x|${safeName}_img/${imgEl.filename}|\n`;
+             }
+        }
+        break;
+    }
+
+    if (el.condition) code += `|>\n`; 
+    return code;
+};
+
 export const compileScreen = (project: ProjectState, screen: ScreenType): string => {
   const { elements, settings } = project;
   const safeName = settings.name.replace(/\s+/g, '_').toLowerCase();
@@ -40,130 +145,16 @@ export const compileScreen = (project: ProjectState, screen: ScreenType): string
   );
   if (adwaitaElements.length > 0) {
       const { VOLUME_OVERLAY } = GRAPHIC_ASSETS;
-      // We assume assets are in the map, so we just reference them relative to theme folder
       code += `%xl|VolumeBackdrop|${safeName}_img/${VOLUME_OVERLAY.BACKDROP.filename}|0|0|\n`;
-      code += `%xl|VolumeIcons|${safeName}_img/${VOLUME_OVERLAY.ICONS.filename}|0|0|4\n`; // 4 tiles
+      code += `%xl|VolumeIcons|${safeName}_img/${VOLUME_OVERLAY.ICONS.filename}|0|0|4\n`; 
       code += `%xl|VolumeSliderBackdrop|${safeName}_img/${VOLUME_OVERLAY.SLIDER_BG.filename}|0|0|\n`;
       code += `%xl|VolumeSlider|${safeName}_img/${VOLUME_OVERLAY.SLIDER_FG.filename}|0|0|\n`;
   }
 
+  // Compile Elements
   elements.filter(el => el.screen === screen).forEach(el => {
     if (!el.visible) return;
-    
-    // Check for special "Auto Mode" Progress Bar which compiles into a conditional structure
-    if (el.type === ElementType.PROGRESS_BAR && (el as ProgressBarElement).pbMode === 'auto') {
-        const pb = el as ProgressBarElement;
-        const vId = `vol_${el.id.substr(0,4)}`;
-        const pId = `trk_${el.id.substr(0,4)}`;
-        
-        // 1. Conditional Logic
-        code += `\n# Auto Progress Bar (Volume Overlay)\n`;
-        code += `%?mv(1)<%Vd(${vId})|%Vd(${pId})>\n`;
-        
-        // 2. Define Track Progress Layer (Standard PB)
-        code += `%Vl(${pId},${el.x},${el.y},${el.width},${el.height},-)\n`;
-        if (pb.pbStyle === 'flat' || pb.pbStyle === 'rounded') {
-            code += `%Vf(${toRbHex(pb.foreColor)})\n`;
-            code += `%Vb(${toRbHex(pb.backColor)})\n`;
-            code += `%pb(0,0,${el.width},${el.height},-)\n`;
-        } else {
-             // Fallback for custom styles in track mode if needed, for now just standard
-             code += `%Vf(${toRbHex(pb.foreColor)})\n`;
-             code += `%pb(0,0,${el.width},${el.height},-)\n`;
-        }
-
-        // 3. Define Volume Layer (Adwaita Style or Standard)
-        code += `%Vl(${vId},${el.x},${el.y},${el.width},${el.height},-)\n`;
-        
-        if (pb.pbStyle === 'adwaita') {
-             // Adwaitapod Logic
-             // Note: Adwaita has specific offsets relative to the element box. 
-             // We assume element width/height is big enough (180x45)
-             code += `%xd(VolumeBackdrop)\n`;
-             // Icons logic
-             code += `%?if(%pv, =, -90)<%xd(VolumeIcons,1)>\n`;
-             code += `%?and(%if(%pv, <=, -60),%if(%pv, >, -90))<%xd(VolumeIcons,2)>\n`;
-             code += `%?and(%if(%pv, <=, -30),%if(%pv, >, -60))<%xd(VolumeIcons,3)>\n`;
-             code += `%?if(%pv, >, -30)<%xd(VolumeIcons,4)>\n`;
-             // Slider Logic
-             // 46, 20 are offsets inside the 180x45 box for the slider
-             code += `%Vl(slider_sub,46,20,117,5,-)\n`; 
-             code += `%xd(VolumeSliderBackdrop)\n`;
-             code += `%pv(0,0,117,5,VolumeSlider.bmp)\n`; // Use image as slider bar
-             // Note: %pv with image argument fills bar with image
-        } else {
-             // Standard Volume Bar
-             code += `%Vf(${toRbHex(pb.foreColor)})\n`;
-             code += `%Vb(${toRbHex(pb.backColor)})\n`;
-             code += `%pv(0,0,${el.width},${el.height},-)\n`;
-        }
-        return; // Skip standard processing
-    }
-
-    code += `\n# Element: ${el.name}\n`;
-    
-    if (el.touchAction) {
-        code += `%T(${el.x},${el.y},${el.width},${el.height},${el.touchAction})\n`;
-    }
-
-    if (el.type === ElementType.VIEWPORT) {
-        code += `%Vi(${el.x},${el.y},${el.width},${el.height}, -)\n`;
-        return; 
-    }
-
-    code += `%V(${el.x},${el.y},${el.width},${el.height},-)\n`;
-
-    if (el.condition) code += `${el.condition}<`; 
-
-    switch (el.type) {
-      case ElementType.RECT:
-        code += `%Vf(${toRbHex((el as RectElement).color)})\n`; 
-        code += `%Cl(0,0,${el.width},${el.height},c,c)\n`; 
-        break;
-
-      case ElementType.TEXT:
-        const textEl = el as TextElement;
-        code += `%Vf(${toRbHex(textEl.color)})\n`;
-        let alignTag = '%ac';
-        if (textEl.align === 'left') alignTag = '%al';
-        if (textEl.align === 'right') alignTag = '%ar';
-        
-        // Handle specific Volume Text formats
-        let content = textEl.content;
-        if (textEl.category === 'volume_text') {
-            if (textEl.volumeFormat === 'db') content = '%pv dB'; // Rockbox defaults %pv to dB usually
-            else if (textEl.volumeFormat === 'percent') content = '%pv%'; // Requires specific theme setting usually
-            else content = '%pv'; 
-        }
-
-        code += `${alignTag}${content}\n`;
-        break;
-
-      case ElementType.PROGRESS_BAR:
-        const pb = el as ProgressBarElement;
-        code += `%Vf(${toRbHex(pb.foreColor)})\n`;
-        code += `%Vb(${toRbHex(pb.backColor)})\n`;
-        if (pb.pbMode === 'volume') {
-            code += `%pv(0,0,${el.width},${el.height},-)\n`;
-        } else {
-            code += `%pb(0,0,${el.width},${el.height},-)\n`;
-        }
-        break;
-        
-      case ElementType.IMAGE:
-        const imgEl = el as ImageElement;
-        if (imgEl.filename) {
-             if (imgEl.imageType === 'battery_strip' && imgEl.preloadId) {
-                 const frames = imgEl.frameCount || 10;
-                 code += `%xd(${imgEl.preloadId}, %bl, ${frames})\n`;
-             } else {
-                 code += `%x|${safeName}_img/${imgEl.filename}|\n`;
-             }
-        }
-        break;
-    }
-
-    if (el.condition) code += `|>\n`; 
+    code += compileElement(el, safeName);
   });
 
   return code;
@@ -200,13 +191,10 @@ backdrop: -
   // New Options
   if (s.iconset) cfg += `iconset: ${s.iconset}\n`;
   if (s.viewersIconset) cfg += `viewers iconset: ${s.viewersIconset}\n`;
-  
   if (s.scrollSpeed) cfg += `scroll speed: ${s.scrollSpeed}\n`;
   if (s.scrollDelay) cfg += `scroll delay: ${s.scrollDelay}\n`;
   if (s.scrollStep) cfg += `scroll step: ${s.scrollStep}\n`;
-  
   if (s.backlightOnHold) cfg += `backlight on button hold: ${s.backlightOnHold}\n`;
-  
   if (s.qsTop) cfg += `qs top: ${s.qsTop}\n`;
   if (s.qsBottom) cfg += `qs bottom: ${s.qsBottom}\n`;
   if (s.qsLeft) cfg += `qs left: ${s.qsLeft}\n`;

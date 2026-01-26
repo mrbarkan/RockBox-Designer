@@ -11,6 +11,18 @@ export const parseRockboxString = (
 ): string => {
     let output = text;
 
+    // Pre-process: Handle %t(time) tags (Alternating Sublines)
+    // For now, we just strip the tag and show the first subline if multiple exist, 
+    // or just clean up the syntax so it displays readable text.
+    // Example: "%t(5)Title;%t(5)Artist" -> "Title" (or ideally cycle)
+    if (output.includes('%t')) {
+        // Simple regex to remove %t(...)
+        output = output.replace(/%t\(\d+(\.\d+)?\)/g, '');
+        // Split by semicolon and take the first part to avoid clutter
+        const parts = output.split(';');
+        if (parts.length > 0) output = parts[0];
+    }
+
     // 1. Basic Metadata Tags
     output = output.replace(/%s/g, meta.title);
     output = output.replace(/%a/g, meta.artist);
