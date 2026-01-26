@@ -179,7 +179,11 @@ export const DEFAULT_SIMULATION: SimulationState = {
   playStatus: 'play',
   currentTime: "12:45",
   shuffle: false,
-  repeat: 'off'
+  repeat: 'off',
+  externalPower: false,
+  volumeLastChanged: 0,
+  diskActivity: false,
+  sublineCycle: 0
 };
 
 // "Modern Dark" Theme (Adwaitapod Inspired)

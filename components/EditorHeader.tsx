@@ -18,6 +18,8 @@ interface EditorHeaderProps {
     setShowGrid: (v: boolean) => void;
     zoom: number;
     setZoom: React.Dispatch<React.SetStateAction<number>>;
+    debugMode: boolean;
+    setDebugMode: (v: boolean) => void;
 }
 
 const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: string, activeId: ScreenType, onClick: (id: ScreenType) => void }) => (
@@ -26,7 +28,8 @@ const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: st
 
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
     project, user, onLogout, activeScreen, setActiveScreen, selectedElement, rightPanelMode,
-    onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom
+    onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
+    debugMode, setDebugMode
 }) => {
     return (
         <div className="h-14 metal-gradient flex items-center px-6 justify-between border-b border-black select-none">
@@ -54,6 +57,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                 )}
             </div>
             <div className="flex items-center gap-6 text-xs font-bold text-gray-700">
+                <button 
+                    onClick={() => setDebugMode(!debugMode)} 
+                    className={`px-3 py-1 border border-gray-400 font-mono text-[10px] ${debugMode ? 'bg-magenta-700 text-white border-magenta-900 animate-pulse' : 'bg-gray-200 text-gray-500'}`}
+                >
+                    DEBUG_OVL
+                </button>
                 <button onClick={() => setShowSource(!showSource)} className={`px-4 py-2 border border-gray-400 rounded-full ${showSource ? 'bg-orange-500 text-white border-orange-600' : 'bg-white hover:bg-gray-50'} transition-all`}>SOURCE_EDITOR</button>
                 <label className="flex items-center gap-2 cursor-pointer select-none hover:text-black"><input type="checkbox" checked={showGrid} onChange={e => setShowGrid(e.target.checked)} className="accent-orange-600 w-4 h-4" /> GRID</label>
                 <div className="flex items-center gap-3 border-l border-black/20 pl-6"><span>ZOOM</span><button onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} className="w-6 h-6 bg-white border border-gray-400 flex items-center justify-center hover:bg-gray-100">-</button><span className="w-10 text-center bg-white border border-gray-300 px-2 py-1 font-mono">{Math.round(zoom * 100)}%</span><button onClick={() => setZoom(z => Math.min(3, z + 0.25))} className="w-6 h-6 bg-white border border-gray-400 flex items-center justify-center hover:bg-gray-100">+</button></div>

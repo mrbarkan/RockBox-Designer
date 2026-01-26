@@ -33,7 +33,13 @@ export default function App() {
   const [showCloudProjects, setShowCloudProjects] = useState(false);
 
   const [song, setSong] = useState<SongMetadata>(DEFAULT_SONG);
-  const [sim, setSim] = useState<SimulationState>(DEFAULT_SIMULATION);
+  const [sim, setSim] = useState<SimulationState>({
+      ...DEFAULT_SIMULATION,
+      externalPower: false,
+      volumeLastChanged: 0,
+      diskActivity: false,
+      sublineCycle: 0
+  });
   
   const [activeScreen, setActiveScreen] = useState<ScreenType>('wps');
   const [rightPanelMode, setRightPanelMode] = useState<'inspector' | 'files' | 'settings'>('inspector');
@@ -44,6 +50,7 @@ export default function App() {
   const [showLibModal, setShowLibModal] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   
   const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
   const [zoom, setZoom] = useState(1.5);
@@ -56,6 +63,19 @@ export default function App() {
   const loadProjectInputRef = useRef<HTMLInputElement>(null);
   const importZipInputRef = useRef<HTMLInputElement>(null);
   const globalFontInputRef = useRef<HTMLInputElement>(null);
+
+  // -- Heartbeat for Animation & Timers --
+  useEffect(() => {
+      const interval = setInterval(() => {
+          setSim(prev => ({
+              ...prev,
+              sublineCycle: prev.sublineCycle + 0.1, // Increment 0.1s every 100ms
+              // Also auto-increment song progress if playing
+              currentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+      }, 100);
+      return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
       const session = storageService.getSession();
@@ -75,6 +95,13 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [project.selectedElementIds, project.elements]);
+
+  useEffect(() => {
+      if (project.validationReport && project.validationReport.length > 0) {
+          const msg = `Import Completed with Warnings:\n\n${project.validationReport.join('\n')}`;
+          alert(msg);
+      }
+  }, [project]);
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -346,9 +373,21 @@ export default function App() {
             selectedElement={selectedElement} rightPanelMode={rightPanelMode}
             onAlign={alignElement} showSource={showSource} setShowSource={setShowSource}
             showGrid={showGrid} setShowGrid={setShowGrid} zoom={zoom} setZoom={setZoom}
+            debugMode={debugMode} setDebugMode={setDebugMode}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
-            <EditorCanvas project={project} activeScreen={activeScreen} song={song} sim={sim} scale={zoom} showGrid={showGrid} showGuides={showGuides} onSelectElement={handleSelectElement} onUpdateElement={handleUpdateElement} />
+            <EditorCanvas 
+              project={project} 
+              activeScreen={activeScreen} 
+              song={song} 
+              sim={sim} 
+              scale={zoom} 
+              showGrid={showGrid} 
+              showGuides={showGuides} 
+              debugMode={debugMode}
+              onSelectElement={handleSelectElement} 
+              onUpdateElement={handleUpdateElement} 
+            />
         </div>
         <SimulationPanel sim={sim} meta={song} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
       </div>

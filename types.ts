@@ -26,7 +26,7 @@ export interface BaseElement {
   
   // Rockbox Logic
   category?: string; // e.g. 'id3', 'power', 'rtc' - Defines the "Content Type" dropdown options
-  condition?: string; // e.g. "%?ps" (Shuffle) or "%?mv" (Volume active)
+  condition?: string; // Serialized condition string (e.g. "mp:1 & C:0")
   touchAction?: string; // e.g. "wps_play", "volume_up" for %T tag
 }
 
@@ -62,6 +62,7 @@ export interface ImageElement extends BaseElement {
       count: number;
       frameWidth?: number;
       frameHeight?: number;
+      frameIndex?: number; // Fixed index if set
   };
 }
 
@@ -125,6 +126,7 @@ export interface ProjectState {
   elements: WpsElement[];
   assets: Record<string, string>; // Map filename -> base64
   selectedElementIds: string[];
+  validationReport?: string[]; // Import warnings
 }
 
 // User & Cloud Types
@@ -156,17 +158,39 @@ export interface SongMetadata {
 // Simulation Types
 
 export interface SimulationState {
+  // Core Hardware
   batteryLevel: number; // 0-100
-  volume: number; // -100 to 0 (dB) or arbitrary scale
-  isCharging: boolean;
-  isHold: boolean;
+  isCharging: boolean; // %bc
+  externalPower: boolean; // %bp
+  
+  // Inputs/State
+  volume: number; // -100 to 0 (dB)
+  isHold: boolean; // %mh
   isUsb: boolean;
-  playStatus: 'stop' | 'play' | 'pause' | 'ffwd' | 'rew';
+  
+  // Playback
+  playStatus: 'stop' | 'play' | 'pause' | 'ffwd' | 'rew'; // %mp
+  shuffle: boolean; // %ps
+  repeat: 'off' | 'all' | 'one'; // %mm
+  
+  // Timers & Events for Logic
   currentTime: string; // HH:MM
-  shuffle: boolean;
-  repeat: 'off' | 'all' | 'one';
-  volumeLastChanged?: number; // Timestamp for overlay simulation
+  volumeLastChanged: number; // Timestamp (ms) for %?mv
+  diskActivity: boolean; // %lh
+  sublineCycle: number; // Global counter for %t rotation
 }
+
+// Graphics Pipeline Types
+
+export type RenderOp = 
+  | { type: 'rect', x: number, y: number, w: number, h: number, color: string }
+  | { type: 'text', x: number, y: number, w: number, h: number, text: string, font: string, color: string, align: 'left'|'center'|'right', scroll: boolean, scrollOffset?: number }
+  | { type: 'image', x: number, y: number, w: number, h: number, assetKey: string, sx?: number, sy?: number, sw?: number, sh?: number, opacity?: number }
+  | { type: 'line', x1: number, y1: number, x2: number, y2: number, color: string, width: number }
+  | { type: 'push_clip', x: number, y: number, w: number, h: number }
+  | { type: 'pop_clip' };
+
+export type RenderList = RenderOp[];
 
 // Service / Generator Types
 
