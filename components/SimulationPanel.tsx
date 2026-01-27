@@ -23,19 +23,6 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({ sim, meta, onU
       </div>
   );
 
-  const EnumSelect = ({ label, value, options, onChange }: any) => (
-      <div className="flex flex-col gap-1">
-          <label className="text-[9px] font-bold text-gray-500 uppercase">{label}</label>
-          <select 
-            value={value} 
-            onChange={(e) => onChange(e.target.value)}
-            className="bg-[#111] border border-[#444] text-gray-300 text-[10px] p-1 uppercase"
-          >
-              {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
-          </select>
-      </div>
-  );
-
   return (
     <div className="bg-[#1a1a1a] border-t border-black p-4 grid grid-cols-4 gap-4 text-[10px] text-gray-400 font-mono select-none shadow-[0_-5px_10px_rgba(0,0,0,0.3)] z-10 h-64 overflow-y-auto custom-scrollbar">
       
@@ -65,6 +52,14 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({ sim, meta, onU
                     <option value="one">One</option>
                 </select>
             </div>
+        </div>
+        <div className="mt-2 pt-2 border-t border-[#444]">
+             <label className="text-[9px] font-bold text-gray-500 uppercase">Elapsed / Total</label>
+             <div className="flex gap-2 mt-1">
+                 <input type="number" value={meta.currentSec} onChange={e => onUpdateMeta({ currentSec: parseInt(e.target.value) })} className="w-full bg-black border border-[#444] p-1 text-right" />
+                 <span className="self-center">/</span>
+                 <input type="number" value={meta.totalSec} onChange={e => onUpdateMeta({ totalSec: parseInt(e.target.value) })} className="w-full bg-black border border-[#444] p-1 text-right" />
+             </div>
         </div>
       </div>
 

@@ -18,7 +18,6 @@ const resolveFont = (fontId: string): string => {
         else family = '"Inter", sans-serif';
     }
     
-    // Adjust size slightly as Canvas pixels != Rockbox pixels exactly
     return `${size}px ${family}`;
 };
 
@@ -33,7 +32,11 @@ export const evaluateTheme = (
     const ops: RenderList = [];
     const elements = project.elements.filter(el => el.screen === screen);
     
-    // 1. Draw Backdrop
+    // Evaluator State
+    let currentViewport = { x: 0, y: 0, w: 320, h: 240 };
+    let artClipRect = { x: 0, y: 0, w: 320, h: 240 }; // For %Cl
+
+    // 1. Draw Backdrop (Global)
     if (project.settings.backdrop && project.assets[project.settings.backdrop]) {
         ops.push({
             type: 'image',
@@ -41,16 +44,26 @@ export const evaluateTheme = (
             assetKey: project.settings.backdrop
         });
     } else if (screen === 'usb') {
-        // Default USB BG
         ops.push({ type: 'rect', x: 0, y: 0, w: 320, h: 240, color: '#000000' });
     }
 
-    // 2. Iterate Elements
+    // 2. Iterate Elements with State
     for (const el of elements) {
         if (!el.visible) continue;
         if (!checkCondition(el.condition, sim, song)) continue;
 
         switch (el.type) {
+            case ElementType.VIEWPORT: {
+                // Rockbox %V(x,y,w,h) sets the new drawing region and clips it
+                currentViewport = { x: el.x, y: el.y, w: el.width, h: el.height };
+                ops.push({ 
+                    type: 'set_viewport', 
+                    x: el.x, y: el.y, w: el.width, h: el.height,
+                    clip: true
+                });
+                break;
+            }
+
             case ElementType.RECT: {
                 ops.push({
                     type: 'rect',
@@ -64,21 +77,19 @@ export const evaluateTheme = (
                 const tel = el as TextElement;
                 let text = parseRockboxString(tel.content, sim, song);
                 
-                // Volume Format handling
+                // Special handling for Volume Text to respect format
                 if (tel.category === 'volume_text') {
-                    if (tel.volumeFormat === 'db') text = `${sim.volume}dB`;
-                    else if (tel.volumeFormat === 'percent') {
-                        const pct = Math.round(((sim.volume + 60) / 60) * 100);
-                        text = `${Math.max(0, pct)}%`;
-                    } else {
-                        const vol = Math.round(((sim.volume + 60) / 60) * 100); 
-                        text = `${Math.max(0, vol)}`;
-                    }
+                     if (tel.volumeFormat === 'db') text = `${sim.volume}dB`;
+                     else if (tel.volumeFormat === 'percent') {
+                         const pct = Math.round(((sim.volume + 60) / 60) * 100);
+                         text = `${Math.max(0, pct)}%`;
+                     } else {
+                         const vol = Math.round(((sim.volume + 60) / 60) * 100); 
+                         text = `${Math.max(0, vol)}`;
+                     }
                 }
 
-                // Font Resolver
                 const fontCss = resolveFont(tel.fontId || project.settings.uiFont);
-                
                 ops.push({
                     type: 'text',
                     x: el.x, y: el.y, w: el.width, h: el.height,
@@ -87,7 +98,7 @@ export const evaluateTheme = (
                     color: tel.color,
                     align: tel.align,
                     scroll: !!tel.scroll,
-                    scrollOffset: tel.scroll ? (sim.sublineCycle * 30) : 0 // Simple scroll simulation
+                    scrollOffset: tel.scroll ? (sim.sublineCycle * 30) : 0
                 });
                 break;
             }
@@ -95,13 +106,16 @@ export const evaluateTheme = (
             case ElementType.IMAGE: {
                 const imgEl = el as ImageElement;
                 
-                // Special: Album Art
+                // A) Album Art Handling (%Cl / %Cd logic)
+                // In Rockbox, %Cl defines the rect, %Cd draws.
+                // In IDE, we might have an Image element named 'Album Art' OR separate %Cl/%Cd elements if parsed.
+                // This block handles the high-level IDE 'Album Art' element which acts as both.
                 if (imgEl.name === 'Album Art' || imgEl.category === 'art') {
                     if (song.albumArt) {
                         ops.push({
                             type: 'image',
                             x: el.x, y: el.y, w: el.width, h: el.height,
-                            assetKey: 'ALBUM_ART' // Special key to be resolved by renderer to song.albumArt
+                            assetKey: 'ALBUM_ART' 
                         });
                     } else {
                         // Placeholder
@@ -118,41 +132,45 @@ export const evaluateTheme = (
                     }
                     continue;
                 }
+                
+                // B) Custom Draw (%Cd) specifically
+                if (imgEl.imageType === 'art') {
+                     // This mimics %Cd. It should fill the current viewport or specific rect?
+                     // Usually %Cd doesn't take args, it uses %Cl rect.
+                     // We'll use the element's rect as the %Cl rect.
+                     if (song.albumArt) {
+                        ops.push({ type: 'image', x: el.x, y: el.y, w: el.width, h: el.height, assetKey: 'ALBUM_ART' });
+                     }
+                     continue;
+                }
 
                 if (!imgEl.filename) continue;
 
-                // Handle Sprites / Strips
+                // C) Sprites / Strips
                 let sx = 0, sy = 0, sw = 0, sh = 0;
                 let isSprite = false;
 
-                // A) Battery Strip Legacy Logic
                 if (imgEl.imageType === 'battery_strip' || imgEl.filename.startsWith('batt_')) {
-                    if (sim.isCharging) {
-                        // Render charging icon logic skipped for brevity
-                    } 
                     const frames = imgEl.frameCount || 10;
-                    // Passing `sx` as -1 tells renderer "calculate based on frame index".
                     const frameIdx = Math.min(frames - 1, Math.floor(sim.batteryLevel / (100 / frames)));
                     ops.push({
                         type: 'image',
                         x: el.x, y: el.y, w: el.width, h: el.height,
                         assetKey: imgEl.filename,
-                        sx: -1, sy: frameIdx, sw: frames, sh: 0 // Hack: passing frames in sw, index in sy
+                        sx: -1, sy: frameIdx, sw: frames, sh: 0 
                     });
                     isSprite = true;
                 }
-                
-                // B) Generic Sprite Config (from %xd)
                 else if (imgEl.spriteConfig) {
                     const { offsetX, offsetY, frameIndex, count } = imgEl.spriteConfig;
                     ops.push({
                         type: 'image',
                         x: el.x, y: el.y, w: el.width, h: el.height,
                         assetKey: imgEl.filename,
-                        sx: -2, // Magic code for "Use SpriteConfig"
+                        sx: -2, 
                         sy: frameIndex || 0,
                         sw: count,
-                        sh: offsetX // Hack: Pass offset X
+                        sh: offsetX 
                     });
                     isSprite = true;
                 }
@@ -172,58 +190,53 @@ export const evaluateTheme = (
                 const isVolume = pb.pbMode === 'volume' || (pb.pbMode === 'auto' && project.selectedElementIds.includes(el.id));
                 
                 let percent = 0;
-                if (isVolume) percent = Math.max(0, (sim.volume + 60) / 60); // 0.0 - 1.0
+                if (isVolume) percent = Math.max(0, (sim.volume + 60) / 60); 
                 else percent = song.totalSec > 0 ? (song.currentSec / song.totalSec) : 0;
-                
                 percent = Math.min(1, Math.max(0, percent));
 
-                // Adwaita Style
                 if (pb.pbStyle === 'adwaita') {
                     const { BACKDROP, ICONS, SLIDER_BG, SLIDER_FG } = GRAPHIC_ASSETS.VOLUME_OVERLAY;
-                    
-                    // Center the overlay group relative to element rect
                     const cx = el.x + el.width / 2;
                     const cy = el.y + el.height / 2;
-                    const ox = cx - 90; // 180w
-                    const oy = cy - 22.5; // 45h
+                    const ox = cx - 90; 
+                    const oy = cy - 22.5; 
 
                     ops.push({ type: 'image', x: ox, y: oy, w: 180, h: 45, assetKey: BACKDROP.filename });
                     
-                    // Icon Frame
                     let iconIdx = 0;
                     if (sim.volume > -30) iconIdx = 3;
                     else if (sim.volume > -60) iconIdx = 2;
                     else if (sim.volume > -90) iconIdx = 1;
                     
-                    ops.push({ 
-                        type: 'image', x: ox + 12, y: oy + 10, w: 24, h: 21, assetKey: ICONS.filename,
-                        sx: -1, sy: iconIdx, sw: 4, sh: 0 
-                    });
-
-                    // Slider BG
+                    ops.push({ type: 'image', x: ox + 12, y: oy + 10, w: 24, h: 21, assetKey: ICONS.filename, sx: -1, sy: iconIdx, sw: 4, sh: 0 });
                     ops.push({ type: 'image', x: ox + 46, y: oy + 20, w: 117, h: 5, assetKey: SLIDER_BG.filename });
                     
-                    // Slider FG (Clipped)
-                    ops.push({ type: 'push_clip', x: ox + 46, y: oy + 20, w: 117 * percent, h: 5 });
+                    // Manual Clip for slider
+                    ops.push({ type: 'set_viewport', x: ox + 46, y: oy + 20, w: 117 * percent, h: 5, clip: true });
                     ops.push({ type: 'image', x: ox + 46, y: oy + 20, w: 117, h: 5, assetKey: SLIDER_FG.filename });
-                    ops.push({ type: 'pop_clip' });
+                    // Restore viewport to context (IDE assumes absolute, so we restore full screen clip? 
+                    // Or we just rely on next viewport set? 
+                    // For correctness, we should restore previous viewport. 
+                    // But our simplistic evaluator relies on the list order.
+                    // We'll set viewport back to currentViewport.
+                    ops.push({ type: 'set_viewport', ...currentViewport, clip: true }); 
 
                 } else if (pb.pbStyle === 'image' && pb.backgroundImage) {
-                    ops.push({ type: 'push_clip', x: el.x, y: el.y, w: el.width * percent, h: el.height });
+                    ops.push({ type: 'set_viewport', x: el.x, y: el.y, w: el.width * percent, h: el.height, clip: true });
                     ops.push({ type: 'image', x: el.x, y: el.y, w: el.width, h: el.height, assetKey: pb.backgroundImage });
-                    ops.push({ type: 'pop_clip' });
+                    ops.push({ type: 'set_viewport', ...currentViewport, clip: true });
+
                 } else if (pb.pbStyle === 'segmented') {
                     const segs = 20;
                     const gap = 1;
                     const segW = (el.width - (segs-1)*gap) / segs;
                     const activeSegs = Math.floor(percent * segs);
                     
-                    ops.push({ type: 'rect', x: el.x, y: el.y, w: el.width, h: el.height, color: pb.backColor }); // bg
+                    ops.push({ type: 'rect', x: el.x, y: el.y, w: el.width, h: el.height, color: pb.backColor }); 
                     for(let i=0; i<activeSegs; i++) {
                         ops.push({ type: 'rect', x: el.x + i*(segW+gap), y: el.y, w: segW, h: el.height, color: pb.foreColor });
                     }
                 } else {
-                    // Flat / Rounded
                     ops.push({ type: 'rect', x: el.x, y: el.y, w: el.width, h: el.height, color: pb.backColor });
                     ops.push({ type: 'rect', x: el.x, y: el.y, w: el.width * percent, h: el.height, color: pb.foreColor });
                 }
@@ -231,14 +244,14 @@ export const evaluateTheme = (
             }
             
             case ElementType.TOUCH_REGION:
-                // Visual debug for touch regions
-                ops.push({ type: 'rect', x: el.x, y: el.y, w: el.width, h: el.height, color: 'rgba(255, 0, 0, 0.1)' });
+                ops.push({ type: 'debug_rect', x: el.x, y: el.y, w: el.width, h: el.height, label: 'TOUCH' });
                 break;
         }
     }
 
-    // 3. System Overlay (Status Bar)
+    // 3. System Overlay
     if (project.settings.statusBarTop) {
+        ops.push({ type: 'set_viewport', x: 0, y: 0, w: 320, h: 14, clip: false });
         ops.push({ type: 'rect', x: 0, y: 0, w: 320, h: 14, color: 'rgba(0,0,0,0.2)' });
         ops.push({ type: 'line', x1: 0, y1: 14, x2: 320, y2: 14, color: 'rgba(0,0,0,0.1)', width: 1 });
         ops.push({ type: 'text', x: 2, y: 1, w: 20, h: 12, text: '▶', font: 'bold 9px monospace', color: project.settings.foregroundColor, align: 'left', scroll: false });
@@ -259,27 +272,26 @@ export const renderToCanvas = (
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.textBaseline = 'top';
     
-    // Initial state
+    // Global State
     ctx.save(); 
 
     for (const op of ops) {
-        if (op.type === 'push_clip') {
-            ctx.save(); // Save before clipping so we can restore to unclipped
-            ctx.beginPath();
-            ctx.rect(op.x, op.y, op.w, op.h);
-            ctx.clip();
+        if (op.type === 'set_viewport') {
+            // Restore to clear previous clip/transform
+            ctx.restore(); 
+            ctx.save();
+            
+            if (op.clip) {
+                ctx.beginPath();
+                ctx.rect(op.x, op.y, op.w, op.h);
+                ctx.clip();
+            }
+            // Note: We don't translate(op.x, op.y) because current Evaluator assumes Absolute coordinates.
+            // If Evaluator used relative, we would translate here.
             continue;
         }
 
-        if (op.type === 'pop_clip') {
-            ctx.restore(); // Undo the last push_clip
-            continue;
-        }
-
-        // For drawing ops, we might want local state (color/font)
-        // But we don't want to break the clip stack.
-        // So we save, draw, restore.
-        ctx.save();
+        ctx.save(); // Local op state
 
         switch (op.type) {
             case 'rect':
@@ -294,6 +306,12 @@ export const renderToCanvas = (
                 ctx.lineTo(op.x2, op.y2);
                 ctx.stroke();
                 break;
+            case 'debug_rect':
+                 ctx.strokeStyle = 'red';
+                 ctx.lineWidth = 1;
+                 ctx.setLineDash([2, 2]);
+                 ctx.strokeRect(op.x, op.y, op.w, op.h);
+                 break;
             case 'text':
                 ctx.font = op.font;
                 ctx.fillStyle = op.color;
@@ -302,7 +320,7 @@ export const renderToCanvas = (
                 if (op.align === 'right') tx = op.x + op.w;
                 ctx.textAlign = op.align;
                 
-                // Internal Text Clip (Standard Rockbox behavior: text doesn't overflow its box)
+                // Implicit Text Clipping (Rockbox standard)
                 ctx.beginPath();
                 ctx.rect(op.x, op.y, op.w, op.h);
                 ctx.clip();
@@ -326,6 +344,8 @@ export const renderToCanvas = (
                 if (img) {
                     if (op.sx !== undefined) {
                         let srcX = 0, srcY = 0, srcW = img.naturalWidth, srcH = img.naturalHeight;
+                        
+                        // Sprite Logic mapped from Evaluator
                         if (op.sx === -1) { // Battery
                             const frames = op.sw!; const idx = op.sy!;
                             srcW = img.naturalWidth / frames; srcX = srcW * idx;
@@ -335,7 +355,7 @@ export const renderToCanvas = (
                         } else {
                             srcX = op.sx; srcY = op.sy!; srcW = op.sw!; srcH = op.sh!;
                         }
-                        // Check bounds to prevent index size error
+                        
                         if (srcX >= 0 && srcX < img.naturalWidth) {
                              const drawW = Math.min(srcW, img.naturalWidth - srcX);
                              ctx.drawImage(img, srcX, srcY, drawW, srcH, op.x, op.y, op.w, op.h);
@@ -346,8 +366,8 @@ export const renderToCanvas = (
                 }
                 break;
         }
-        ctx.restore(); // Restore local draw state
+        ctx.restore(); // Restore local op state
     }
     
-    ctx.restore(); // Restore initial state
+    ctx.restore(); // Restore global
 }

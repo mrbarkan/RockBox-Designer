@@ -51,7 +51,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           for (const [name, base64] of Object.entries(project.assets)) {
               if (!newCache[name]) {
                   const img = new Image();
-                  img.src = base64;
+                  img.src = base64 as string;
                   await new Promise(r => img.onload = r);
                   newCache[name] = img;
                   changed = true;

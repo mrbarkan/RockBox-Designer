@@ -3,11 +3,6 @@ import { SimulationState, SongMetadata } from '../types';
 
 /**
  * Evaluates a serialized condition string against the current SimulationState.
- * Condition format: "tag:index & tag2:index"
- * Examples: 
- *  "mp:1" (Play status is Play)
- *  "mp:1 & ps:0" (Play status Play AND Shuffle Off)
- *  "mv(2.5):0" (Momentary Volume logic)
  */
 export const checkCondition = (condition: string | undefined, sim: SimulationState, meta: SongMetadata): boolean => {
     if (!condition) return true;
@@ -21,13 +16,12 @@ export const checkCondition = (condition: string | undefined, sim: SimulationSta
         const targetIndex = parseInt(targetIndexStr);
 
         // 1. Momentary Volume: %?mv(x)
-        // Syntax stored as "mv(x):0" where 0 is the "active" branch usually
         if (tagRaw.startsWith('mv(')) {
             const match = tagRaw.match(/mv\(([\d.]+)\)/);
             if (match) {
                 const durationSec = parseFloat(match[1]);
                 const elapsed = (Date.now() - sim.volumeLastChanged) / 1000;
-                // Branch 0 is "Active", Branch 1 is "Inactive" (usually empty)
+                // Branch 0 is "Active"
                 const isActive = elapsed < durationSec;
                 if (targetIndex === 0 && !isActive) return false;
                 if (targetIndex === 1 && isActive) return false;
@@ -56,7 +50,7 @@ export const checkCondition = (condition: string | undefined, sim: SimulationSta
             continue;
         }
 
-        // 5. Battery Power (%bp) - 0: Battery, 1: External
+        // 5. Battery Power (%bp)
         if (tagRaw === 'bp') {
             const val = sim.externalPower ? 1 : 0;
             if (val !== targetIndex) return false;
@@ -86,48 +80,21 @@ export const checkCondition = (condition: string | undefined, sim: SimulationSta
 
         // 9. Album Art Present (%C)
         if (tagRaw === 'C') {
-            // Logic: 0 = No Art, 1 = Has Art
             const hasArt = !!meta.albumArt && meta.albumArt.length > 0;
             const val = hasArt ? 1 : 0;
             if (val !== targetIndex) return false;
             continue;
         }
 
-        // 10. Battery Level Logic (%bl) - Usually integer ranges in parser, but if simplified to <10|20|...>:
-        // This is complex because %bl matches ranges. For xhibition (sprite frames), 
-        // the parser usually generated one element per frame with %bl condition?
-        // Actually, for images, we often use %?bl<%xd(a)|%xd(b)...>
-        // The index corresponds to the battery level bucket.
-        // If the parser preserved the buckets, targetIndex is the bucket index.
-        // Assuming 10 buckets for standard strips:
+        // 10. Battery Level Logic (%bl) - Approximation for strips
         if (tagRaw === 'bl') {
-             // Heuristic: If targetIndex is small (0-20), treat as bucket
-             const bucket = Math.floor(sim.batteryLevel / 10); // 0-10
-             // Correction: 100% is bucket 10 or 9? Usually last branch catches all.
-             // If conditionals were %?bl<0|10|20...>, Rockbox evaluates "which branch matches current value?"
-             // Actually Rockbox %?bl<a|b|c> divides 100% by N branches.
-             // We need to know N (total branches) to calc bucket.
-             // Since we don't know N here easily without parsing context, 
-             // we assume standard 10-20 frame strips for now or rely on specific mappings.
-             // For strict correctness we'd need total branches.
-             // Let's approximate: 
-             // If index is being checked, assume linear distribution.
-             // We'll pass for now if we can't determine.
-             // BETTER: The parser should have emitted specific ranges? 
-             // Rockbox logic: "If value is X, print branch Y".
-             // For %bl, it divides the range. 
-             // We will assume 10 segments for now as standard.
-             const numSegments = 10; // Default guess
+             const numSegments = 10; 
              const segment = Math.min(numSegments - 1, Math.floor(sim.batteryLevel / (100/numSegments)));
              if (segment !== targetIndex) return false;
         }
         
-        // 11. Volume Level Logic (%pv) - Similar to Battery
+        // 11. Volume Level Logic (%pv) 
         if (tagRaw === 'pv') {
-             // Map -60dB to 0dB into segments?
-             // Standard volume strips often have ~10-15 frames.
-             // sim.volume is -60 to 0.
-             // Normalized 0-1.
              const norm = Math.max(0, (sim.volume + 60) / 60);
              const numSegments = 10; 
              const segment = Math.min(numSegments - 1, Math.floor(norm * numSegments));
@@ -141,6 +108,7 @@ export const checkCondition = (condition: string | undefined, sim: SimulationSta
 /**
  * Parses a Rockbox string with tags for display (Text Content).
  * Handles %t(time) sublines based on sim.sublineCycle.
+ * Handles %Sx(English) translations.
  */
 export const parseRockboxString = (
     text: string, 
@@ -149,10 +117,13 @@ export const parseRockboxString = (
 ): string => {
     let output = text;
 
+    // 0. Translation Tags: %Sx(Fallback)
+    // We just strip the tag and use the fallback content
+    output = output.replace(/%Sx\(([^)]*)\)/g, '$1');
+
     // 1. Handle Timed Sublines: %t(5)Line1;%t(2)Line2;Line3
     if (output.includes(';')) {
         const parts = output.split(';');
-        // Parse the timings for each part
         const sublines: { text: string, duration: number }[] = [];
         
         parts.forEach(part => {
@@ -160,18 +131,11 @@ export const parseRockboxString = (
             if (match) {
                 sublines.push({ duration: parseFloat(match[1]), text: match[2] });
             } else {
-                // Default duration if missing tag on a subline (Rockbox defaults to 1s or prev)
                 sublines.push({ duration: 2, text: part });
             }
         });
 
-        // Determine active subline based on global cycle
-        // Total cycle time
         const totalDuration = sublines.reduce((acc, l) => acc + l.duration, 0);
-        // Current position in cycle (sim.sublineCycle is a counter, let's assume it increments 10Hz)
-        // Let's treat sim.sublineCycle as seconds * 10 or similar? 
-        // Let's assume sim.sublineCycle is ms for accuracy or ticks.
-        // Let's use sim.sublineCycle as "Seconds elapsed since start".
         const cyclePos = sim.sublineCycle % totalDuration;
         
         let currentT = 0;

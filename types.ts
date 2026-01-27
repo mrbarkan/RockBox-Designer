@@ -7,7 +7,8 @@ export enum ElementType {
   IMAGE = 'image',
   VIEWPORT = 'viewport',
   PROGRESS_BAR = 'progress_bar',
-  TOUCH_REGION = 'touch_region'
+  TOUCH_REGION = 'touch_region',
+  CUSTOM_DRAW = 'custom_draw' // For %Cd, %Dr, etc.
 }
 
 export type ScreenType = 'wps' | 'sbs' | 'fms' | 'usb';
@@ -25,9 +26,9 @@ export interface BaseElement {
   locked: boolean;
   
   // Rockbox Logic
-  category?: string; // e.g. 'id3', 'power', 'rtc' - Defines the "Content Type" dropdown options
+  category?: string; 
   condition?: string; // Serialized condition string (e.g. "mp:1 & C:0")
-  touchAction?: string; // e.g. "wps_play", "volume_up" for %T tag
+  touchAction?: string; 
 }
 
 export interface TextElement extends BaseElement {
@@ -36,8 +37,8 @@ export interface TextElement extends BaseElement {
   fontId: string;
   align: 'left' | 'center' | 'right';
   color: string; 
-  scroll?: boolean; // New: Enable Scrolling
-  volumeFormat?: 'numeric' | 'db' | 'percent'; // New: For Volume Text elements
+  scroll?: boolean; 
+  volumeFormat?: 'numeric' | 'db' | 'percent'; 
 }
 
 export interface RectElement extends BaseElement {
@@ -50,19 +51,17 @@ export interface ImageElement extends BaseElement {
   src: string; 
   filename: string; 
   
-  // Advanced Image Properties for Rockbox
-  imageType?: 'static' | 'battery_strip' | 'volume_strip' | 'shuffle_icon' | 'repeat_icon';
-  frameCount?: number; // How many frames in the strip?
-  preloadId?: string; // A, B, C... assigned during compile
+  imageType?: 'static' | 'battery_strip' | 'volume_strip' | 'shuffle_icon' | 'repeat_icon' | 'art';
+  frameCount?: number; 
+  preloadId?: string; 
   
-  // Sprite Sheet Support
   spriteConfig?: {
       offsetX: number;
       offsetY: number;
       count: number;
       frameWidth?: number;
       frameHeight?: number;
-      frameIndex?: number; // Fixed index if set
+      frameIndex?: number; 
   };
 }
 
@@ -70,31 +69,28 @@ export interface ProgressBarElement extends BaseElement {
   type: ElementType.PROGRESS_BAR;
   foreColor: string;
   backColor: string;
-  pbMode?: 'track' | 'volume' | 'auto'; // Auto = Volume Overlay on change
+  pbMode?: 'track' | 'volume' | 'auto'; 
   pbStyle?: 'flat' | 'rounded' | 'segmented' | 'adwaita' | 'image';
-  backgroundImage?: string; // For %pv(x,y,w,h,img)
+  backgroundImage?: string; 
 }
 
 export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarElement | BaseElement;
 
 export interface ProjectSettings {
   name: string;
-  target: 'ipod_video'; // 320x240
+  target: 'ipod_video';
   backgroundColor: string;
-  statusBarTop: boolean; // Mapped to 'statusbar' in CFG
-  backdrop?: string; // filename
+  statusBarTop: boolean;
+  backdrop?: string; 
   
-  // Global Menu / UI Settings
-  foregroundColor: string;     // Main text color
-  selectorColor: string;       // Cursor bar background (Start color)
-  selectorTextColor: string;   // Cursor text color
-  uiFont: string;             // Global UI font
+  foregroundColor: string;     
+  selectorColor: string;       
+  selectorTextColor: string;   
+  uiFont: string;             
 
-  // Iconsets
-  iconset?: string;          // /.rockbox/icons/...
-  viewersIconset?: string;   // /.rockbox/icons/...
+  iconset?: string;          
+  viewersIconset?: string;   
 
-  // Advanced Appearance & Behavior
   showIcons: boolean;
   scrollbar: 'off' | 'left' | 'right';
   scrollbarWidth: number;
@@ -103,33 +99,29 @@ export interface ProjectSettings {
   batteryDisplay: 'graphic' | 'numeric';
   
   lineSelectorType: 'pointer' | 'bar_inverse' | 'bar_color' | 'bar_gradient';
-  lineSelectorEndColor?: string; // For gradient (End color)
+  lineSelectorEndColor?: string;
 
-  // Scrolling & Backlight (New)
   scrollSpeed?: number;
   scrollDelay?: number;
   scrollStep?: number;
   backlightOnHold?: 'normal' | 'off' | 'on';
   
-  // QuickScreen (New)
   qsTop?: string;
   qsBottom?: string;
   qsLeft?: string;
   qsRight?: string;
 
-  // Palette (New)
   palette: string[];
 }
 
 export interface ProjectState {
   settings: ProjectSettings;
   elements: WpsElement[];
-  assets: Record<string, string>; // Map filename -> base64
+  assets: Record<string, string>; 
   selectedElementIds: string[];
-  validationReport?: string[]; // Import warnings
+  validationReport?: string[]; 
 }
 
-// User & Cloud Types
 export interface User {
   username: string;
   created: number;
@@ -152,47 +144,39 @@ export interface SongMetadata {
   totalSec: number;
   format: string;
   kbps: number;
-  albumArt?: string; // URL
+  albumArt?: string; 
 }
 
-// Simulation Types
-
 export interface SimulationState {
-  // Core Hardware
-  batteryLevel: number; // 0-100
-  isCharging: boolean; // %bc
-  externalPower: boolean; // %bp
+  batteryLevel: number; 
+  isCharging: boolean; 
+  externalPower: boolean; 
   
-  // Inputs/State
-  volume: number; // -100 to 0 (dB)
-  isHold: boolean; // %mh
+  volume: number; 
+  isHold: boolean; 
   isUsb: boolean;
   
-  // Playback
-  playStatus: 'stop' | 'play' | 'pause' | 'ffwd' | 'rew'; // %mp
-  shuffle: boolean; // %ps
-  repeat: 'off' | 'all' | 'one'; // %mm
+  playStatus: 'stop' | 'play' | 'pause' | 'ffwd' | 'rew'; 
+  shuffle: boolean; 
+  repeat: 'off' | 'all' | 'one'; 
   
-  // Timers & Events for Logic
-  currentTime: string; // HH:MM
-  volumeLastChanged: number; // Timestamp (ms) for %?mv
-  diskActivity: boolean; // %lh
-  sublineCycle: number; // Global counter for %t rotation
+  currentTime: string; 
+  volumeLastChanged: number; 
+  diskActivity: boolean; 
+  sublineCycle: number; 
 }
 
 // Graphics Pipeline Types
 
 export type RenderOp = 
+  | { type: 'set_viewport', x: number, y: number, w: number, h: number, clip: boolean }
   | { type: 'rect', x: number, y: number, w: number, h: number, color: string }
   | { type: 'text', x: number, y: number, w: number, h: number, text: string, font: string, color: string, align: 'left'|'center'|'right', scroll: boolean, scrollOffset?: number }
   | { type: 'image', x: number, y: number, w: number, h: number, assetKey: string, sx?: number, sy?: number, sw?: number, sh?: number, opacity?: number }
   | { type: 'line', x1: number, y1: number, x2: number, y2: number, color: string, width: number }
-  | { type: 'push_clip', x: number, y: number, w: number, h: number }
-  | { type: 'pop_clip' };
+  | { type: 'debug_rect', x: number, y: number, w: number, h: number, label: string };
 
 export type RenderList = RenderOp[];
-
-// Service / Generator Types
 
 export enum LayoutStyle {
   MINIMAL = 'MINIMAL',
