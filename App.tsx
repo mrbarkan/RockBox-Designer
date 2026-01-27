@@ -132,8 +132,15 @@ export default function App() {
           fontId: '14-Nimbus.fnt',
           ...preset
       } as WpsElement;
+      const nextAssets = { ...project.assets };
+      if ('filename' in newEl && (newEl as any).filename && (newEl as any).src) {
+          const { filename, src } = newEl as any;
+          if (!nextAssets[filename]) {
+              nextAssets[filename] = src;
+          }
+      }
 
-      setProject({ ...project, elements: [...project.elements, newEl], selectedElementIds: [newEl.id] });
+      setProject({ ...project, assets: nextAssets, elements: [...project.elements, newEl], selectedElementIds: [newEl.id] });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

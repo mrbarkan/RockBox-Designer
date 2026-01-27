@@ -159,32 +159,11 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
   // Helper to inject Adwaita assets if they don't exist
   const ensureAdwaitaAssets = () => {
       const { BACKDROP, ICONS, SLIDER_BG, SLIDER_FG } = GRAPHIC_ASSETS.VOLUME_OVERLAY;
-      const newAssets: Record<string, string> = { ...project.assets };
-      let changed = false;
-
       [BACKDROP, ICONS, SLIDER_BG, SLIDER_FG].forEach(asset => {
-          if (!newAssets[asset.filename]) {
-              newAssets[asset.filename] = asset.src;
-              changed = true;
+          if (!project.assets[asset.filename]) {
+              onUpdateProject({}, { name: asset.filename, data: asset.src });
           }
       });
-
-      if (changed) {
-          // This is a hacky way to update assets via the parent prop without a direct setAssets
-          // We rely on onUpdateProject being able to handle asset injection or we just
-          // call it once for the first asset and manually trigger state update in App?
-          // Since onUpdateProject only takes one asset, we might need to rely on the user
-          // or improve the Architecture. For now, let's just trigger one by one or assume
-          // the user will add them manually? 
-          // Better: We assume standard assets are always available in the 'assets' map logic of the Compiler,
-          // but for the Simulator/EditorCanvas to see them, they need to be in project.assets.
-          // Let's force them into project assets via multiple calls if needed, or better, 
-          // let App.tsx handle a bulk update.
-          // For now, we'll try to update one and hopefully the others are standard.
-          // Actually, let's just use the onUpdateProject hack for the main one.
-          onUpdateProject({}, { name: BACKDROP.filename, data: BACKDROP.src });
-          // We really need a bulk asset update. For now, assume the Canvas uses constants fallback.
-      }
   };
 
   const handlePbStyleChange = (style: string) => {
@@ -237,7 +216,10 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
                   {variants.map((v, i) => (
                       <button 
                         key={i}
-                        onClick={() => onUpdate(element.id, { src: v.src, filename: v.filename, width: v.width, height: v.height })}
+                        onClick={() => {
+                            onUpdate(element.id, { src: v.src, filename: v.filename, width: v.width, height: v.height });
+                            onUpdateProject({}, { name: v.filename, data: v.src });
+                        }}
                         className={`p-3 border flex flex-col items-center gap-2 hover:bg-gray-50 transition-colors ${imgEl.filename === v.filename ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
                       >
                           <img src={v.src} alt={v.name} className="h-5 object-contain" />
