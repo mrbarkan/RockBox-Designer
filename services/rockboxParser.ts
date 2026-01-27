@@ -5,12 +5,16 @@ import { DEFAULT_PROJECT } from '../constants';
 interface ParserContext {
     screen: ScreenType;
     activeViewport: { x:number, y:number, width:number, height:number };
+    namedViewports: Record<string, { x:number, y:number, width:number, height:number }>;
     fontSlots: Record<string, string>; 
     preloadMap: Record<string, any>; 
     currentFontId: string;
     currentFg: string;
     currentBg: string;
     currentAlign: 'left' | 'center' | 'right';
+    lineIndex: number;
+    lineHeight: number;
+    albumArtRect?: { x:number, y:number, width:number, height:number };
     
     // Phase 3: Logic Stack
     conditionStack: string[]; 
@@ -40,23 +44,28 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
 
         // --- 1. Load Assets ---
         const imageFiles = Object.values(loadedZip.files).filter((f: any) => !f.dir && !f.name.startsWith('__MACOSX') && f.name.match(/\.(bmp|png|jpg|jpeg|fnt)$/i));
+        const normalizeAssetKey = (path: string) => path.toLowerCase().replace(/\\/g, '/');
+        const assetBaseName = (path: string) => normalizeAssetKey(path).split('/').pop() || '';
+
         for (const f of imageFiles) {
             const blob = await (f as any).async('blob');
             const dataUrl = await blobToDataURL(blob);
             const name = (f as any).name;
-            assets[name.toLowerCase()] = dataUrl;
-            // Normalize path keys
-            assets[name.toLowerCase().replace(/\\/g, '/')] = dataUrl;
-            if (name.includes('.rockbox/')) assets[name.split('.rockbox/')[1].toLowerCase()] = dataUrl;
+            const baseName = assetBaseName(name);
+            if (baseName) {
+                assets[baseName] = dataUrl;
+            }
         }
 
         const resolveAsset = (path: string) => {
             if (!path || path === '-') return null;
-            const key = path.toLowerCase().replace(/\\/g, '/');
-            // Try exact, then suffix
-            if (assets[key]) return { src: assets[key], filename: path.split('/').pop() || '' };
-            const foundKey = Object.keys(assets).find(k => k.endsWith(key) || key.endsWith(k));
-            return foundKey ? { src: assets[foundKey], filename: path.split('/').pop() || '' } : null;
+            const key = normalizeAssetKey(path);
+            const baseName = assetBaseName(path);
+            if (assets[baseName]) {
+                return { src: assets[baseName], filename: baseName };
+            }
+            const foundKey = Object.keys(assets).find(k => k.endsWith(baseName) || baseName.endsWith(k));
+            return foundKey ? { src: assets[foundKey], filename: foundKey.split('/').pop() || foundKey } : null;
         };
 
         // --- 2. Load CFG ---
@@ -64,7 +73,8 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
         if (!cfgFile) throw new Error("No .cfg found");
         const cfgContent = await (cfgFile as any).async('string');
         
-        const settings = { ...DEFAULT_PROJECT.settings, name: (cfgFile as any).name.replace('.cfg', '') };
+        const cfgBaseName = assetBaseName((cfgFile as any).name).replace(/\.cfg$/i, '');
+        const settings = { ...DEFAULT_PROJECT.settings, name: cfgBaseName };
         let wpsPath = '', sbsPath = '';
 
         cfgContent.split('\n').forEach(line => {
@@ -74,11 +84,11 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             const v = valParts.join(':').trim();
             if (k === 'wps') wpsPath = v;
             if (k === 'sbs') sbsPath = v;
-            if (k === 'backdrop') settings.backdrop = v.split('/').pop();
+            if (k === 'backdrop') settings.backdrop = assetBaseName(v);
             if (k === 'background color') settings.backgroundColor = toCssHex(v);
             if (k === 'foreground color') settings.foregroundColor = toCssHex(v);
             if (k === 'statusbar') settings.statusBarTop = v === 'top';
-            if (k === 'font') settings.uiFont = v.split('/').pop() || '14-Nimbus.fnt';
+            if (k === 'font') settings.uiFont = assetBaseName(v) || '14-Nimbus.fnt';
         });
 
         // --- 3. Parser ---
@@ -86,33 +96,28 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             const context: ParserContext = {
                 screen,
                 activeViewport: { x: 0, y: 0, width: 320, height: 240 },
+                namedViewports: {},
                 fontSlots: {},
                 preloadMap: {},
                 currentFontId: settings.uiFont,
                 currentFg: settings.foregroundColor,
                 currentBg: settings.backgroundColor,
                 currentAlign: 'center',
+                lineIndex: 0,
+                lineHeight: 14,
                 conditionStack: []
             };
 
-            const content = raw.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-            let cursor = 0;
-            const len = content.length;
-
-            const readArgs = (): string[] => {
-                if (cursor >= len || (content[cursor] !== '(' && content[cursor] !== '|')) return [];
-                cursor++; // skip opener
-                const closer = content[cursor-1] === '(' ? ')' : '|';
-                let start = cursor, depth = 1;
-                while (cursor < len) {
-                    if (content[cursor] === content[start-1]) depth++;
-                    else if (content[cursor] === closer) { depth--; if (depth === 0) break; }
-                    cursor++;
-                }
-                const res = content.substring(start, cursor).split(',').map(s => s.trim());
-                cursor++;
-                return res;
+            const getFontSize = (fontId: string) => {
+                const match = fontId.match(/^(\d+)-/);
+                return match ? parseInt(match[1], 10) : 14;
             };
+
+            const updateLineMetrics = () => {
+                context.lineHeight = Math.max(10, getFontSize(context.currentFontId) + 2);
+            };
+
+            updateLineMetrics();
 
             const internalParse = (text: string) => {
                 let i = 0;
@@ -240,17 +245,110 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                         continue;
                     }
                     
-                    // VIEWPORTS
+                    // VIEWPORTS + VIEWPORT COLORS
                     if (tag === 'V') {
                         i++;
+                        if (text[i] === 'f') {
+                            i++;
+                            const args = readLocalArgs();
+                            if (args[0]) context.currentFg = toCssHex(args[0]);
+                            continue;
+                        }
+                        if (text[i] === 'b') {
+                            i++;
+                            const args = readLocalArgs();
+                            if (args[0]) context.currentBg = toCssHex(args[0]);
+                            continue;
+                        }
+                        if (text[i] === 'l') {
+                            i++;
+                            const args = readLocalArgs();
+                            const name = args[0];
+                            if (name) {
+                                const vp = {
+                                    x: parseInt(args[1] || '0'),
+                                    y: parseInt(args[2] || '0'),
+                                    width: parseInt(args[3] || '320'),
+                                    height: parseInt(args[4] || '240')
+                                };
+                                context.namedViewports[name] = vp;
+                                context.activeViewport = vp;
+                                if (args[5]) {
+                                    context.currentFontId = args[5].split('/').pop() || context.currentFontId;
+                                    updateLineMetrics();
+                                }
+                            }
+                            context.lineIndex = 0;
+                            continue;
+                        }
                         if (text[i] === '(') {
                             const args = readLocalArgs();
-                            context.activeViewport = { x: parseInt(args[0]), y: parseInt(args[1]), width: parseInt(args[2]), height: parseInt(args[3]) };
+                            context.activeViewport = {
+                                x: parseInt(args[0] || '0'),
+                                y: parseInt(args[1] || '0'),
+                                width: parseInt(args[2] || '320'),
+                                height: parseInt(args[3] || '240')
+                            };
+                            if (args[4]) {
+                                context.currentFontId = args[4].split('/').pop() || context.currentFontId;
+                                updateLineMetrics();
+                            }
+                            context.lineIndex = 0;
                         } else if (text[i] === 'd') {
-                             i++; readLocalArgs(); // Reset viewport, simplistic handling
-                             context.activeViewport = { x: 0, y: 0, width: 320, height: 240 };
+                             i++;
+                             const args = readLocalArgs();
+                             const name = args[0];
+                             if (name && context.namedViewports[name]) {
+                                 context.activeViewport = context.namedViewports[name];
+                             } else {
+                                 context.activeViewport = { x: 0, y: 0, width: 320, height: 240 };
+                             }
+                             context.lineIndex = 0;
                         }
                         continue;
+                    }
+
+                    // ALIGNMENT (%al, %ac, %ar)
+                    if (tag === 'a') {
+                        const next = text[i];
+                        if (next === 'l' || next === 'c' || next === 'r') {
+                            context.currentAlign = next === 'l' ? 'left' : next === 'r' ? 'right' : 'center';
+                            i++;
+                            continue;
+                        }
+                    }
+
+                    // ALBUM ART (%Cl / %Cd)
+                    if (tag === 'C') {
+                        i++;
+                        if (text[i] === 'l') {
+                            i++;
+                            const args = readLocalArgs();
+                            context.albumArtRect = {
+                                x: parseInt(args[0] || '0'),
+                                y: parseInt(args[1] || '0'),
+                                width: parseInt(args[2] || '0'),
+                                height: parseInt(args[3] || '0')
+                            };
+                            continue;
+                        }
+                        if (text[i] === 'd') {
+                            i++;
+                            readLocalArgs();
+                            const rect = context.albumArtRect || context.activeViewport;
+                            elements.push({
+                                id: genId(), type: ElementType.IMAGE, screen,
+                                name: 'Album Art',
+                                x: rect.x, y: rect.y,
+                                width: rect.width, height: rect.height,
+                                visible: true, locked: false,
+                                src: '', filename: '',
+                                imageType: 'art',
+                                category: 'art',
+                                condition: context.conditionStack.join(' & ')
+                            });
+                            continue;
+                        }
                     }
 
                     // TAGS
@@ -262,8 +360,10 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                          elements.push({
                              id: genId(), type: ElementType.TEXT, screen,
                              name: `Text %${tagRaw}`,
-                             x: context.activeViewport.x, y: context.activeViewport.y,
-                             width: context.activeViewport.width, height: 20,
+                             x: context.activeViewport.x,
+                             y: context.activeViewport.y + context.lineIndex * context.lineHeight,
+                             width: context.activeViewport.width,
+                             height: context.lineHeight,
                              visible: true, locked: false,
                              content: `%${tagRaw}`,
                              fontId: context.currentFontId, align: context.currentAlign,
@@ -276,8 +376,12 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                     }
                 }
             };
-            
-            internalParse(content);
+
+            const lines = raw.split('\n').filter(l => !l.trim().startsWith('#'));
+            lines.forEach(line => {
+                internalParse(line);
+                context.lineIndex += 1;
+            });
         };
 
         const loadContent = async (p: string) => {
