@@ -219,6 +219,29 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     const zip = new JSZip();
     const themeName = project.settings.name.replace(/\s+/g, '_').toLowerCase();
     const assetsFolder = `${themeName}_img`;
+    const builtinAssets: Record<string, string> = {};
+
+    GRAPHIC_ASSETS.BATTERY.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    GRAPHIC_ASSETS.SHUFFLE.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    GRAPHIC_ASSETS.REPEAT.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    Object.values(GRAPHIC_ASSETS.VOLUME_OVERLAY).forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+
+    const assetsToInclude: Record<string, string> = { ...project.assets };
+    project.elements.forEach(el => {
+        if (el.type === ElementType.IMAGE) {
+            const filename = (el as ImageElement).filename;
+            if (filename && builtinAssets[filename] && !assetsToInclude[filename]) {
+                assetsToInclude[filename] = builtinAssets[filename];
+            }
+        }
+        if (el.type === ElementType.PROGRESS_BAR && (el as ProgressBarElement).pbStyle === 'adwaita') {
+            Object.values(GRAPHIC_ASSETS.VOLUME_OVERLAY).forEach(asset => {
+                if (!assetsToInclude[asset.filename]) {
+                    assetsToInclude[asset.filename] = asset.src;
+                }
+            });
+        }
+    });
 
     zip.file(`.rockbox/themes/${themeName}.cfg`, compileCfg(project));
     zip.file(`.rockbox/wps/${themeName}.wps`, compileWps(project));
@@ -227,8 +250,8 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
 
     const imgFolder = zip.folder(`.rockbox/wps/${assetsFolder}`);
     if (imgFolder) {
-        Object.keys(project.assets).forEach(filename => {
-            const base64 = project.assets[filename];
+        Object.keys(assetsToInclude).forEach(filename => {
+            const base64 = assetsToInclude[filename];
             if (filename === project.settings.backdrop) {
                 zip.file(`.rockbox/wps/${themeName}_bg.bmp`, dataURItoBlob(base64)); 
             } else {

@@ -40,23 +40,28 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
 
         // --- 1. Load Assets ---
         const imageFiles = Object.values(loadedZip.files).filter((f: any) => !f.dir && !f.name.startsWith('__MACOSX') && f.name.match(/\.(bmp|png|jpg|jpeg|fnt)$/i));
+        const normalizeAssetKey = (path: string) => path.toLowerCase().replace(/\\/g, '/');
+        const assetBaseName = (path: string) => normalizeAssetKey(path).split('/').pop() || '';
+
         for (const f of imageFiles) {
             const blob = await (f as any).async('blob');
             const dataUrl = await blobToDataURL(blob);
             const name = (f as any).name;
-            assets[name.toLowerCase()] = dataUrl;
-            // Normalize path keys
-            assets[name.toLowerCase().replace(/\\/g, '/')] = dataUrl;
-            if (name.includes('.rockbox/')) assets[name.split('.rockbox/')[1].toLowerCase()] = dataUrl;
+            const baseName = assetBaseName(name);
+            if (baseName) {
+                assets[baseName] = dataUrl;
+            }
         }
 
         const resolveAsset = (path: string) => {
             if (!path || path === '-') return null;
-            const key = path.toLowerCase().replace(/\\/g, '/');
-            // Try exact, then suffix
-            if (assets[key]) return { src: assets[key], filename: path.split('/').pop() || '' };
-            const foundKey = Object.keys(assets).find(k => k.endsWith(key) || key.endsWith(k));
-            return foundKey ? { src: assets[foundKey], filename: path.split('/').pop() || '' } : null;
+            const key = normalizeAssetKey(path);
+            const baseName = assetBaseName(path);
+            if (assets[baseName]) {
+                return { src: assets[baseName], filename: baseName };
+            }
+            const foundKey = Object.keys(assets).find(k => k.endsWith(baseName) || baseName.endsWith(k));
+            return foundKey ? { src: assets[foundKey], filename: foundKey.split('/').pop() || foundKey } : null;
         };
 
         // --- 2. Load CFG ---
@@ -74,11 +79,11 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             const v = valParts.join(':').trim();
             if (k === 'wps') wpsPath = v;
             if (k === 'sbs') sbsPath = v;
-            if (k === 'backdrop') settings.backdrop = v.split('/').pop();
+            if (k === 'backdrop') settings.backdrop = assetBaseName(v);
             if (k === 'background color') settings.backgroundColor = toCssHex(v);
             if (k === 'foreground color') settings.foregroundColor = toCssHex(v);
             if (k === 'statusbar') settings.statusBarTop = v === 'top';
-            if (k === 'font') settings.uiFont = v.split('/').pop() || '14-Nimbus.fnt';
+            if (k === 'font') settings.uiFont = assetBaseName(v) || '14-Nimbus.fnt';
         });
 
         // --- 3. Parser ---
