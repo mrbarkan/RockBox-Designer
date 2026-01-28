@@ -51,7 +51,7 @@ export default function App() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const [useAstPreview, setUseAstPreview] = useState(false);
+  const [useAstPreview, setUseAstPreview] = useState(true);
   
   const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
   const [zoom, setZoom] = useState(1.5);
