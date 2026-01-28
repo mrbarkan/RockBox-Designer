@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { ProjectState, WpsElement, SongMetadata, SimulationState, ScreenType } from '../types';
 import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, GRAPHIC_ASSETS } from '../constants';
 import { evaluateTheme, renderToCanvas } from '../services/graphicsPipeline';
+import { evaluateAstTheme } from '../services/rockboxAstEvaluator';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -15,6 +16,7 @@ interface EditorCanvasProps {
   showGuides: boolean;
   showGrid: boolean;
   debugMode?: boolean;
+  useAstPreview?: boolean;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -27,7 +29,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   scale = 1,
   showGuides,
   showGrid,
-  debugMode = false
+  debugMode = false,
+  useAstPreview = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,7 +92,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       canvas.height = IPOD_SCREEN_HEIGHT;
 
       // 1. Evaluate
-      const renderList = evaluateTheme(project, activeScreen, sim, song);
+      const renderList = useAstPreview
+          ? evaluateAstTheme(project, activeScreen, sim, song)
+          : evaluateTheme(project, activeScreen, sim, song);
 
       // 2. Render
       renderToCanvas(ctx, renderList, imageCache);
