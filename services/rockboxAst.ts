@@ -53,7 +53,8 @@ const readArgs = (source: string, cursor: Cursor) => {
     advance(cursor, ch);
   }
   const raw = sliceWithCursor(source, start, cursor.index);
-  const args = raw.split(',').map(arg => arg.trim()).filter(arg => arg.length > 0);
+  const delimiter = opener === '|' ? '|' : ',';
+  const args = raw.split(delimiter).map(arg => arg.trim()).filter(arg => arg.length > 0);
   if (source[cursor.index] === closer) advance(cursor, closer);
   return { args, raw, opener };
 };
