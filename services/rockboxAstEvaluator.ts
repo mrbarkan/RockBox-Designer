@@ -1,5 +1,5 @@
 import { ProjectState, RenderList, RenderOp, ScreenType, SimulationState, SongMetadata, RockboxAstDocument, RockboxAstNode, RockboxTagNode } from '../types';
-import { parseRockboxString } from './rockboxTagParser';
+import { checkCondition, parseRockboxString } from './rockboxTagParser';
 
 const toCssHex = (hex: string) => hex ? `#${hex.replace(/^0x/, '').replace(/[^0-9A-Fa-f]/g, '')}` : '#ffffff';
 
@@ -14,6 +14,8 @@ type AstContext = {
   align: 'left' | 'center' | 'right';
   fontId: string;
   color: string;
+  barColor: string;
+  barBackground: string;
   lineOrigin: number;
   lineHeight: number;
   preloads: Record<string, { filename: string; x: number; y: number; count: number }>;
@@ -157,6 +159,15 @@ const resolveImages = (tag: RockboxTagNode, context: AstContext, ops: RenderList
   return false;
 };
 
+const updateFont = (tag: RockboxTagNode, context: AstContext) => {
+  if (tag.tag === 'Fn' && tag.args[0]) {
+    context.fontId = tag.args[0].split('/').pop() || context.fontId;
+    updateLineMetrics(context);
+    return true;
+  }
+  return false;
+};
+
 const updateAlignment = (tag: RockboxTagNode, context: AstContext) => {
   if (tag.tag === 'al') {
     context.align = 'left';
@@ -171,6 +182,43 @@ const updateAlignment = (tag: RockboxTagNode, context: AstContext) => {
     return true;
   }
   return false;
+};
+
+const renderProgressBar = (
+  context: AstContext,
+  ops: RenderList,
+  song: SongMetadata
+) => {
+  const percent = song.totalSec > 0 ? Math.min(1, Math.max(0, song.currentSec / song.totalSec)) : 0;
+  ops.push({
+    type: 'rect',
+    x: context.viewport.x,
+    y: context.viewport.y,
+    w: context.viewport.w,
+    h: context.viewport.h,
+    color: context.barBackground
+  });
+  ops.push({
+    type: 'rect',
+    x: context.viewport.x,
+    y: context.viewport.y,
+    w: context.viewport.w * percent,
+    h: context.viewport.h,
+    color: context.barColor
+  });
+};
+
+const resolveTextTag = (tag: RockboxTagNode, sim: SimulationState) => {
+  if (tag.tag === 'mp') {
+    return sim.playStatus === 'play' ? 'Play' : sim.playStatus === 'pause' ? 'Pause' : 'Stop';
+  }
+  if (tag.tag === 'mm') {
+    return sim.repeat === 'all' ? 'All' : sim.repeat === 'one' ? 'One' : 'Off';
+  }
+  if (tag.tag === 'ps') {
+    return sim.shuffle ? 'Shuffle' : 'No Shuffle';
+  }
+  return `%${tag.tag}`;
 };
 
 const buildTextOp = (
@@ -211,17 +259,35 @@ const walkNodes = (
       continue;
     }
     if (node.type === 'conditional') {
-      if (node.branches[0]) {
-        walkNodes(node.branches[0].nodes, context, ops, sim, song);
+      const branches = node.branches;
+      const tag = node.tag;
+      let matched = false;
+      for (let i = 0; i < branches.length; i += 1) {
+        if (checkCondition(`${tag}:${i}`, sim, song)) {
+          walkNodes(branches[i].nodes, context, ops, sim, song);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched && branches[0]) {
+        walkNodes(branches[0].nodes, context, ops, sim, song);
       }
       continue;
     }
     if (node.type === 'tag') {
       if (resolveViewport(node, context)) continue;
       if (resolveImages(node, context, ops)) continue;
+      if (updateFont(node, context)) continue;
       if (updateAlignment(node, context)) continue;
-      if (['s', 'a', 'id', 'it'].includes(node.tag)) {
-        ops.push(buildTextOp(`%${node.tag}`, node.line, context, sim, song));
+      if (node.tag === 'pb') {
+        renderProgressBar(context, ops, song);
+        continue;
+      }
+      if (['s', 'a', 'id', 'it', 'pc', 'pt', 'pv', 'bl', 'mp', 'mm', 'ps'].includes(node.tag)) {
+        const textContent = ['mp', 'mm', 'ps'].includes(node.tag)
+          ? resolveTextTag(node, sim)
+          : `%${node.tag}`;
+        ops.push(buildTextOp(textContent, node.line, context, sim, song));
         continue;
       }
     }
@@ -238,12 +304,25 @@ export const evaluateAstTheme = (
   const ast = getDocumentForScreen(project, screen);
   if (!ast) return ops;
 
+  if (project.settings.backdrop && project.assets[project.settings.backdrop]) {
+    ops.push({
+      type: 'image',
+      x: 0,
+      y: 0,
+      w: 320,
+      h: 240,
+      assetKey: project.settings.backdrop
+    });
+  }
+
   const context: AstContext = {
     viewport: { x: 0, y: 0, w: 320, h: 240 },
     namedViewports: {},
     align: 'left',
     fontId: project.settings.uiFont,
     color: project.settings.foregroundColor,
+    barColor: project.settings.foregroundColor,
+    barBackground: '#333333',
     lineOrigin: 1,
     lineHeight: Math.max(10, getFontSize(project.settings.uiFont) + 2),
     preloads: {}
