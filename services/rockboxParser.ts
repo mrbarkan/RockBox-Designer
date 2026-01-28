@@ -1,6 +1,7 @@
 
-import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement } from '../types';
+import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement, RockboxAstDocument } from '../types';
 import { DEFAULT_PROJECT } from '../constants';
+import { parseWpsToAst } from './rockboxAst';
 
 interface ParserContext {
     screen: ScreenType;
@@ -390,10 +391,22 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             return f ? await f.async('string') : '';
         };
 
-        if (wpsPath) parseScreen(await loadContent(wpsPath), 'wps');
-        if (sbsPath) parseScreen(await loadContent(sbsPath), 'sbs');
+        let wpsAst: RockboxAstDocument | undefined;
+        let sbsAst: RockboxAstDocument | undefined;
+        let fmsAst: RockboxAstDocument | undefined;
 
-        return { settings, elements, assets, selectedElementIds: [], validationReport: warnings };
+        if (wpsPath) {
+            const wpsContent = await loadContent(wpsPath);
+            parseScreen(wpsContent, 'wps');
+            wpsAst = parseWpsToAst(wpsContent);
+        }
+        if (sbsPath) {
+            const sbsContent = await loadContent(sbsPath);
+            parseScreen(sbsContent, 'sbs');
+            sbsAst = parseWpsToAst(sbsContent);
+        }
+
+        return { settings, elements, assets, selectedElementIds: [], validationReport: warnings, wpsAst, sbsAst, fmsAst };
 
     } catch (e) {
         console.error(e);

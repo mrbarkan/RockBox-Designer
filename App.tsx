@@ -51,6 +51,7 @@ export default function App() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [useAstPreview, setUseAstPreview] = useState(true);
   
   const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
   const [zoom, setZoom] = useState(1.5);
@@ -381,6 +382,7 @@ export default function App() {
             onAlign={alignElement} showSource={showSource} setShowSource={setShowSource}
             showGrid={showGrid} setShowGrid={setShowGrid} zoom={zoom} setZoom={setZoom}
             debugMode={debugMode} setDebugMode={setDebugMode}
+            useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
             <EditorCanvas 
@@ -392,6 +394,7 @@ export default function App() {
               showGrid={showGrid} 
               showGuides={showGuides} 
               debugMode={debugMode}
+              useAstPreview={useAstPreview}
               onSelectElement={handleSelectElement} 
               onUpdateElement={handleUpdateElement} 
             />
