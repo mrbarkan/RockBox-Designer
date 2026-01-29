@@ -1,6 +1,7 @@
 
 import { ProjectState, ElementType, TextElement, WpsElement, ImageElement, ScreenType, RectElement, ProgressBarElement } from '../types';
 import { GRAPHIC_ASSETS } from '../constants';
+import { serializeDocument } from './rockboxAstSerializer';
 
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex ? hex.replace('#', '') : 'FFFFFF';
@@ -164,6 +165,13 @@ export const compileWps = (project: ProjectState) => compileScreen(project, 'wps
 export const compileSbs = (project: ProjectState) => compileScreen(project, 'sbs');
 export const compileFms = (project: ProjectState) => compileScreen(project, 'fms');
 
+export const compileAstScreen = (project: ProjectState, screen: ScreenType): string | null => {
+  if (screen === 'wps' && project.wpsAst) return serializeDocument(project.wpsAst);
+  if (screen === 'sbs' && project.sbsAst) return serializeDocument(project.sbsAst);
+  if (screen === 'fms' && project.fmsAst) return serializeDocument(project.fmsAst);
+  return null;
+};
+
 export const compileCfg = (project: ProjectState): string => {
   const themeName = project.settings.name.replace(/\s+/g, '_').toLowerCase();
   const s = project.settings;
@@ -219,16 +227,42 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     const zip = new JSZip();
     const themeName = project.settings.name.replace(/\s+/g, '_').toLowerCase();
     const assetsFolder = `${themeName}_img`;
+    const builtinAssets: Record<string, string> = {};
+
+    GRAPHIC_ASSETS.BATTERY.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    GRAPHIC_ASSETS.SHUFFLE.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    GRAPHIC_ASSETS.REPEAT.forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+    Object.values(GRAPHIC_ASSETS.VOLUME_OVERLAY).forEach(asset => { builtinAssets[asset.filename] = asset.src; });
+
+    const assetsToInclude: Record<string, string> = { ...project.assets };
+    project.elements.forEach(el => {
+        if (el.type === ElementType.IMAGE) {
+            const filename = (el as ImageElement).filename;
+            if (filename && builtinAssets[filename] && !assetsToInclude[filename]) {
+                assetsToInclude[filename] = builtinAssets[filename];
+            }
+        }
+        if (el.type === ElementType.PROGRESS_BAR && (el as ProgressBarElement).pbStyle === 'adwaita') {
+            Object.values(GRAPHIC_ASSETS.VOLUME_OVERLAY).forEach(asset => {
+                if (!assetsToInclude[asset.filename]) {
+                    assetsToInclude[asset.filename] = asset.src;
+                }
+            });
+        }
+    });
 
     zip.file(`.rockbox/themes/${themeName}.cfg`, compileCfg(project));
-    zip.file(`.rockbox/wps/${themeName}.wps`, compileWps(project));
-    zip.file(`.rockbox/wps/${themeName}.sbs`, compileSbs(project));
-    zip.file(`.rockbox/wps/${themeName}.fms`, compileFms(project));
+    const wpsAst = compileAstScreen(project, 'wps');
+    const sbsAst = compileAstScreen(project, 'sbs');
+    const fmsAst = compileAstScreen(project, 'fms');
+    zip.file(`.rockbox/wps/${themeName}.wps`, wpsAst ?? compileWps(project));
+    zip.file(`.rockbox/wps/${themeName}.sbs`, sbsAst ?? compileSbs(project));
+    zip.file(`.rockbox/wps/${themeName}.fms`, fmsAst ?? compileFms(project));
 
     const imgFolder = zip.folder(`.rockbox/wps/${assetsFolder}`);
     if (imgFolder) {
-        Object.keys(project.assets).forEach(filename => {
-            const base64 = project.assets[filename];
+        Object.keys(assetsToInclude).forEach(filename => {
+            const base64 = assetsToInclude[filename];
             if (filename === project.settings.backdrop) {
                 zip.file(`.rockbox/wps/${themeName}_bg.bmp`, dataURItoBlob(base64)); 
             } else {
