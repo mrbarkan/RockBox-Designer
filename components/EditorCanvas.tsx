@@ -51,6 +51,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   // Asset Cache
   const [imageCache, setImageCache] = useState<Record<string, HTMLImageElement>>({});
+  const albumArtRef = useRef<string | null>(null);
 
   // 1. Asset Loading Effect
   useEffect(() => {
@@ -70,16 +71,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }
 
           // Special Assets (Album Art)
-          if (song.albumArt && !newCache['ALBUM_ART_CURRENT']) {
+          if (song.albumArt && song.albumArt !== albumArtRef.current) {
                const img = new Image();
                img.src = song.albumArt;
                await new Promise(r => img.onload = r);
                newCache['ALBUM_ART'] = img; // We map 'ALBUM_ART' key to this
-               newCache['ALBUM_ART_CURRENT'] = img; // Marker to invalidate if song changes
+               albumArtRef.current = song.albumArt;
                changed = true;
-          } else if (!song.albumArt && newCache['ALBUM_ART']) {
+          } else if (!song.albumArt && albumArtRef.current) {
                delete newCache['ALBUM_ART'];
-               delete newCache['ALBUM_ART_CURRENT'];
+               albumArtRef.current = null;
                changed = true;
           }
 
