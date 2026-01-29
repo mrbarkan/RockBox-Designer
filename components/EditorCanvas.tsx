@@ -4,7 +4,6 @@ import { ProjectState, WpsElement, SongMetadata, SimulationState, ScreenType } f
 import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, GRAPHIC_ASSETS } from '../constants';
 import { evaluateTheme, renderToCanvas } from '../services/graphicsPipeline';
 import { evaluateAstTheme } from '../services/rockboxAstEvaluator';
-import { AstImageEditable, AstTextEditable, AstViewportEditable, listAstImageNodes, listAstTextNodes, listAstViewports } from '../services/rockboxAstEditor';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -18,9 +17,6 @@ interface EditorCanvasProps {
   showGrid: boolean;
   debugMode?: boolean;
   useAstPreview?: boolean;
-  onUpdateAstViewport?: (path: AstViewportEditable['path'], updates: { x: number; y: number; width: number; height: number }) => void;
-  onUpdateAstText?: (path: AstTextEditable['path'], value: string) => void;
-  onUpdateAstImage?: (path: AstImageEditable['path'], filename: string) => void;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -34,10 +30,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   showGuides,
   showGrid,
   debugMode = false,
-  useAstPreview = false,
-  onUpdateAstViewport,
-  onUpdateAstText,
-  onUpdateAstImage
+  useAstPreview = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

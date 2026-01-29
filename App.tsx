@@ -438,9 +438,6 @@ export default function App() {
               showGuides={showGuides} 
               debugMode={debugMode}
               useAstPreview={useAstPreview}
-              onUpdateAstViewport={handleUpdateAstViewport}
-              onUpdateAstText={handleUpdateAstText}
-              onUpdateAstImage={handleUpdateAstImage}
               onSelectElement={handleSelectElement} 
               onUpdateElement={handleUpdateElement} 
             />

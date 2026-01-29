@@ -158,6 +158,39 @@ export interface RockboxConditionalNode {
   column: number;
 }
 
+export type RockboxAstNode = RockboxTextNode | RockboxTagNode | RockboxConditionalNode;
+
+export interface RockboxAstDocument {
+  type: 'document';
+  raw: string;
+  nodes: RockboxAstNode[];
+}
+
+export interface RockboxTextNode {
+  type: 'text';
+  value: string;
+  line: number;
+  column: number;
+}
+
+export interface RockboxTagNode {
+  type: 'tag';
+  tag: string;
+  args: string[];
+  raw: string;
+  line: number;
+  column: number;
+}
+
+export interface RockboxConditionalNode {
+  type: 'conditional';
+  tag: string;
+  branches: RockboxAstDocument[];
+  raw: string;
+  line: number;
+  column: number;
+}
+
 export type RockboxAstPathStep = {
   nodeIndex: number;
   branchIndex?: number;

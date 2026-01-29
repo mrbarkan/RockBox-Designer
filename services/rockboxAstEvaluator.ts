@@ -82,7 +82,6 @@ const resolveViewport = (tag: RockboxTagNode, context: AstContext) => {
   }
 
   if (tag.tag === 'Vb' && tag.args[0]) {
-    context.barBackground = toCssHex(tag.args[0]);
     return true;
   }
 
