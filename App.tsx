@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType, User } from './types';
+import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType, User, RockboxAstPath } from './types';
 import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION, IPOD_SCREEN_HEIGHT, IPOD_SCREEN_WIDTH } from './constants';
 import { EditorCanvas } from './components/EditorCanvas';
 import { SimulationPanel } from './components/SimulationPanel';
@@ -18,6 +18,7 @@ import { applyThemeToProject } from './services/layoutEngine';
 import { parseAudioFile } from './services/audioService';
 import { storageService } from './services/storageService';
 import { useHistory } from './hooks/useHistory';
+import { updateAstImageNode, updateAstTextNode, updateAstViewport } from './services/rockboxAstEditor';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -109,6 +110,48 @@ export default function App() {
       ...project,
       elements: project.elements.map(el => el.id === id ? { ...el, ...updates } as WpsElement : el)
     });
+  };
+
+  const handleUpdateAstViewport = (path: RockboxAstPath, updates: { x: number; y: number; width: number; height: number }) => {
+    const next = { ...project };
+    if (activeScreen === 'wps' && project.wpsAst) {
+        next.wpsAst = updateAstViewport(project.wpsAst, path, updates);
+    }
+    if (activeScreen === 'sbs' && project.sbsAst) {
+        next.sbsAst = updateAstViewport(project.sbsAst, path, updates);
+    }
+    if (activeScreen === 'fms' && project.fmsAst) {
+        next.fmsAst = updateAstViewport(project.fmsAst, path, updates);
+    }
+    setProject(next);
+  };
+
+  const handleUpdateAstText = (path: RockboxAstPath, value: string) => {
+    const next = { ...project };
+    if (activeScreen === 'wps' && project.wpsAst) {
+        next.wpsAst = updateAstTextNode(project.wpsAst, path, value);
+    }
+    if (activeScreen === 'sbs' && project.sbsAst) {
+        next.sbsAst = updateAstTextNode(project.sbsAst, path, value);
+    }
+    if (activeScreen === 'fms' && project.fmsAst) {
+        next.fmsAst = updateAstTextNode(project.fmsAst, path, value);
+    }
+    setProject(next);
+  };
+
+  const handleUpdateAstImage = (path: RockboxAstPath, filename: string) => {
+    const next = { ...project };
+    if (activeScreen === 'wps' && project.wpsAst) {
+        next.wpsAst = updateAstImageNode(project.wpsAst, path, filename);
+    }
+    if (activeScreen === 'sbs' && project.sbsAst) {
+        next.sbsAst = updateAstImageNode(project.sbsAst, path, filename);
+    }
+    if (activeScreen === 'fms' && project.fmsAst) {
+        next.fmsAst = updateAstImageNode(project.fmsAst, path, filename);
+    }
+    setProject(next);
   };
 
   const handleSelectElement = (id: string) => {

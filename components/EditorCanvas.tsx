@@ -38,11 +38,13 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   // Interaction State
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [resizingId, setResizingId] = useState<string | null>(null);
+  const [astDragging, setAstDragging] = useState<AstViewportEditable | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [elementStart, setElementStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
 
   // Asset Cache
   const [imageCache, setImageCache] = useState<Record<string, HTMLImageElement>>({});
+  const albumArtRef = useRef<string | null>(null);
 
   // 1. Asset Loading Effect
   useEffect(() => {
@@ -62,16 +64,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }
 
           // Special Assets (Album Art)
-          if (song.albumArt && !newCache['ALBUM_ART_CURRENT']) {
+          if (song.albumArt && song.albumArt !== albumArtRef.current) {
                const img = new Image();
                img.src = song.albumArt;
                await new Promise(r => img.onload = r);
                newCache['ALBUM_ART'] = img; // We map 'ALBUM_ART' key to this
-               newCache['ALBUM_ART_CURRENT'] = img; // Marker to invalidate if song changes
+               albumArtRef.current = song.albumArt;
                changed = true;
-          } else if (!song.albumArt && newCache['ALBUM_ART']) {
+          } else if (!song.albumArt && albumArtRef.current) {
                delete newCache['ALBUM_ART'];
-               delete newCache['ALBUM_ART_CURRENT'];
+               albumArtRef.current = null;
                changed = true;
           }
 
@@ -118,11 +120,38 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     setElementStart({ x: el.x, y: el.y, w: el.width, h: el.height });
   }
 
+  const handleAstMouseDown = (e: React.MouseEvent, viewport: AstViewportEditable) => {
+    e.stopPropagation();
+    setAstDragging(viewport);
+    setResizingId(null);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ x: viewport.x, y: viewport.y, w: viewport.width, h: viewport.height });
+  };
+
+  const handleAstResizeStart = (e: React.MouseEvent, viewport: AstViewportEditable) => {
+    e.stopPropagation();
+    setAstDragging(viewport);
+    setResizingId(viewport.id);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setElementStart({ x: viewport.x, y: viewport.y, w: viewport.width, h: viewport.height });
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
-    if ((!draggingId && !resizingId) || !containerRef.current) return;
+    if ((!draggingId && !resizingId && !astDragging) || !containerRef.current) return;
     const deltaX = (e.clientX - dragStart.x) / scale;
     const deltaY = (e.clientY - dragStart.y) / scale;
     const snap = (val: number) => showGrid ? Math.round(val / 10) * 10 : Math.round(val);
+
+    if (astDragging && onUpdateAstViewport) {
+        const next = {
+            x: snap(elementStart.x + (resizingId ? 0 : deltaX)),
+            y: snap(elementStart.y + (resizingId ? 0 : deltaY)),
+            width: Math.max(10, snap(elementStart.w + (resizingId ? deltaX : 0))),
+            height: Math.max(10, snap(elementStart.h + (resizingId ? deltaY : 0)))
+        };
+        onUpdateAstViewport(astDragging.path, next);
+        return;
+    }
 
     if (resizingId) {
         onUpdateElement(resizingId, {
@@ -140,10 +169,44 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const handleMouseUp = () => {
     setDraggingId(null);
     setResizingId(null);
+    setAstDragging(null);
   };
 
   // Only render interaction boxes for visible elements on current screen
   const interactionElements = project.elements.filter(el => el.screen === activeScreen);
+  const astViewports = useAstPreview
+      ? listAstViewports(
+          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst
+        )
+      : [];
+  const astTextNodes = useAstPreview
+      ? listAstTextNodes(
+          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst,
+          project.settings.uiFont
+        )
+      : [];
+  const astImageNodes = useAstPreview
+      ? listAstImageNodes(
+          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst,
+          project.settings.uiFont
+        )
+      : [];
+
+  const handleAstTextEdit = (node: AstTextEditable) => {
+    if (!onUpdateAstText) return;
+    const next = window.prompt('Edit text', node.value);
+    if (next !== null) {
+      onUpdateAstText(node.path, next);
+    }
+  };
+
+  const handleAstImageEdit = (node: AstImageEditable) => {
+    if (!onUpdateAstImage) return;
+    const next = window.prompt('Image filename', node.filename);
+    if (next !== null) {
+      onUpdateAstImage(node.path, next);
+    }
+  };
 
   return (
     <div 
@@ -172,7 +235,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             />
 
             {/* LAYER 2: INTERACTION (DOM) */}
-            {interactionElements.map(el => {
+            {!useAstPreview && interactionElements.map(el => {
                 const isSelected = project.selectedElementIds.includes(el.id);
                 // For Interaction, we might show hidden elements as semi-transparent boxes if selected?
                 // Or just follow visibility.
@@ -209,6 +272,61 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     </div>
                 );
             })}
+
+            {useAstPreview && astViewports.map(vp => (
+                <div
+                    key={vp.id}
+                    onMouseDown={(e) => handleAstMouseDown(e, vp)}
+                    className="absolute group hover:outline hover:outline-1 hover:outline-amber-400 outline outline-1 outline-amber-600/60 z-20"
+                    style={{
+                        left: vp.x,
+                        top: vp.y,
+                        width: vp.width,
+                        height: vp.height,
+                        cursor: 'move',
+                        backgroundColor: 'rgba(251, 191, 36, 0.08)'
+                    }}
+                >
+                    <div
+                        className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-600 border border-white cursor-se-resize"
+                        onMouseDown={(e) => handleAstResizeStart(e, vp)}
+                    />
+                </div>
+            ))}
+
+            {useAstPreview && astTextNodes.map(node => (
+                <div
+                    key={node.id}
+                    onDoubleClick={() => handleAstTextEdit(node)}
+                    className="absolute z-30 border border-dashed border-emerald-400/70 text-[9px] text-emerald-100/80 font-mono pointer-events-auto"
+                    style={{
+                        left: node.x,
+                        top: node.y,
+                        width: node.width,
+                        height: node.height,
+                        backgroundColor: 'rgba(16, 185, 129, 0.08)'
+                    }}
+                >
+                    <span className="px-1">TXT</span>
+                </div>
+            ))}
+
+            {useAstPreview && astImageNodes.map(node => (
+                <div
+                    key={node.id}
+                    onDoubleClick={() => handleAstImageEdit(node)}
+                    className="absolute z-30 border border-dashed border-sky-400/70 text-[9px] text-sky-100/80 font-mono pointer-events-auto"
+                    style={{
+                        left: node.x,
+                        top: node.y,
+                        width: node.width,
+                        height: node.height,
+                        backgroundColor: 'rgba(56, 189, 248, 0.08)'
+                    }}
+                >
+                    <span className="px-1">IMG</span>
+                </div>
+            ))}
             
             {showGuides && <div className="absolute inset-0 pointer-events-none opacity-50"><div className="absolute top-0 bottom-0 left-1/2 border-l border-cyan-400 border-dashed" /><div className="absolute left-0 right-0 top-1/2 border-t border-cyan-400 border-dashed" /></div>}
         </div>

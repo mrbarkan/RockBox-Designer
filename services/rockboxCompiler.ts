@@ -1,6 +1,7 @@
 
 import { ProjectState, ElementType, TextElement, WpsElement, ImageElement, ScreenType, RectElement, ProgressBarElement } from '../types';
 import { GRAPHIC_ASSETS } from '../constants';
+import { serializeDocument } from './rockboxAstSerializer';
 
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex ? hex.replace('#', '') : 'FFFFFF';
@@ -164,6 +165,13 @@ export const compileWps = (project: ProjectState) => compileScreen(project, 'wps
 export const compileSbs = (project: ProjectState) => compileScreen(project, 'sbs');
 export const compileFms = (project: ProjectState) => compileScreen(project, 'fms');
 
+export const compileAstScreen = (project: ProjectState, screen: ScreenType): string | null => {
+  if (screen === 'wps' && project.wpsAst) return serializeDocument(project.wpsAst);
+  if (screen === 'sbs' && project.sbsAst) return serializeDocument(project.sbsAst);
+  if (screen === 'fms' && project.fmsAst) return serializeDocument(project.fmsAst);
+  return null;
+};
+
 export const compileCfg = (project: ProjectState): string => {
   const themeName = project.settings.name.replace(/\s+/g, '_').toLowerCase();
   const s = project.settings;
@@ -244,9 +252,12 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     });
 
     zip.file(`.rockbox/themes/${themeName}.cfg`, compileCfg(project));
-    zip.file(`.rockbox/wps/${themeName}.wps`, compileWps(project));
-    zip.file(`.rockbox/wps/${themeName}.sbs`, compileSbs(project));
-    zip.file(`.rockbox/wps/${themeName}.fms`, compileFms(project));
+    const wpsAst = compileAstScreen(project, 'wps');
+    const sbsAst = compileAstScreen(project, 'sbs');
+    const fmsAst = compileAstScreen(project, 'fms');
+    zip.file(`.rockbox/wps/${themeName}.wps`, wpsAst ?? compileWps(project));
+    zip.file(`.rockbox/wps/${themeName}.sbs`, sbsAst ?? compileSbs(project));
+    zip.file(`.rockbox/wps/${themeName}.fms`, fmsAst ?? compileFms(project));
 
     const imgFolder = zip.folder(`.rockbox/wps/${assetsFolder}`);
     if (imgFolder) {
