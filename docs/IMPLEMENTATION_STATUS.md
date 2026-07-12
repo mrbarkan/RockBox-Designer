@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1E — Device profile foundation
-- **Branch:** `codex/phase-1e-device-profiles`
-- **Merged milestones:** Phase 0 through Phase 1D; Phase 1D merged through [PR #9](https://github.com/mrbarkan/RockBox-Designer/pull/9) at `8adf130`.
-- **Status:** Phase 1E acceptance criteria pass locally; ready to publish and merge.
-- **Scope boundary:** Source-referenced iPod Video and Classic profiles, saved-project migration, native dimensions, and minimal capability gates only. Official parser validation remains Phase 1F.
+- **Phase:** Phase 1F — Official parser validation bridge
+- **Branch:** `codex/phase-1f-official-parser-bridge`
+- **Merged milestones:** Phase 0 through Phase 1E; Phase 1E merged through [PR #10](https://github.com/mrbarkan/RockBox-Designer/pull/10) at `c861677`.
+- **Status:** Phase 1F acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** Optional external CheckWPS build/invocation, structured fixture comparison, and checked-in report verification only. Real-theme corpus work remains Phase 1G.
 
 ## Current architecture
 
@@ -30,6 +30,8 @@ Last updated: 2026-07-12
 - The lossless parser now uses the registry for longest official tag-name matching and still preserves unmatched future names generically.
 - `rockbox/devices/` now supplies two verified profile IDs, dimensions, capabilities, supported screen files, legacy aliases, and feature-gate queries.
 - Canvas sizing, alignment, legacy evaluators, layout generation, and import defaults read the selected profile. The UI profile selector capability-gates FMS, FM presets, and touch presets without deleting source.
+- `scripts/official/` builds target-specific upstream `checkwps` outside the repository and writes structured comparisons without bundling GPL source or binaries.
+- `rockbox/validation/` models all required official-comparison categories; ordinary validation checks the report without requiring a Rockbox checkout.
 
 ## Baseline findings
 
@@ -70,32 +72,31 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 11 files, 96 tests
+npm test               passed — 12 files, 102 tests
 npm run build          passed — Vite production build
-npm run validate       passed — registry/device verification, typecheck, test, and build
+npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
-device verification   passed — 2 profiles; local Rockbox source match
-browser smoke         passed — Video shows FMS; Classic hides it; both render 320×240 without page errors
+official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
 ```
 
-Phase 1E evidence:
+Phase 1F evidence:
 
-- iPod Video (`ipodvideo`) and iPod Classic (`ipod6g`) profiles cite the pinned Rockbox SHA and exact target/config paths.
-- The optional source verifier confirms target entries, 320×240×16 LCDs at 160 DPI, tuner, recording, touch, remote LCD, USB HID, RTC, and album-art definitions.
-- Equal LCD dimensions do not collapse capabilities: Video exposes its configured tuner and FMS; Classic does not.
-- Saved direct and nested mock-cloud projects migrate `ipod_video`, `ipodvideo`, `ipod_6g`, and `ipod6g` aliases to profile IDs.
-- Canvas and evaluator geometry comes from the selected profile; unsupported screen tabs and FM/touch presets are gated without deleting preserved data.
-- Unit tests cover profile evidence, fallback migration, FM, touch, remote LCD, and screen-file gates.
+- The bridge builds Rockbox `tools/checkwps` from `ROCKBOX_SOURCE_DIR` in a temporary SHA/target cache and requires the checkout to match `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`.
+- No Rockbox source, object, or executable is written into or bundled from this repository.
+- Six fixtures ran against `checkwps.ipodvideo`: three accepted by both, one future tag preserved only by the browser, one diagnostic difference, and one target-dependent result.
+- All six browser sources round-trip exactly; no official execution failed.
+- The report records source hashes, browser diagnostics, official output/exit codes, target, tool, repository, and exact SHA.
+- Missing setup fails clearly; `ROCKBOX_OFFICIAL_SKIP=1` is the only explicit skip path. Ordinary tests remain self-contained.
 
 ## Known blockers
 
-- No Phase 1E blocker is currently known.
-- Parser compatibility remains intentionally unverified until the later official-validation and real-theme phases.
+- No Phase 1F blocker is currently known.
+- The representative official fixture report is not a substitute for the Phase 1G real-theme corpus.
 
 ## Next task
 
-Finish and merge Phase 1E. Phase 1F must begin from updated `main` and build an optional official-parser comparison bridge without bundling GPL implementation code.
+Finish and merge Phase 1F. Phase 1G must begin from updated `main` and add a provenance-tracked real-theme corpus plus package/parser/report automation.
 
 ## Compatibility summary
 
-The product uses lossless screen and CFG source, binary package assets, generated official tag identity, and verified device profiles for tested paths. Rendering remains a legacy adapter, and official-parser or real-theme compatibility has not yet been demonstrated.
+The product uses lossless screen and CFG source, binary package assets, generated official tag identity, verified device profiles, and a demonstrated official parser bridge for representative fixtures. Rendering remains a legacy adapter, and real-theme compatibility has not yet been demonstrated.

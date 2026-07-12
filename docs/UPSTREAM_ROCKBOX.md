@@ -66,9 +66,9 @@ Then verify the relevant paths, update the SHA and inspection date here, and upd
 
 Phase 1D generated `rockbox/registry/generated/rockbox-tags.json` from `lib/skin_parser/tag_table.c` and `lib/skin_parser/tag_table.h` at this exact SHA. The checked-in output contains 193 non-sentinel tag definitions and is reproducible through `npm run registry:generate` and `npm run registry:verify`. See `docs/ROCKBOX_TAG_REGISTRY.md` for the workflow and licensing-review boundary.
 
-## Future official parser harness
+## Official parser harness
 
-Phase 1F will use a separately checked-out Rockbox tree provided through `ROCKBOX_SOURCE_DIR`. Ordinary application tests must not require the checkout or network access, and Rockbox parser code must not be bundled into the browser by default.
+Phase 1F builds and runs upstream `tools/checkwps` from a separately checked-out Rockbox tree provided through `ROCKBOX_SOURCE_DIR`. The demonstrated structured report cites this SHA. Ordinary application tests do not require the checkout or network access, and Rockbox parser source or binaries are not bundled into the browser. See `docs/OFFICIAL_PARSER_VALIDATION.md`.
 
 ## Licensing note
 

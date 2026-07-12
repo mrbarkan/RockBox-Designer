@@ -79,10 +79,10 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Missing and case-mismatched references are reported rather than resolved by basename.
 - **Planned phase:** Later asset-library UI migration.
 
-## Official parser and real themes are not yet test inputs
+## Official fixtures are compared; real themes are not yet the corpus
 
 - **Example:** Target-dependent tags, complex legacy themes, and constructs outside the authored fixture corpus.
-- **Current behavior:** Phase 1A inspected the pinned upstream source for delimiter, escape, comment, and conditional rules, but does not execute the official parser.
-- **Preservation status:** Not established beyond the current synthetic and randomized safe-fragment corpus.
-- **Diagnostic:** No official comparison report.
-- **Planned phase:** Phase 1F official parser bridge and Phase 1G real-theme corpus.
+- **Current behavior:** The optional Phase 1F bridge executes target-specific upstream `checkwps` against six representative fixtures and records both parser outcomes. Ordinary tests only verify the checked-in report.
+- **Preservation status:** All demonstrated fixtures round-trip in the browser parser; one future tag is intentionally preserved even though Rockbox rejects it.
+- **Diagnostic:** `reports/official-parser/latest.json` records browser diagnostic codes/messages beside official exit codes and output.
+- **Planned phase:** Phase 1G expands from representative fixtures to a provenance-tracked real-theme corpus.
