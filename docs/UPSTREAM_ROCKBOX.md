@@ -18,6 +18,9 @@ lib/skin_parser/tag_table.c
 lib/skin_parser/tag_table.h
 lib/skin_parser/skin_parser.c
 lib/skin_parser/skin_scan.c
+firmware/export/config/ipodvideo.h
+firmware/export/config/ipod6g.h
+tools/configure
 apps/gui/skin_engine/skin_parser.c
 apps/gui/statusbar-skinned.c
 apps/radio/radio_skin.c
@@ -30,6 +33,10 @@ docs/COPYING
 ```
 
 Phase 0 verified that these paths exist and inspected the parser/tag-table headers. Phase 1D generated factual tag metadata from the first two paths without copying parser functions or comments.
+
+## Phase 1E device verification
+
+Phase 1E verified the iPod Video `ipodvideo` and iPod Classic `ipod6g` target entries plus their LCD and capability definitions at this SHA. The checked-in profiles and optional local-source verifier are documented in `docs/DEVICE_PROFILES.md`.
 
 ## Phase 1A syntax verification
 
@@ -48,7 +55,7 @@ Use a separate local checkout so GPL source is not accidentally added to this ap
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse https://github.com/Rockbox/rockbox.git /tmp/rockbox-upstream-reference
-git -C /tmp/rockbox-upstream-reference sparse-checkout set lib/skin_parser apps/gui/skin_engine apps/gui apps/radio tools utils/themeeditor uisimulator docs
+git -C /tmp/rockbox-upstream-reference sparse-checkout set lib/skin_parser firmware/export/config apps/gui/skin_engine apps/gui apps/radio tools utils/themeeditor uisimulator docs
 git -C /tmp/rockbox-upstream-reference rev-parse HEAD
 git -C /tmp/rockbox-upstream-reference show -s --format=%cI HEAD
 ```

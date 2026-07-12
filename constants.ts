@@ -1,5 +1,6 @@
 
 import { SongMetadata, ProjectState, ElementType, SimulationState, FontDefinition } from './types';
+import { DEFAULT_DEVICE_PROFILE_ID } from './rockbox/devices';
 
 export const IPOD_SCREEN_WIDTH = 320;
 export const IPOD_SCREEN_HEIGHT = 240;
@@ -190,7 +191,7 @@ export const DEFAULT_SIMULATION: SimulationState = {
 export const DEFAULT_PROJECT: ProjectState = {
   settings: {
     name: "Modern Dark",
-    target: "ipod_video",
+    target: DEFAULT_DEVICE_PROFILE_ID,
     backgroundColor: "#1e1e1e",
     statusBarTop: true,
     foregroundColor: "#f0f0f0",

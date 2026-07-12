@@ -5,6 +5,8 @@ This matrix records separate evidence levels. It deliberately does not combine t
 | Area | Preserved | Parsed | Interpreted | Rendered | Editable | Officially validated | Baseline note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Generated official tag names | Yes | 193 names and longest boundaries | No blanket claim | No blanket claim | No blanket claim | No | Names, raw parameter specs, flags, tokens, and categories come from the pinned Rockbox tag table. |
+| iPod Video device profile | Profile data preserved | Target and capabilities loaded | Feature gates | Native 320×240 canvas | Profile selection | Source-config verified | `ipodvideo` values match the pinned config and local verifier. |
+| iPod Classic device profile | Profile data preserved | Target and capabilities loaded | Feature gates | Native 320×240 canvas | Profile selection | Source-config verified | `ipod6g` has no configured tuner, so FMS is hidden despite identical LCD dimensions. |
 | Phase 1A syntax document | Yes for tested corpus | Structural subset | No | No | Serializer primitive only | No | Twenty named fixtures and randomized safe-fragment combinations round-trip exactly. |
 | WPS product workflow | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | Import/edit/export authority is lossless; rendering remains approximate. |
 | SBS source | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | CFG `sbs` is loaded when found and uses the same lossless edit path. |

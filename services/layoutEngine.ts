@@ -1,5 +1,5 @@
 import { ProjectState, ThemeConfig, LayoutStyle, WpsElement, ElementType, ThemeFont } from '../types';
-import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT } from '../constants';
+import { getDeviceProfile } from '../rockbox/devices';
 
 /**
  * Applies a high-level ThemeConfig to the ProjectState by generating specific elements.
@@ -8,6 +8,9 @@ import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT } from '../constants';
 export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): ProjectState => {
     const newElements: WpsElement[] = [];
     const { colors, layout, font } = theme;
+    const profile = getDeviceProfile(project.settings.target);
+    const screenWidth = profile.mainScreen.width;
+    const screenHeight = profile.mainScreen.height;
 
     // Helper to generate ID
     const genId = (prefix: string) => `${prefix}-${Math.random().toString(36).substr(2, 5)}`;
@@ -50,7 +53,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             screen: 'wps',
             x: theme.showAlbumArt ? 120 : 10, 
             y: textY, 
-            width: theme.showAlbumArt ? 190 : 300, 
+            width: theme.showAlbumArt ? Math.max(20, screenWidth - 130) : Math.max(20, screenWidth - 20),
             height: 20,
             visible: true, locked: false,
             content: '%s',
@@ -67,7 +70,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             screen: 'wps',
             x: theme.showAlbumArt ? 120 : 10, 
             y: textY + 25, 
-            width: theme.showAlbumArt ? 190 : 300, 
+            width: theme.showAlbumArt ? Math.max(20, screenWidth - 130) : Math.max(20, screenWidth - 20),
             height: 20,
             visible: true, locked: false,
             content: '%a',
@@ -84,7 +87,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
                 name: 'Album Art (Viewport)',
                 type: ElementType.IMAGE,
                 screen: 'wps',
-                x: 0, y: 20, width: 320, height: 130,
+                x: 0, y: 20, width: screenWidth, height: 130,
                 visible: true, locked: true,
                 src: '', 
                 filename: ''
@@ -97,7 +100,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Metadata Background',
             type: ElementType.RECT,
             screen: 'wps',
-            x: 0, y: 150, width: 320, height: 90,
+            x: 0, y: 150, width: screenWidth, height: Math.max(20, screenHeight - 150),
             visible: true, locked: true,
             color: colors.barBackground // Use bar/accent color for split
         });
@@ -108,7 +111,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Title',
             type: ElementType.TEXT,
             screen: 'wps',
-            x: 10, y: 160, width: 300, height: 24,
+            x: 10, y: 160, width: Math.max(20, screenWidth - 20), height: 24,
             visible: true, locked: false,
             content: '%s',
             fontId: font,
@@ -122,7 +125,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Artist',
             type: ElementType.TEXT,
             screen: 'wps',
-            x: 10, y: 185, width: 300, height: 20,
+            x: 10, y: 185, width: Math.max(20, screenWidth - 20), height: 20,
             visible: true, locked: false,
             content: '%a',
             fontId: font,
@@ -138,7 +141,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Title Backdrop',
             type: ElementType.RECT,
             screen: 'wps',
-            x: 0, y: 180, width: 320, height: 60,
+            x: 0, y: Math.max(0, screenHeight - 60), width: screenWidth, height: 60,
             visible: true, locked: true,
             color: 'rgba(0,0,0,0.5)' // Semi transparent black usually, but we use hex.
         });
@@ -148,7 +151,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Title',
             type: ElementType.TEXT,
             screen: 'wps',
-            x: 10, y: 190, width: 300, height: 20,
+            x: 10, y: Math.max(0, screenHeight - 50), width: Math.max(20, screenWidth - 20), height: 20,
             visible: true, locked: false,
             content: '%s',
             fontId: font,
@@ -163,7 +166,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
         name: 'Progress',
         type: ElementType.PROGRESS_BAR,
         screen: 'wps',
-        x: 0, y: IPOD_SCREEN_HEIGHT - 8, width: IPOD_SCREEN_WIDTH, height: 8,
+        x: 0, y: screenHeight - 8, width: screenWidth, height: 8,
         visible: true, locked: false,
         foreColor: colors.accent,
         backColor: colors.barBackground
@@ -176,7 +179,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
             name: 'Volume',
             type: ElementType.TEXT,
             screen: 'wps',
-            x: 260, y: IPOD_SCREEN_HEIGHT - 25, width: 50, height: 15,
+            x: Math.max(0, screenWidth - 60), y: screenHeight - 25, width: 50, height: 15,
             visible: true, locked: false,
             content: 'Vol: %pv',
             fontId: '12-Sys-Fixed.fnt',
@@ -191,7 +194,7 @@ export const applyThemeToProject = (project: ProjectState, theme: ThemeConfig): 
         name: 'SBS Status',
         type: ElementType.TEXT,
         screen: 'sbs',
-        x: 5, y: 0, width: 310, height: 16,
+        x: 5, y: 0, width: Math.max(20, screenWidth - 10), height: 16,
         visible: true, locked: false,
         content: '%?mp<Stop|Play|Pause> %ac%cH:%cM %ar%bl%%',
         fontId: font,

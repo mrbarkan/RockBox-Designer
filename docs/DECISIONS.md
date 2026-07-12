@@ -59,3 +59,13 @@
 **Decision:** Extract factual tag names, token identifiers, parameter specs, raw flags, and categories from a separately checked-out pinned Rockbox tree. Check in reproducible JSON with attribution and licensing-review notes. Use it only for registry queries and longest-name matching; preserve unmatched names generically.
 
 **Consequences:** Official names track an exact upstream SHA and ordinary tests stay offline. Parameter metadata does not itself prove interpretation, rendering, editing, or official parser agreement, and generated output requires human licensing review before distribution assumptions are made.
+
+## ADR-0007 — Gate features by verified device capability
+
+**Status:** Accepted
+
+**Context:** The core state accepted only `ipod_video`, while dimensions and feature surfaces were scattered as iPod-specific constants. The Video and Classic targets share LCD dimensions but differ in tuner capability.
+
+**Decision:** Store a source-referenced device profile ID in project settings. Centralize dimensions, capabilities, supported screen files, alias migration, and feature queries under `rockbox/devices/`. Hide unsupported authoring surfaces without deleting preserved project data.
+
+**Consequences:** Existing projects migrate safely, target selection controls canvas geometry and minimal FM/touch/screen-file gates, and identical dimensions no longer imply identical capabilities. New profiles require source evidence and verification rather than UI conditionals.

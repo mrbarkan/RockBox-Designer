@@ -1,7 +1,8 @@
 
 import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { ProjectState, WpsElement, SongMetadata, SimulationState, ScreenType } from '../types';
-import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, GRAPHIC_ASSETS } from '../constants';
+import { GRAPHIC_ASSETS } from '../constants';
+import { getDeviceProfile } from '../rockbox/devices';
 import { evaluateTheme, renderToCanvas } from '../services/graphicsPipeline';
 import { evaluateAstTheme } from '../services/rockboxAstEvaluator';
 import {
@@ -52,6 +53,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const deviceProfile = getDeviceProfile(project.settings.target);
+  const screenWidth = deviceProfile.mainScreen.width;
+  const screenHeight = deviceProfile.mainScreen.height;
   
   // Interaction State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -108,8 +112,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       if (!ctx) return;
 
       // Ensure dimensions match (HiDPI support can be added here if needed)
-      canvas.width = IPOD_SCREEN_WIDTH;
-      canvas.height = IPOD_SCREEN_HEIGHT;
+      canvas.width = screenWidth;
+      canvas.height = screenHeight;
 
       // 1. Evaluate
       const renderList = useAstPreview
@@ -119,7 +123,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       // 2. Render
       renderToCanvas(ctx, renderList, imageCache);
 
-  }, [project, activeScreen, sim, song, imageCache]);
+  }, [project, activeScreen, sim, song, imageCache, screenWidth, screenHeight]);
 
   // 3. Interaction Handlers (DOM Layer)
   const handleMouseDown = (e: React.MouseEvent, el: WpsElement) => {
@@ -222,7 +226,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   return (
     <div 
         className="relative shadow-2xl bg-black overflow-hidden select-none" 
-        style={{ width: IPOD_SCREEN_WIDTH * scale, height: IPOD_SCREEN_HEIGHT * scale }} 
+        style={{ width: screenWidth * scale, height: screenHeight * scale }}
         onMouseMove={handleMouseMove} 
         onMouseUp={handleMouseUp} 
         onMouseLeave={handleMouseUp}
@@ -231,8 +235,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             ref={containerRef}
             className={`relative w-full h-full ${showGrid ? 'canvas-grid' : ''}`} 
             style={{ 
-                width: IPOD_SCREEN_WIDTH, 
-                height: IPOD_SCREEN_HEIGHT, 
+                width: screenWidth,
+                height: screenHeight,
                 transform: `scale(${scale})`, 
                 transformOrigin: 'top left', 
                 backgroundColor: project.settings.backgroundColor 

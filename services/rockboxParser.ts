@@ -5,6 +5,7 @@ import { RockboxDocument } from '../rockbox/syntax';
 import { importThemePackage } from '../rockbox/packages';
 import { DEFAULT_PROJECT } from '../constants';
 import { parseRockboxForLegacyConsumer } from './rockboxSyntaxAdapter';
+import { getDeviceProfile } from '../rockbox/devices';
 
 interface ParserContext {
     screen: ScreenType;
@@ -77,6 +78,9 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
         
         const cfgBaseName = assetBaseName((cfgFile as any).name).replace(/\.cfg$/i, '');
         const settings = { ...DEFAULT_PROJECT.settings, name: cfgBaseName };
+        const deviceProfile = getDeviceProfile(settings.target);
+        const screenWidth = deviceProfile.mainScreen.width;
+        const screenHeight = deviceProfile.mainScreen.height;
         let wpsPath = '', sbsPath = '';
 
         cfgContent.split('\n').forEach(line => {
@@ -97,7 +101,7 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
         const parseScreen = (raw: string, screen: ScreenType) => {
             const context: ParserContext = {
                 screen,
-                activeViewport: { x: 0, y: 0, width: 320, height: 240 },
+                activeViewport: { x: 0, y: 0, width: screenWidth, height: screenHeight },
                 namedViewports: {},
                 fontSlots: {},
                 preloadMap: {},
@@ -270,8 +274,8 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                                 const vp = {
                                     x: parseInt(args[1] || '0'),
                                     y: parseInt(args[2] || '0'),
-                                    width: parseInt(args[3] || '320'),
-                                    height: parseInt(args[4] || '240')
+                                    width: parseInt(args[3] || String(screenWidth)),
+                                    height: parseInt(args[4] || String(screenHeight))
                                 };
                                 context.namedViewports[name] = vp;
                                 context.activeViewport = vp;
@@ -288,8 +292,8 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                             context.activeViewport = {
                                 x: parseInt(args[0] || '0'),
                                 y: parseInt(args[1] || '0'),
-                                width: parseInt(args[2] || '320'),
-                                height: parseInt(args[3] || '240')
+                                width: parseInt(args[2] || String(screenWidth)),
+                                height: parseInt(args[3] || String(screenHeight))
                             };
                             if (args[4]) {
                                 context.currentFontId = args[4].split('/').pop() || context.currentFontId;
@@ -303,7 +307,7 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
                              if (name && context.namedViewports[name]) {
                                  context.activeViewport = context.namedViewports[name];
                              } else {
-                                 context.activeViewport = { x: 0, y: 0, width: 320, height: 240 };
+                                 context.activeViewport = { x: 0, y: 0, width: screenWidth, height: screenHeight };
                              }
                              context.lineIndex = 0;
                         }
