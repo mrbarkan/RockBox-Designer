@@ -1,4 +1,5 @@
 import { createDiagnostic } from './diagnostics';
+import { getLongestKnownTagAt } from '../registry';
 import { createSourceText, SourceText } from './sourceText';
 import { isCommentStart, isEscapeSequence } from './tokenizer';
 import {
@@ -13,17 +14,6 @@ import {
   TagNode,
   TextNode
 } from './types';
-
-// Phase 1D replaces this transitional list with generated upstream metadata.
-const TRANSITIONAL_KNOWN_TAGS = [
-  'St', 'Sr', 'Sx', 'Vi', 'Vl', 'Vd', 'Vf', 'Vb', 'Vs', 'Vg', 'Vp', 'VB',
-  'xl', 'xd', 'x9', 'Cl', 'Cd', 'C', 'Fl', 'Fn', 'T', 'Tl', 'Tn', 'Te',
-  'pb', 'pv', 'bl', 'bc', 'bp', 'mh', 'mp', 'mm', 'mv', 'ps', 'if', 'and', 'or',
-  'al', 'ac', 'ar', 'aL', 'aR', 'ax', 'it', 'ia', 'id', 'in', 'ik', 'iy',
-  'It', 'Ia', 'Id', 'pc', 'pt', 'pr', 'pp', 'pe', 'fc', 'fb', 'ff', 'fk',
-  'fm', 'fn', 'fp', 'fs', 'fv', 'Ft', 'Fb', 'Ff', 'Fk', 'Fm', 'Fp', 'Fs',
-  'Fv', 'wd', 'we', 'wi', 's', 'X', 'x', 'V'
-].sort((left, right) => right.length - left.length);
 
 const PIPE_ARITY: Record<string, { min: number; max: number }> = {
   X: { min: 1, max: 1 },
@@ -192,10 +182,8 @@ class LosslessParser {
   }
 
   private readTagName(start: number, end: number) {
-    const known = TRANSITIONAL_KNOWN_TAGS.find(tag =>
-      start + tag.length <= end && this.source.startsWith(tag, start)
-    );
-    if (known) return known;
+    const known = getLongestKnownTagAt(this.source, start);
+    if (known && start + known.name.length <= end) return known.name;
 
     let offset = start;
     while (offset < end && isTagNameCharacter(this.source[offset])) offset += 1;

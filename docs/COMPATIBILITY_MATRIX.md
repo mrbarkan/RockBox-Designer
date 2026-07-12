@@ -4,12 +4,13 @@ This matrix records separate evidence levels. It deliberately does not combine t
 
 | Area | Preserved | Parsed | Interpreted | Rendered | Editable | Officially validated | Baseline note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Generated official tag names | Yes | 193 names and longest boundaries | No blanket claim | No blanket claim | No blanket claim | No | Names, raw parameter specs, flags, tokens, and categories come from the pinned Rockbox tag table. |
 | Phase 1A syntax document | Yes for tested corpus | Structural subset | No | No | Serializer primitive only | No | Twenty named fixtures and randomized safe-fragment combinations round-trip exactly. |
 | WPS product workflow | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | Import/edit/export authority is lossless; rendering remains approximate. |
 | SBS source | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | CFG `sbs` is loaded when found and uses the same lossless edit path. |
-| FMS source | No package evidence | No package evidence | Partial synthetic support | Partial synthetic support | Partial synthetic support | No | Project state supports FMS, but ZIP import does not read the CFG `fms` path. |
+| FMS source | Yes for package fixtures | Structural source document | Partial synthetic support | Partial synthetic support | Partial synthetic support | No | Package import/export resolves FMS; the legacy visual derivation remains incomplete. |
 | CFG | Yes for tested corpus | Settings plus raw lines | Partial | Not applicable | Source helper subset | No | Comments, duplicates, unknown keys, whitespace, colons, ordering, and CRLF survive. |
-| Unknown tags in new syntax API | Yes | Generic raw tag | No | No | No | No | Unknown names and arguments are preserved; registry-backed name boundaries arrive in Phase 1D. |
+| Unknown tags in new syntax API | Yes | Generic raw tag | No | No | No | No | Unknown names and arguments remain preserved when no generated official definition matches. |
 | Malformed syntax in new syntax API | Yes for tested cases | Recovery nodes and diagnostics | No | No | No | No | Incomplete tags, delimiters, and conditionals remain serializable. |
 | Conditionals in new syntax API | Yes for tested corpus | Nested tests and branches | No | No | Serializer primitive only | No | Parameterized tests, nested branches, empty branches, argument pipes, and escaped separators are structural. |
 | Viewports | Yes for tested edits | `%V`, `%Vl`, `%Vi` helpers | Partial | Partial | Yes for geometry | No | Narrow edits preserve surrounding bytes and invocation style. |

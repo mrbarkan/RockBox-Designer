@@ -37,12 +37,12 @@ Every root and conditional-branch document references the same original source s
 
 `ProjectState` may now carry `wpsDocument`, `sbsDocument`, and `fmsDocument`. New imports create lossless and legacy representations together. The lossless document is authoritative; `applyProjectSyntaxDocument()` serializes it and derives a fresh legacy AST only for the current preview evaluator. Old saved projects are parsed lazily from the legacy document's stored raw source.
 
-## Current data flow
+## Legacy data flow being retired
 
 ```text
 Theme ZIP
-  -> global JSZip loader
-  -> CFG and screen parser
+  -> explicit JSZip module
+  -> lossless CFG, package, and screen parsers
   -> ProjectState
        -> visual elements -> graphics evaluator -> canvas
        -> early AST       -> AST evaluator      -> canvas
@@ -103,10 +103,16 @@ ZIP bytes -> path-safe manifest -> source documents + binary asset store
 
 The existing UI may derive data URLs for `<img>` previews, but imported package bytes remain canonical in `ProjectState.themePackage`. Project persistence has an explicit binary JSON encoding rather than relying on JavaScript's default typed-array serialization.
 
+## Phase 1D tag registry
+
+`rockbox/registry/` exposes the generated Rockbox tag table through typed lookup functions. The lossless parser asks `getLongestKnownTagAt()` for official tag boundaries; when no definition matches, it retains the complete alphanumeric future name as unknown source.
+
+The registry is generated outside the browser from a local Rockbox checkout. Checked-in JSON contains factual identifiers and metadata only. Validation checks its schema, duplicate names, documented SHA, and—when `ROCKBOX_SOURCE_DIR` is present—exact regeneration. This does not execute or vendor the official parser.
+
 ## Rendering flow target
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1C boundary
+## Phase 1D boundary
 
-Phase 1C migrates package authority and removes the global JSZip dependency. It does not generate the official tag registry, add device profiles, execute the official parser, expand rendering, or redesign the interface.
+Phase 1D replaces hand-maintained known-name matching with upstream-generated metadata. It does not add device profiles, execute the official parser, claim higher support states, expand rendering, or redesign the interface.
