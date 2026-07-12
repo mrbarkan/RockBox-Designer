@@ -49,6 +49,15 @@ export const importThemePackage = async (input: ZipInput): Promise<ThemePackage>
   const cfgPath = [...entries.keys()].find(path => path.toLowerCase().endsWith('.cfg'));
   const cfg = cfgPath ? parseCfg(decodeText(entries.get(cfgPath)!)) : undefined;
   if (!cfg) diagnostics.push({ severity: 'error', code: 'missing-cfg', message: 'The archive does not contain a theme CFG file.' });
+  const rockboxIndex = cfgPath?.toLowerCase().indexOf('.rockbox/');
+  const archiveRoot = rockboxIndex !== undefined && rockboxIndex >= 0 ? cfgPath!.slice(0, rockboxIndex) : '';
+  const resolveAbsoluteReference = (reference: string) => {
+    const normalized = normalizeArchivePath(reference);
+    if (!normalized) return undefined;
+    if (entries.has(normalized)) return normalized;
+    const rooted = archiveRoot ? normalizeArchivePath(`${archiveRoot}${normalized}`) : undefined;
+    return rooted && entries.has(rooted) ? rooted : undefined;
+  };
 
   const screens: ThemePackage['screens'] = {};
   const screenPaths: ThemePackage['screenPaths'] = {};
@@ -57,8 +66,8 @@ export const importThemePackage = async (input: ZipInput): Promise<ThemePackage>
   for (const screen of ['wps', 'sbs', 'fms'] as const) {
     const reference = cfg ? getCfgValues(cfg, screen).at(-1) : undefined;
     if (!reference || reference === '-') continue;
-    const path = normalizeArchivePath(reference);
-    if (!path || !entries.has(path)) {
+    const path = resolveAbsoluteReference(reference);
+    if (!path) {
       diagnostics.push({ severity: 'error', code: 'missing-screen', message: `CFG ${screen} path is missing from the archive: ${reference}`, path: reference });
       continue;
     }
@@ -73,7 +82,7 @@ export const importThemePackage = async (input: ZipInput): Promise<ThemePackage>
     if (!document || !screenPath) continue;
     for (const reference of collectAssetReferences(document)) {
       const candidates = reference.startsWith('/')
-        ? [normalizeArchivePath(reference)]
+        ? [resolveAbsoluteReference(reference)]
         : [
             joinArchivePath(archiveDirname(screenPath), reference),
             joinArchivePath(screenPath.replace(/\.[^./]+$/, ''), reference)

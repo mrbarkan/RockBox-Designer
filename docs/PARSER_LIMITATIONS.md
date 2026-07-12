@@ -39,13 +39,13 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Delimiter errors are reported; type/arity validation is deferred.
 - **Planned phase:** Expand only with source and official evidence; never infer blanket semantics from the registry parameter string alone.
 
-## Complex conditional functions are preserved but not automatically evaluated
+## Conditional expression evaluation is intentionally bounded
 
 - **Example:** `%?if(%pv, =, -90)<Muted|Audible>` or nested `%?and`/`%?or` expressions.
-- **Current behavior:** Common direct state tests select branches automatically. Every conditional and branch appears in the logic panel, and any branch can be previewed manually. Complex function tests default to their first branch and are marked as unsupported.
+- **Current behavior:** Common direct state tests plus nested `%if`, `%and`, `%or`, `%St`, and `%ss` operands used by the Adwaitapod WPS select branches automatically. False one-branch conditionals select no branch, and `%Vl` definitions remain hidden until an active `%Vd` enables their label. Every conditional and branch still appears in the logic panel and can be previewed manually.
 - **Preservation status:** Exact; inactive and unsupported branch source remains present.
-- **Diagnostic:** The layer uses the preserved-raw state rather than claiming automatic interpretation.
-- **Planned phase:** Expand the expression evaluator alongside the device-state simulator and official behavior evidence.
+- **Diagnostic:** Expression tags outside the supported evaluator remain preserved and are marked unsupported rather than being silently treated as true.
+- **Planned phase:** Expand operands only alongside simulator state and official behavior evidence.
 
 ## Recovery coverage is representative, not exhaustive
 
@@ -74,7 +74,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 ## Browser font metrics are not Rockbox font metrics
 
 - **Example:** A custom `.fnt` file with glyph widths that differ from the browser's monospace font.
-- **Current behavior:** Phase 2 uses the source font slot to approximate line height and renders browser monospace glyphs. The canvas position and clipping are native-pixel, but text width and glyph shape can differ from firmware.
+- **Current behavior:** Phase 2 resolves `%Fl` font slots and uses the declared pixel size and bold weight with a browser sans-serif approximation. The canvas position and clipping are native-pixel, but text width and glyph shape can differ from the packaged Rockbox `.fnt` file.
 - **Preservation status:** Font references and binaries remain exact.
 - **Diagnostic:** The Phase 2 guide labels font rendering approximate; no pixel-parity claim is made.
 - **Planned phase:** Phase 3 font pipeline and Phase 4 simulator screenshot comparison.

@@ -71,4 +71,58 @@ describe('source-linked WPS interpreter', () => {
     expect(result.diagnostics.some(diagnostic => diagnostic.severity === 'error')).toBe(true);
     expect(result.layers.some(layer => layer.kind === 'conditional')).toBe(true);
   });
+
+  it('renders only enabled conditional viewports and resolves negative dimensions and font slots', () => {
+    const result = interpretWps(parseRockbox([
+      '%Fl(7,20-Cantarell-Bold.fnt)',
+      '%V(0,0,-,-,-)%?if(%St(battery display), =, graphic)<%Vd(Player)>',
+      '%Vl(Player,10,152,-10,28,7)',
+      '%ac%it %ia',
+      '%Vl(Hidden,0,0,-,-,-)',
+      'This must stay hidden'
+    ].join('\n')), { ...options, settings: { 'battery display': 'graphic' } });
+
+    expect(result.operations.find(operation => operation.type === 'drawText')).toMatchObject({
+      text: `${DEFAULT_SONG.title} ${DEFAULT_SONG.artist}`,
+      rect: { x: 10, y: 152, width: 300, height: 20 },
+      fontSize: 20,
+      fontWeight: 'bold',
+      align: 'center'
+    });
+    expect(result.operations.some(operation => operation.type === 'drawText' && operation.text.includes('hidden'))).toBe(false);
+  });
+
+  it('does not render a false single-branch conditional', () => {
+    const result = interpretWps(parseRockbox('%?mh<Locked>'), {
+      ...options,
+      sim: { ...DEFAULT_SIMULATION, isHold: false }
+    });
+    expect(result.operations.some(operation => operation.type === 'drawText')).toBe(false);
+    expect(result.layers.find(layer => layer.kind === 'conditional')?.selectedBranch).toBeUndefined();
+  });
+
+  it('uses compact xl frame counts and resolves progress image handles', () => {
+    const result = interpretWps(parseRockbox([
+      '%xl(P,PlayStatus.bmp,9)',
+      '%xl(S,PlayerSlider.bmp)',
+      '%xl(B,SliderBackdrop.bmp)',
+      '%xd(P,%mp)',
+      '%pb(0,20,100,14,Slider.bmp,slider,S,backdrop,B)'
+    ].join('\n')), options);
+
+    expect(result.operations.find(operation => operation.type === 'drawBitmap')).toMatchObject({
+      assetPath: 'PlayStatus.bmp', frameCount: 9, frame: 1
+    });
+    expect(result.operations.find(operation => operation.type === 'drawProgress')).toMatchObject({
+      image: 'Slider.bmp', slider: 'PlayerSlider.bmp', backdrop: 'SliderBackdrop.bmp'
+    });
+  });
+
+  it('selects one timed subline instead of painting alternatives over each other', () => {
+    const source = '%t(6)%ia;%t(6)%id;%t(0)';
+    const first = interpretWps(parseRockbox(source), { ...options, sim: { ...DEFAULT_SIMULATION, sublineCycle: 1 } });
+    const second = interpretWps(parseRockbox(source), { ...options, sim: { ...DEFAULT_SIMULATION, sublineCycle: 7 } });
+    expect(first.operations.find(operation => operation.type === 'drawText')).toMatchObject({ text: DEFAULT_SONG.artist });
+    expect(second.operations.find(operation => operation.type === 'drawText')).toMatchObject({ text: DEFAULT_SONG.album });
+  });
 });

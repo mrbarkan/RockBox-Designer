@@ -137,9 +137,9 @@ Phase 1G adds reproducible corpus evidence without committing third-party themes
 
 ## Phase 2 source-linked WPS editor
 
-`rockbox/semantics/` walks the authoritative `RockboxDocument` and emits a documented render-operation subset plus a logic-aware layer model. Every operation carries the originating CST node ID and source span. Context state covers viewports, colors, alignment, font size approximation, named viewports, bitmap preloads, album-art geometry, and scrolling state. Conditional selection is derived from deterministic simulation fields or an explicit per-conditional branch override.
+`rockbox/semantics/` walks the authoritative `RockboxDocument` and emits a documented render-operation subset plus a logic-aware layer model. Every operation carries the originating CST node ID and source span. Context state covers Rockbox-relative viewport geometry, `%Fl` font slots, colors, alignment, conditional viewport activation, bitmap preloads, album-art geometry, timed sublines, and scrolling state. Conditional selection is derived from deterministic simulation/settings fields, the evidenced logical-expression subset, or an explicit per-conditional branch override.
 
-`rockbox/rendering/` consumes that device-independent list. The browser renderer draws at the profile's native resolution, rounds coordinates, clips viewports explicitly, disables bitmap interpolation, and lets CSS scale only the completed canvas. A separate dependency-free RGB renderer produces deterministic golden images for CI.
+`rockbox/rendering/` consumes that device-independent list. The browser renderer draws at the profile's native resolution, rounds coordinates, clips viewports explicitly, disables bitmap interpolation, applies Rockbox's magenta bitmap transparency key, composes image-backed bars, and lets CSS scale only the completed canvas. A separate dependency-free RGB renderer produces deterministic golden images for CI.
 
 ```text
 RockboxDocument (authority)
@@ -154,4 +154,4 @@ The source editor reparses applied WPS/SBS/FMS text. For WPS, a document with er
 
 ## Phase 2 boundary
 
-Phase 2 migrates the documented WPS subset only. The legacy visual-element path remains available for synthetic projects and non-WPS screens. Exact Rockbox font metrics, complex condition functions, SBS/FMS semantics, list/menu behavior, and simulator-reference pixels are explicit later-phase work.
+Phase 2 migrates the documented WPS subset only. The legacy visual-element path remains available for synthetic projects and non-WPS screens. Exact Rockbox font metrics, expression operands outside the evidenced subset, SBS/FMS semantics, list/menu behavior, and broad simulator-reference comparison are explicit later-phase work.

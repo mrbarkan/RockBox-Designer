@@ -79,12 +79,23 @@ export default function App() {
     background: project.settings.backgroundColor,
     sim,
     song,
+    settings: {
+      'battery display': project.settings.batteryDisplay,
+      'volume display': project.settings.volumeDisplay,
+      statusbar: project.settings.statusBarTop ? 'top' : 'off',
+      'backlight on button hold': project.settings.backlightOnHold,
+      lang: 'english-us'
+    },
     branchOverrides
   }) : null, [
     wpsDocument,
     project.settings.uiFont,
     project.settings.foregroundColor,
     project.settings.backgroundColor,
+    project.settings.batteryDisplay,
+    project.settings.volumeDisplay,
+    project.settings.statusBarTop,
+    project.settings.backlightOnHold,
     deviceProfile.id,
     sim,
     song,
