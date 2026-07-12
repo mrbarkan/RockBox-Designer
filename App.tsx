@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType, User } from './types';
 import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION } from './constants';
 import { EditorCanvas } from './components/EditorCanvas';
@@ -18,10 +18,12 @@ import { applyThemeToProject } from './services/layoutEngine';
 import { parseAudioFile } from './services/audioService';
 import { storageService } from './services/storageService';
 import { useHistory } from './hooks/useHistory';
-import { EditResult, updateImageReference, updateTextNode, updateViewport } from './rockbox/editing';
+import { EditResult, updateImageReference, updateTagArguments, updateTextNode, updateViewport } from './rockbox/editing';
 import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from './services/rockboxSyntaxAdapter';
 import { parseProjectData, stringifyProjectData } from './services/projectSerialization';
 import { getDeviceProfile, supportsScreenFile } from './rockbox/devices';
+import { parseRockbox } from './rockbox/syntax';
+import { BranchOverrides, interpretWps, SemanticResult } from './rockbox/semantics';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -56,6 +58,7 @@ export default function App() {
   const [showPalette, setShowPalette] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
+  const [branchOverrides, setBranchOverrides] = useState<BranchOverrides>({});
   
   const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
   const [zoom, setZoom] = useState(1.5);
@@ -63,6 +66,46 @@ export default function App() {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const deviceProfile = getDeviceProfile(project.settings.target);
+  const latestValidSemantic = useRef<{ projectName: string; result: SemanticResult } | null>(null);
+  const wpsDocument = useMemo(
+    () => getProjectSyntaxDocument(project, 'wps'),
+    [project.wpsDocument, project.wpsAst]
+  );
+  const interpretedWps = useMemo(() => wpsDocument ? interpretWps(wpsDocument, {
+    width: deviceProfile.mainScreen.width,
+    height: deviceProfile.mainScreen.height,
+    defaultFont: project.settings.uiFont,
+    foreground: project.settings.foregroundColor,
+    background: project.settings.backgroundColor,
+    sim,
+    song,
+    branchOverrides
+  }) : null, [
+    wpsDocument,
+    project.settings.uiFont,
+    project.settings.foregroundColor,
+    project.settings.backgroundColor,
+    deviceProfile.id,
+    sim,
+    song,
+    branchOverrides
+  ]);
+  const semanticResult = useMemo(() => {
+    if (!interpretedWps) return null;
+    if (interpretedWps.valid) {
+      latestValidSemantic.current = { projectName: project.settings.name, result: interpretedWps };
+      return interpretedWps;
+    }
+    return latestValidSemantic.current?.projectName === project.settings.name
+      ? {
+          ...latestValidSemantic.current.result,
+          layers: interpretedWps.layers,
+          diagnostics: interpretedWps.diagnostics,
+          valid: false,
+          stale: true
+        }
+      : { ...interpretedWps, stale: true };
+  }, [interpretedWps, project.settings.name]);
 
   // Refs for Toolbar Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,13 +150,15 @@ export default function App() {
           const msg = `Import Completed with Warnings:\n\n${project.validationReport.join('\n')}`;
           alert(msg);
       }
-  }, [project]);
+  }, [project.validationReport]);
 
   useEffect(() => {
       if (activeScreen !== 'usb' && !supportsScreenFile(deviceProfile, activeScreen)) {
           setActiveScreen('wps');
       }
   }, [activeScreen, deviceProfile.id]);
+
+  useEffect(() => setBranchOverrides({}), [project.settings.name]);
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -141,6 +186,24 @@ export default function App() {
 
   const handleUpdateAstImage = (nodeId: string, filename: string) =>
     applySyntaxEdit(document => updateImageReference(document, nodeId, filename));
+
+  const handleUpdateSourceArguments = (nodeId: string, updates: Record<string, string>) =>
+    applySyntaxEdit(document => updateTagArguments(document, nodeId, updates));
+
+  const handleApplySource = (screen: 'wps' | 'sbs' | 'fms' | 'cfg', content: string) => {
+    if (screen === 'cfg') {
+      setProject({ ...project, validationReport: ['CFG source editing is preserved but not yet wired to project settings.'] });
+      return;
+    }
+    const document = parseRockbox(content);
+    const next = applyProjectSyntaxDocument(project, screen, document);
+    setProject({
+      ...next,
+      validationReport: document.diagnostics.map(diagnostic =>
+        `Line ${diagnostic.span.startLine}:${diagnostic.span.startColumn} — ${diagnostic.message}`
+      )
+    });
+  };
 
   const handleSelectElement = (id: string) => {
     setProject({ ...project, selectedElementIds: id ? [id] : [] });
@@ -368,7 +431,7 @@ export default function App() {
     <div className="flex h-screen w-screen bg-[#333] text-[#111] overflow-hidden font-sans relative">
       <LoginModal isOpen={showLogin && !user} onLoginSuccess={(u) => { setUser(u); setShowLogin(false); }} />
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
-      {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={() => {}} />}
+      {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
       <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => globalFontInputRef.current?.click()} />
       <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
@@ -431,6 +494,7 @@ export default function App() {
               onUpdateAstViewport={handleUpdateAstViewport}
               onUpdateAstText={handleUpdateAstText}
               onUpdateAstImage={handleUpdateAstImage}
+              semanticResult={activeScreen === 'wps' ? semanticResult : null}
             />
         </div>
         <SimulationPanel sim={sim} meta={song} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
@@ -444,6 +508,18 @@ export default function App() {
           onUpdateProject={handleUpdateProjectSettings} onDeleteElement={handleDeleteElement}
           onSelectElement={handleSelectElement} isLayerStackCollapsed={isLayerStackCollapsed}
           setIsLayerStackCollapsed={setIsLayerStackCollapsed} activeScreen={activeScreen}
+          semanticResult={activeScreen === 'wps' ? semanticResult : null}
+          branchOverrides={branchOverrides}
+          onSetBranchOverride={(nodeId, branch) => setBranchOverrides(current => {
+            if (branch === null) {
+              const next = { ...current };
+              delete next[nodeId];
+              return next;
+            }
+            return { ...current, [nodeId]: branch };
+          })}
+          onUpdateSourceArguments={handleUpdateSourceArguments}
+          onUpdateSourceText={handleUpdateAstText}
       />
     </div>
   );

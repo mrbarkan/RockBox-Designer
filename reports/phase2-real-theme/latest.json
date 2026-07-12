@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T20:43:13.047Z",
+  "scope": {
+    "privateFixturesCommitted": false,
+    "sourceIncluded": false,
+    "preservationIsNotVisualSupport": true
+  },
+  "themes": [
+    {
+      "name": "AMusicPod",
+      "target": "ipodvideo",
+      "sourceSha256Before": "11e41fe3ed7a2f8b4d20c9e1b48a2588a2be817e6fb36d6f18be7dbb24c611c7",
+      "sourceSha256After": "a2b2e31fd5c28e6e8e1a1326b257c5ad3cfa6f6c962099d3eceac0ac44ed3899",
+      "viewportEdit": {
+        "nodeId": "tag:806:821",
+        "xBefore": 2,
+        "xAfter": 3
+      },
+      "semanticProjectionUpdated": true,
+      "minimumChange": true,
+      "exactAfterExport": true,
+      "assetsPreserved": true,
+      "unsupportedNodesRetained": 4,
+      "packageDiagnostics": 0
+    },
+    {
+      "name": "Adwaitapod",
+      "target": "ipodvideo",
+      "sourceSha256Before": "2168693dc8d6966babf21fbec7fd9d698e113f439473870ecb881e2e95adf599",
+      "sourceSha256After": "b58c7cae3a4e0615ebecf544b727c6ef71d65c7f3c65493abe76af7d3f86c49d",
+      "viewportEdit": {
+        "nodeId": "tag:4291:4315",
+        "xBefore": 24,
+        "xAfter": 25
+      },
+      "semanticProjectionUpdated": true,
+      "minimumChange": true,
+      "exactAfterExport": true,
+      "assetsPreserved": true,
+      "unsupportedNodesRetained": 54,
+      "packageDiagnostics": 0
+    }
+  ]
+}

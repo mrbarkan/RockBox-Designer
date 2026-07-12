@@ -1,19 +1,19 @@
 # Parser Limitations
 
-Phase 1B makes the lossless syntax API authoritative for imported WPS/SBS editing and export. The distinction still matters:
+The lossless syntax API is authoritative for imported WPS/SBS/FMS editing and export. The distinction still matters:
 
 - **New syntax API:** `rockbox/syntax/` preserves tested source exactly and provides structural diagnostics.
-- **Current preview path:** Canvas rendering still consumes a derived legacy AST while semantic migration remains incomplete.
+- **WPS preview path:** Phase 2 interprets a documented subset directly from the lossless document. SBS and FMS still use the derived legacy adapter.
 
 Passing synthetic fixtures are evidence for those inputs, not a claim of complete Rockbox compatibility.
 
-## Application migration is intentionally partial
+## Application migration remains screen-specific
 
 - **Example:** Importing a WPS through the current ZIP workflow and editing it on the canvas.
-- **Current behavior:** Import, viewport/text/image editing, compilation, ZIP screen export, and source previews use the lossless document. The renderer receives a derived legacy AST.
+- **Current behavior:** Import, viewport/text/image editing, compilation, ZIP screen export, and source previews use the lossless document. WPS renders from source-linked semantics; SBS/FMS still receive a derived legacy AST.
 - **Preservation status:** Exact for untouched source and the tested edit subset; visual interpretation remains approximate.
 - **Diagnostic:** Unsafe commands return an edit diagnostic and leave source unchanged.
-- **Planned phase:** Phase 2 semantic interpreter and two-way source synchronization.
+- **Planned phase:** Phase 3 migrates SBS/FMS semantics.
 
 ## Known-tag names are generated; meaning is still incremental
 
@@ -21,7 +21,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** The parser uses the Phase 1D registry generated from the pinned Rockbox tag table for longest official name matching. When no definition matches, it preserves the full alphanumeric unknown name.
 - **Preservation status:** Exact bytes survive; known names use upstream-derived boundaries and future unknown names remain openable.
 - **Diagnostic:** No unknown-tag error is emitted because unknown syntax must remain openable.
-- **Planned phase:** Higher support states require Phase 2 interpretation and Phase 1F official validation evidence.
+- **Planned phase:** Higher support states require per-tag semantic/render/edit evidence and later official render comparison.
 
 ## Pipe-style argument arity is transitional
 
@@ -31,21 +31,21 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Unterminated known pipe regions report `unterminated-pipe-arguments`.
 - **Planned phase:** Later tag-specific semantic decoders may use the registry's raw parameter specifications, but must not normalize untouched source.
 
-## Arguments are intentionally not semantically decoded
+## Argument semantics are decoded only for the supported WPS subset
 
 - **Example:** `%V( 0, 0, 320, 240, - )` or `%?if(%pv, =, -90)<...>`.
-- **Current behavior:** Invocation style and the exact raw argument region are structural, but parameter values are not split into normalized semantic fields.
+- **Current behavior:** Invocation style and exact raw arguments remain structural. Phase 2 decodes viewports, colors, images, bars, album art, rectangles, touch regions, and selected state tags into projections without changing the raw source.
 - **Preservation status:** Exact for tested source.
 - **Diagnostic:** Delimiter errors are reported; type/arity validation is deferred.
-- **Planned phase:** Phase 2 semantic interpretation expands beyond the current Phase 1B editable subset.
+- **Planned phase:** Expand only with source and official evidence; never infer blanket semantics from the registry parameter string alone.
 
-## Conditional editing is structural but intentionally narrow
+## Complex conditional functions are preserved but not automatically evaluated
 
-- **Example:** Replacing or inserting a branch in a malformed conditional.
-- **Current behavior:** Branch replacement and nested text/image edits are immutable and preserve sibling branches. The current UI does not yet expose a general conditional editor.
-- **Preservation status:** Exact for tested nested edits and branch replacement.
-- **Diagnostic:** Missing conditionals or branch indexes fail without changing source.
-- **Planned phase:** Phase 2 logic-aware layers and conditional inspector controls.
+- **Example:** `%?if(%pv, =, -90)<Muted|Audible>` or nested `%?and`/`%?or` expressions.
+- **Current behavior:** Common direct state tests select branches automatically. Every conditional and branch appears in the logic panel, and any branch can be previewed manually. Complex function tests default to their first branch and are marked as unsupported.
+- **Preservation status:** Exact; inactive and unsupported branch source remains present.
+- **Diagnostic:** The layer uses the preserved-raw state rather than claiming automatic interpretation.
+- **Planned phase:** Expand the expression evaluator alongside the device-state simulator and official behavior evidence.
 
 ## Recovery coverage is representative, not exhaustive
 
@@ -71,6 +71,22 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Missing FMS files are reported.
 - **Planned phase:** Phase 3 FMS editor.
 
+## Browser font metrics are not Rockbox font metrics
+
+- **Example:** A custom `.fnt` file with glyph widths that differ from the browser's monospace font.
+- **Current behavior:** Phase 2 uses the source font slot to approximate line height and renders browser monospace glyphs. The canvas position and clipping are native-pixel, but text width and glyph shape can differ from firmware.
+- **Preservation status:** Font references and binaries remain exact.
+- **Diagnostic:** The Phase 2 guide labels font rendering approximate; no pixel-parity claim is made.
+- **Planned phase:** Phase 3 font pipeline and Phase 4 simulator screenshot comparison.
+
+## Invalid source intentionally makes the preview stale
+
+- **Example:** Applying `%?mp<Play|Pause` without a closing `>`.
+- **Current behavior:** The invalid source and diagnostics remain editable. The canvas retains the last valid WPS operation list and displays a stale-preview badge instead of rendering a misleading partial replacement.
+- **Preservation status:** The invalid text is preserved exactly.
+- **Diagnostic:** Line/column parser diagnostics appear in the source editor and source-linked panel.
+- **Planned phase:** Keep this safety contract as semantic coverage expands.
+
 ## Newly uploaded assets still enter through a compatibility bridge
 
 - **Example:** `dark/icons/play.bmp` and `light/icons/play.bmp` in the same ZIP.
@@ -85,4 +101,4 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** The Phase 1G runner measures exact source serialization, package manifests, asset hashes, browser diagnostics, support inventories, and optional CheckWPS results. Local third-party ZIPs stay ignored.
 - **Preservation status:** Both named real themes round-trip exactly with complete manifests. Adwaitapod passes CheckWPS; AMusicPod's original WPS has a documented official rejection while remaining byte-exact.
 - **Diagnostic:** `reports/themes/latest.json` records complete evidence and `reports/themes/latest.md` provides a readable summary.
-- **Planned phase:** Phase 2 expands the interpreted, rendered, and editable WPS subset without weakening preservation.
+- **Planned phase:** Continue expanding per-construct evidence without weakening preservation; Phase 4 adds official render comparison.

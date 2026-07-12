@@ -28,7 +28,16 @@ export const KNOWN_TAG_SCHEMAS: Record<string, string[]> = {
   pv: ['x', 'y', 'width', 'height', 'path'],
   Cl: ['x', 'y', 'width', 'height', 'horizontalAlign', 'verticalAlign'],
   Cd: [],
-  T: ['x', 'y', 'width', 'height', 'action']
+  T: ['x', 'y', 'width', 'height', 'action'],
+  dr: ['x', 'y', 'width', 'height', 'color', 'outlineColor']
+};
+
+export const getKnownTagSchema = (tag: TagNode): string[] | undefined => {
+  if (tag.name === 'x' && tag.invocationStyle === 'parentheses') {
+    const slots = splitRawArguments(tag);
+    if (slots.length >= 4) return ['handle', 'path', 'x', 'y'];
+  }
+  return KNOWN_TAG_SCHEMAS[tag.name];
 };
 
 const toSlot = (raw: string): ArgumentSlot => {
@@ -72,7 +81,7 @@ export const splitRawArguments = (tag: TagNode): ArgumentSlot[] => {
 };
 
 export const decodeKnownTag = (tag: TagNode): KnownTagValue | null => {
-  const schema = KNOWN_TAG_SCHEMAS[tag.name];
+  const schema = getKnownTagSchema(tag);
   if (!schema) return null;
   const slots = splitRawArguments(tag);
   const values: Record<string, string> = {};
@@ -86,7 +95,7 @@ export const updateKnownTagArguments = (
   tag: TagNode,
   updates: Record<string | number, string>
 ): TagNode | null => {
-  const schema = KNOWN_TAG_SCHEMAS[tag.name];
+  const schema = getKnownTagSchema(tag);
   const slots = splitRawArguments(tag);
   if (!schema || tag.invocationStyle === 'none') return null;
 

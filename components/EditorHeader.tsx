@@ -74,7 +74,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     onClick={() => setUseAstPreview(!useAstPreview)} 
                     className={`px-3 py-1 border border-gray-400 font-mono text-[10px] ${useAstPreview ? 'bg-orange-600 text-white border-orange-700' : 'bg-gray-200 text-gray-500'}`}
                 >
-                    {useAstPreview ? 'AST_PREVIEW: ON' : 'AST_PREVIEW: OFF'}
+                    {useAstPreview ? 'SOURCE_RENDER: ON' : 'SOURCE_RENDER: OFF'}
                 </button>
                 <button onClick={() => setShowSource(!showSource)} className={`px-4 py-2 border border-gray-400 rounded-full ${showSource ? 'bg-orange-500 text-white border-orange-600' : 'bg-white hover:bg-gray-50'} transition-all`}>SOURCE_EDITOR</button>
                 <label className="flex items-center gap-2 cursor-pointer select-none hover:text-black"><input type="checkbox" checked={showGrid} onChange={e => setShowGrid(e.target.checked)} className="accent-orange-600 w-4 h-4" /> GRID</label>

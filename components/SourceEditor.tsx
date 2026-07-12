@@ -1,18 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ProjectState } from '../types';
 import { compileAstScreen, compileWps, compileCfg, compileSbs, compileFms } from '../services/rockboxCompiler';
+import { parseRockbox } from '../rockbox/syntax';
 
 interface SourceEditorProps {
   project: ProjectState;
   onClose: () => void;
-  onApplyChanges: (screen: 'wps' | 'sbs' | 'cfg', content: string) => void;
+  onApplyChanges: (screen: 'wps' | 'sbs' | 'fms' | 'cfg', content: string) => void;
 }
 
 export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, onApplyChanges }) => {
   const [activeTab, setActiveTab] = useState<'wps' | 'sbs' | 'fms' | 'cfg'>('wps');
   const [content, setContent] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [applied, setApplied] = useState(false);
 
   const sourceForTab = (tab: typeof activeTab) => {
     if (tab === 'cfg') return compileCfg(project);
@@ -26,34 +27,18 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
   // Load initial content on open or tab change
   useEffect(() => {
     setContent(sourceForTab(activeTab));
-    setError(null);
+    setApplied(false);
   }, [activeTab, project]);
 
-  const validate = (code: string) => {
-      // Basic Rockbox syntax checks
-      const lines = code.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          // Check for balanced parentheses in viewport tags
-          if (line.includes('%V') && (line.match(/\(/g)?.length !== line.match(/\)/g)?.length)) {
-              return `Line ${i + 1}: Unbalanced parentheses in Viewport tag.`;
-          }
-          // Check for conditional closure
-          if (line.includes('%?') && line.includes('<') && !line.includes('>')) {
-              return `Line ${i + 1}: Unclosed conditional tag.`;
-          }
-      }
-      return null;
-  };
+  const diagnostics = useMemo(
+    () => activeTab === 'cfg' ? [] : parseRockbox(content).diagnostics,
+    [activeTab, content]
+  );
+  const errors = diagnostics.filter(diagnostic => diagnostic.severity === 'error');
 
   const handleApply = () => {
-      const err = validate(content);
-      if (err) {
-          setError(err);
-          return;
-      }
-      alert("Changes applied to internal buffer (Visual update requires full re-parse logic which is currently experimental).");
-      setError(null);
+      onApplyChanges(activeTab, content);
+      setApplied(true);
   };
 
   return (
@@ -74,10 +59,15 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
 
         {/* Toolbar */}
         <div className="bg-[#111] p-3 flex justify-between items-center border-b border-black">
-             <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Live Editor</span>
+             <div>
+                <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Two-way source</span>
+                <span className={`ml-3 border px-2 py-1 text-[9px] font-bold ${activeTab === 'cfg' ? 'border-gray-600 text-gray-500' : errors.length ? 'border-amber-500 text-amber-400' : 'border-emerald-700 text-emerald-400'}`}>
+                    {activeTab === 'cfg' ? 'READ ONLY' : errors.length ? `${errors.length} ERROR${errors.length === 1 ? '' : 'S'} · PREVIEW WILL STALE` : 'PREVIEW READY'}
+                </span>
+             </div>
              <div className="flex gap-3">
                  <button className="px-3 py-1.5 bg-[#333] text-gray-300 text-xs border border-black hover:bg-[#444]" onClick={() => setContent(sourceForTab(activeTab))}>Reset</button>
-                 <button onClick={handleApply} className="px-4 py-1.5 bg-orange-600 text-white text-xs font-bold uppercase border border-black shadow-[2px_2px_0px_black] active:translate-y-[1px] active:shadow-none transition-all">
+                 <button onClick={handleApply} disabled={activeTab === 'cfg'} className="px-4 py-1.5 bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-bold uppercase border border-black shadow-[2px_2px_0px_black] active:translate-y-[1px] active:shadow-none transition-all">
                      Apply Changes
                  </button>
              </div>
@@ -87,21 +77,25 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
         <div className="flex-1 relative">
             <textarea
                 value={content}
-                onChange={(e) => { setContent(e.target.value); setError(null); }}
+                onChange={(e) => { setContent(e.target.value); setApplied(false); }}
                 className="w-full h-full bg-[#0a0a0a] text-[#d4d4d4] p-6 outline-none resize-none font-mono text-sm leading-relaxed"
                 spellCheck={false}
             />
-            {error && (
-                <div className="absolute bottom-6 left-6 right-6 bg-red-900/90 text-white p-3 border border-red-500 text-xs font-bold flex items-center gap-3 shadow-lg">
-                    <span className="text-xl">⚠️</span> {error}
+            {diagnostics.length > 0 && (
+                <div className="absolute bottom-4 left-4 right-4 max-h-36 overflow-y-auto bg-[#1c0808]/95 text-white p-3 border border-red-600 text-xs shadow-lg">
+                    {diagnostics.slice(0, 8).map(diagnostic => (
+                      <div key={`${diagnostic.code}:${diagnostic.span.start}`} className="mb-1 font-mono text-[10px]">
+                        <span className="text-red-400">L{diagnostic.span.startLine}:{diagnostic.span.startColumn}</span> {diagnostic.message}
+                      </div>
+                    ))}
                 </div>
             )}
         </div>
         
         {/* Status */}
         <div className="h-8 bg-[#222] border-t border-black flex items-center px-4 text-xs text-gray-500 justify-between">
-             <span>Ln {content.split('\n').length}, Col 1</span>
-             <span>UTF-8</span>
+             <span>Ln {content.split('\n').length}, Col 1 · {diagnostics.length} diagnostic{diagnostics.length === 1 ? '' : 's'}</span>
+             <span>{applied ? 'APPLIED · ' : ''}UTF-8 · LOSSLESS</span>
         </div>
     </div>
   );
