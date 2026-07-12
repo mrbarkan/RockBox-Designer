@@ -11,6 +11,19 @@ The prototype currently has two overlapping theme representations:
 
 The AST becomes the export source when a screen has one, but it is not lossless. Its parser splits arguments and its serializer reconstructs syntax. Phase 0 intentionally leaves that behavior unchanged.
 
+## Phase 1A lossless syntax layer
+
+`rockbox/syntax/` now exists beside the legacy services:
+
+- `sourceText.ts` indexes line starts and creates absolute, half-open source spans.
+- `tokenizer.ts` preserves lexical text, newlines, comments, escapes, conditional introducers, and delimiters.
+- `parser.ts` creates text, escape, comment, tag, conditional, and invalid nodes while retaining every raw source slice.
+- `serializer.ts` returns the original source slice for clean documents and raw node text for clean nodes. Dirty known tags regenerate only themselves with their original invocation style.
+- `diagnostics.ts` provides severity, code, message, span, and recovery information.
+- `services/rockboxSyntaxAdapter.ts` returns the lossless document and legacy AST in parallel for incremental caller migration.
+
+Every root and conditional-branch document references the same original source string and carries its own absolute span. This prevents branch parsing from losing parent coordinates while allowing clean branch serialization to return only the branch slice.
+
 ## Current data flow
 
 ```text
@@ -24,9 +37,17 @@ Theme ZIP
        -> compiler or AST serializer -> theme ZIP
 ```
 
+During Phase 1A, callers may opt into a parallel syntax result:
+
+```text
+Raw screen source
+  -> lossless parser -> RockboxDocument (future authority)
+  -> legacy adapter  -> RockboxAstDocument (current UI compatibility)
+```
+
 ## Required source-of-truth rule
 
-The original Rockbox source must become the authoritative document. Visual state will be a projection over a lossless concrete syntax tree (CST), not a replacement for it. Untouched source must eventually serialize exactly.
+The original Rockbox source is authoritative inside the new syntax API. Visual state will become a projection over this lossless concrete syntax tree (CST), not a replacement for it. Untouched input already serializes exactly in the Phase 1A fixture corpus; application-wide authority moves in Phase 1B.
 
 ## Target module boundaries
 
@@ -59,6 +80,6 @@ ZIP bytes -> path-safe manifest -> source documents + binary asset store
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 0 boundary
+## Phase 1A boundary
 
-Phase 0 establishes scripts, tests, documentation, and a compiling baseline. It does not introduce the CST, change parser behavior, replace JSZip, restructure project state, or redesign the interface.
+Phase 1A introduces the lossless syntax layer beside the legacy parser. It does not migrate visual editing, delete the legacy serializer, decode tag-specific semantics, replace JSZip, restructure project state, expand rendering, or redesign the interface.

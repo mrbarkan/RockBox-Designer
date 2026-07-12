@@ -31,6 +31,17 @@ docs/COPYING
 
 Phase 0 verified that these paths exist and inspected the parser/tag-table headers. It did not generate a tag registry or copy implementation code.
 
+## Phase 1A syntax verification
+
+At the recorded SHA, Phase 1A re-inspected:
+
+- `find_escape_character()` and `legal_escape_characters` in `lib/skin_parser/tag_table.c`
+- `skin_parse_text()`, `skin_parse_conditional()`, and `skin_parse_comment()` in `lib/skin_parser/skin_parser.c`
+- `skip_tag()` and argument scanning in `lib/skin_parser/skin_scan.c`
+- parser delimiter constants in `lib/skin_parser/symbols.h`
+
+This confirmed the escape set `%(,);#<|>` and that an unescaped `#` starts a comment at its source position rather than only at the beginning of a line. The Phase 1A browser parser was adjusted and tested accordingly. The inspection informed behavior; no upstream implementation code was copied.
+
 ## Updating the reference
 
 Use a separate local checkout so GPL source is not accidentally added to this application:

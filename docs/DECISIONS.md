@@ -19,3 +19,13 @@
 **Decision:** Phase 0 may repair compile/runtime wiring needed for a clean baseline, but it will not change parser, serializer, package, rendering, or UI contracts.
 
 **Consequences:** The current compatibility limitations remain visible and documented. Phase 1A starts only after the Phase 0 validation and pull request are complete.
+
+## ADR-0003 — Use one root source with absolute spans for all syntax documents
+
+**Status:** Accepted
+
+**Context:** Conditional branches need to serialize as independent documents while diagnostics and later editing commands still require coordinates in the original file.
+
+**Decision:** Root and branch `RockboxDocument` values share the original source string and carry absolute, half-open spans. Clean documents serialize their source span directly; clean nodes serialize their exact `raw` slice. Tag arguments remain raw syntax and are not semantically split during initial parsing.
+
+**Consequences:** Untouched source and branches round-trip exactly, line/column diagnostics remain globally meaningful, and Phase 1B can target narrow source regions. Callers must not assume a branch document's source string contains only that branch.
