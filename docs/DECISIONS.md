@@ -49,3 +49,13 @@
 **Decision:** Imported files are identified by normalized, case-sensitive archive path and stored as `Uint8Array` bytes with SHA-256 hashes. Data URLs are derived UI state. CFG and screen documents preserve source, and ZIP export sorts entries with fixed metadata.
 
 **Consequences:** Duplicate basenames remain safe, unknown files survive, and logical manifests are reproducible. Project persistence needs explicit typed-array encoding, and case mismatches now produce diagnostics instead of silent fallback.
+
+## ADR-0006 — Generate tag identity without vendoring the parser
+
+**Status:** Accepted
+
+**Context:** A local tag shortlist creates incorrect name boundaries and drifts from Rockbox, while copying the GPL parser into the browser would cross the project's current licensing and architecture boundary.
+
+**Decision:** Extract factual tag names, token identifiers, parameter specs, raw flags, and categories from a separately checked-out pinned Rockbox tree. Check in reproducible JSON with attribution and licensing-review notes. Use it only for registry queries and longest-name matching; preserve unmatched names generically.
+
+**Consequences:** Official names track an exact upstream SHA and ordinary tests stay offline. Parameter metadata does not itself prove interpretation, rendering, editing, or official parser agreement, and generated output requires human licensing review before distribution assumptions are made.

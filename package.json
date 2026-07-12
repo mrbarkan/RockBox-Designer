@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "validate": "npm run typecheck && npm test && npm run build"
+    "registry:generate": "node scripts/generate-rockbox-tag-registry.mjs",
+    "registry:verify": "node scripts/verify-rockbox-tag-registry.mjs",
+    "validate": "npm run registry:verify && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

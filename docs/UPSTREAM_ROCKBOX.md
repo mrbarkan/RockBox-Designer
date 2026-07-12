@@ -29,7 +29,7 @@ utils/themeeditor/
 docs/COPYING
 ```
 
-Phase 0 verified that these paths exist and inspected the parser/tag-table headers. It did not generate a tag registry or copy implementation code.
+Phase 0 verified that these paths exist and inspected the parser/tag-table headers. Phase 1D generated factual tag metadata from the first two paths without copying parser functions or comments.
 
 ## Phase 1A syntax verification
 
@@ -55,9 +55,9 @@ git -C /tmp/rockbox-upstream-reference show -s --format=%cI HEAD
 
 Then verify the relevant paths, update the SHA and inspection date here, and update any generated compatibility metadata that cites the previous SHA.
 
-## Future tag-registry generation
+## Generated tag registry
 
-Phase 1D will generate factual tag metadata from `lib/skin_parser/tag_table.c` and related declarations. Generated output must preserve attribution, cite this exact upstream SHA, remain reproducible, and receive human licensing review before distribution assumptions are made.
+Phase 1D generated `rockbox/registry/generated/rockbox-tags.json` from `lib/skin_parser/tag_table.c` and `lib/skin_parser/tag_table.h` at this exact SHA. The checked-in output contains 193 non-sentinel tag definitions and is reproducible through `npm run registry:generate` and `npm run registry:verify`. See `docs/ROCKBOX_TAG_REGISTRY.md` for the workflow and licensing-review boundary.
 
 ## Future official parser harness
 
@@ -65,4 +65,4 @@ Phase 1F will use a separately checked-out Rockbox tree provided through `ROCKBO
 
 ## Licensing note
 
-Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox source code has been copied into Rockbox Designer during Phase 0. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.
+Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox parser implementation has been copied into Rockbox Designer. The generated factual registry is explicitly flagged for human licensing review. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.

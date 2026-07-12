@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1C — Theme packages, CFG, and binary assets
-- **Branch:** `codex/phase-1c-theme-packages`
-- **Merged milestones:** Phase 0 through Phase 1B; Phase 1B merged through [PR #7](https://github.com/mrbarkan/RockBox-Designer/pull/7) at `51c6697`.
-- **Status:** Phase 1C acceptance criteria pass locally; ready to publish and merge.
-- **Scope boundary:** Source-preserving CFG, explicit JSZip, binary assets, safe paths, deterministic logical export, and package fixtures only. Tag registry remains Phase 1D.
+- **Phase:** Phase 1D — Generated Rockbox tag registry
+- **Branch:** `codex/phase-1d-tag-registry`
+- **Merged milestones:** Phase 0 through Phase 1C; Phase 1C merged through [PR #8](https://github.com/mrbarkan/RockBox-Designer/pull/8) at `0db5b26`.
+- **Status:** Phase 1D acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** Upstream-derived tag identity and metadata, reproducible generation, offline verification, and parser longest-match wiring only. Device profiles remain Phase 1E.
 
 ## Current architecture
 
@@ -26,6 +26,8 @@ Last updated: 2026-07-12
 - `rockbox/packages/` now owns lossless CFG parsing, strict archive paths, binary assets and hashes, package diagnostics, manifests, import, and deterministic export.
 - Imported packages are canonical binary runtime state in `ProjectState.themePackage`; browser data URLs remain derived preview state.
 - Project JSON and mock-cloud persistence encode `Uint8Array` values explicitly and restore them on load.
+- `rockbox/registry/` exposes 193 generated Rockbox tag definitions from the pinned upstream SHA, including raw parameter specs, flags, tokens, categories, and baseline support states.
+- The lossless parser now uses the registry for longest official tag-name matching and still preserves unmatched future names generically.
 
 ## Baseline findings
 
@@ -52,7 +54,7 @@ Before Phase 0 changes:
 - Viewport, text, and image interactions now edit the lossless document and synchronize a derived legacy AST for preview.
 - The renderer still interprets the derived legacy AST; broader semantic migration is deferred.
 - The raw source editor displays authoritative source but its Apply action is not a two-way parser/editor workflow yet.
-- Known-tag matching uses a transitional local list until Phase 1D generates the registry from Rockbox source.
+- Official tag names come from generated upstream metadata; interpretation and editing remain intentionally limited to evidenced subsets.
 - Legacy pipe-style argument boundaries use a small transitional arity table and need registry-backed expansion.
 - CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
 - Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback.
@@ -66,31 +68,31 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 9 files, 85 tests
+npm test               passed — 10 files, 90 tests
 npm run build          passed — Vite production build
-npm run validate       passed — typecheck, test, and build
+npm run validate       passed — registry verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
+registry verification passed — 193 definitions; exact local regeneration match
 ```
 
-Phase 1C evidence:
+Phase 1D evidence:
 
-- CFG comments, blank lines, duplicates, unknown keys, colons, whitespace, and CRLF round-trip exactly.
-- WPS-only, WPS+SBS, and WPS+SBS+FMS package fixtures import correctly.
-- Missing CFG, screens, and referenced assets produce explicit diagnostics.
-- Duplicate basenames in separate directories remain distinct; fonts and unknown binary files retain bytes and hashes.
-- Import/export logical manifests and source bytes round-trip, and repeated ZIP exports are deterministic.
-- Product export preserves imported CFG text and does not create absent SBS/FMS files.
-- Runtime and persisted project state round-trip binary `Uint8Array` assets without making data URLs canonical.
+- Generator reads `tag_table.c` and `tag_table.h` from `ROCKBOX_SOURCE_DIR` and records the exact Git SHA, commit timestamp, generation time, repository, and source paths.
+- Generated JSON has 193 unique non-sentinel definitions with tag names, token identifiers, raw parameter specs, raw flags, source-derived categories, and `preserved`/`parsed` states.
+- Verification checks schema, duplicates, attribution, documented SHA, and exact regeneration when the local Rockbox tree is configured.
+- Parser longest-match behavior recognizes three-character official names such as `%and` and `%x9` without consuming unknown future names.
+- Ordinary validation remains offline and no Rockbox parser implementation or comments are bundled.
+- Attribution, GPL-2.0-or-later source licensing, and the required human licensing review are documented.
 
 ## Known blockers
 
-- No Phase 1C blocker is currently known.
+- No Phase 1D blocker is currently known.
 - Parser compatibility remains intentionally unverified until the later official-validation and real-theme phases.
 
 ## Next task
 
-Finish and merge Phase 1C. Phase 1D must begin from updated `main` and generate the known-tag registry from the pinned Rockbox source without bundling GPL implementation code.
+Finish and merge Phase 1D. Phase 1E must begin from updated `main` and derive device profiles from the pinned Rockbox target configuration without hardcoded UI assumptions.
 
 ## Compatibility summary
 
-The product uses lossless screen and CFG source plus binary package assets for tested import/export paths. Rendering remains a legacy adapter, tag recognition is still transitional, and official or real-theme compatibility has not been demonstrated.
+The product uses lossless screen and CFG source, binary package assets, and generated official tag identity for tested paths. Rendering remains a legacy adapter, device assumptions are still hardcoded, and official-parser or real-theme compatibility has not been demonstrated.

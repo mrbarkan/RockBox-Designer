@@ -15,13 +15,13 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Unsafe commands return an edit diagnostic and leave source unchanged.
 - **Planned phase:** Phase 2 semantic interpreter and two-way source synchronization.
 
-## Known-tag boundaries are transitional
+## Known-tag names are generated; meaning is still incremental
 
 - **Example:** A no-argument tag immediately followed by alphabetic text, or a future tag whose prefix matches a current tag.
-- **Current behavior:** Phase 1A uses a small local longest-match list for currently exercised tags and otherwise preserves an alphanumeric unknown name.
-- **Preservation status:** Exact bytes survive; the structural name boundary can be ambiguous.
+- **Current behavior:** The parser uses the Phase 1D registry generated from the pinned Rockbox tag table for longest official name matching. When no definition matches, it preserves the full alphanumeric unknown name.
+- **Preservation status:** Exact bytes survive; known names use upstream-derived boundaries and future unknown names remain openable.
 - **Diagnostic:** No unknown-tag error is emitted because unknown syntax must remain openable.
-- **Planned phase:** Phase 1D generated registry from the recorded Rockbox source SHA.
+- **Planned phase:** Higher support states require Phase 2 interpretation and Phase 1F official validation evidence.
 
 ## Pipe-style argument arity is transitional
 
@@ -29,7 +29,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** Raw argument text is preserved. A small arity table prevents known image and viewport pipes from being mistaken for conditional separators.
 - **Preservation status:** Exact bytes survive; unlisted multi-argument pipe syntax may have an approximate node boundary.
 - **Diagnostic:** Unterminated known pipe regions report `unterminated-pipe-arguments`.
-- **Planned phase:** Phase 1D registry metadata and later tag-specific semantic decoders.
+- **Planned phase:** Later tag-specific semantic decoders may use the registry's raw parameter specifications, but must not normalize untouched source.
 
 ## Arguments are intentionally not semantically decoded
 
@@ -37,7 +37,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** Invocation style and the exact raw argument region are structural, but parameter values are not split into normalized semantic fields.
 - **Preservation status:** Exact for tested source.
 - **Diagnostic:** Delimiter errors are reported; type/arity validation is deferred.
-- **Planned phase:** Phase 1B known-tag argument helpers and Phase 1D registry metadata.
+- **Planned phase:** Phase 2 semantic interpretation expands beyond the current Phase 1B editable subset.
 
 ## Conditional editing is structural but intentionally narrow
 

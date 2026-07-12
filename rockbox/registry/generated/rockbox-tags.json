@@ -1,0 +1,2138 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+    "commitTimestamp": "2026-07-12T11:19:40-04:00",
+    "generatedAt": "2026-07-12T19:39:03.237Z",
+    "sourcePaths": [
+      "lib/skin_parser/tag_table.c",
+      "lib/skin_parser/tag_table.h"
+    ]
+  },
+  "tags": [
+    {
+      "name": "C",
+      "token": "SKIN_TOKEN_ALBUMART_FOUND",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "albumart",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Cd",
+      "token": "SKIN_TOKEN_ALBUMART_DISPLAY",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "albumart",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Cl",
+      "token": "SKIN_TOKEN_ALBUMART_LOAD",
+      "rawParameterSpec": "[iP][iP][iP][iP]|ss",
+      "rawFlags": "0|NOBREAK",
+      "category": "albumart",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "D",
+      "token": "SKIN_TOKEN_FILE_DIRECTORY",
+      "rawParameterSpec": "I",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fb",
+      "token": "SKIN_TOKEN_FILE_BITRATE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fc",
+      "token": "SKIN_TOKEN_FILE_CODEC",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ff",
+      "token": "SKIN_TOKEN_FILE_FREQUENCY",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fk",
+      "token": "SKIN_TOKEN_FILE_FREQUENCY_KHZ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fl",
+      "token": "SKIN_TOKEN_LOAD_FONT",
+      "rawParameterSpec": "IF|I",
+      "rawFlags": "0|NOBREAK",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fm",
+      "token": "SKIN_TOKEN_FILE_NAME_WITH_EXTENSION",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fn",
+      "token": "SKIN_TOKEN_FILE_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fp",
+      "token": "SKIN_TOKEN_FILE_PATH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fs",
+      "token": "SKIN_TOKEN_FILE_SIZE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Fv",
+      "token": "SKIN_TOKEN_FILE_VBR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "IA",
+      "token": "SKIN_TOKEN_METADATA_ALBUM_ARTIST",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "IC",
+      "token": "SKIN_TOKEN_METADATA_COMMENT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "IG",
+      "token": "SKIN_TOKEN_METADATA_GROUPING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ia",
+      "token": "SKIN_TOKEN_METADATA_ARTIST",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ic",
+      "token": "SKIN_TOKEN_METADATA_COMPOSER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Id",
+      "token": "SKIN_TOKEN_METADATA_ALBUM",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ig",
+      "token": "SKIN_TOKEN_METADATA_GENRE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ik",
+      "token": "SKIN_TOKEN_METADATA_DISC_NUMBER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "In",
+      "token": "SKIN_TOKEN_METADATA_TRACK_NUMBER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "It",
+      "token": "SKIN_TOKEN_METADATA_TRACK_TITLE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Iv",
+      "token": "SKIN_TOKEN_METADATA_VERSION",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Iy",
+      "token": "SKIN_TOKEN_METADATA_YEAR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LB",
+      "token": "SKIN_TOKEN_LIST_NEEDS_SCROLLBAR",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LC",
+      "token": "SKIN_TOKEN_LIST_ITEM_COLUMN",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LI",
+      "token": "SKIN_TOKEN_LIST_ITEM_ICON",
+      "rawParameterSpec": "|IS",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LN",
+      "token": "SKIN_TOKEN_LIST_ITEM_NUMBER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LR",
+      "token": "SKIN_TOKEN_LIST_ITEM_ROW",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "LT",
+      "token": "SKIN_TOKEN_LIST_ITEM_TEXT",
+      "rawParameterSpec": "|IS",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Lb",
+      "token": "SKIN_TOKEN_LIST_ITEM_CFG",
+      "rawParameterSpec": "Sii|S",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Lc",
+      "token": "SKIN_TOKEN_LIST_ITEM_IS_SELECTED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Li",
+      "token": "SKIN_TOKEN_LIST_TITLE_ICON",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Lt",
+      "token": "SKIN_TOKEN_LIST_TITLE_TEXT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Pt",
+      "token": "SKIN_TOKEN_TRACK_LENGTH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "QB",
+      "token": "SKIN_TOKEN_BOTTOM_QUICKSETTING_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "QL",
+      "token": "SKIN_TOKEN_LEFT_QUICKSETTING_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "QR",
+      "token": "SKIN_TOKEN_RIGHT_QUICKSETTING_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "QT",
+      "token": "SKIN_TOKEN_TOP_QUICKSETTING_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Qb",
+      "token": "SKIN_TOKEN_BOTTOM_QUICKSETTING_VALUE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ql",
+      "token": "SKIN_TOKEN_LEFT_QUICKSETTING_VALUE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Qr",
+      "token": "SKIN_TOKEN_RIGHT_QUICKSETTING_VALUE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Qt",
+      "token": "SKIN_TOKEN_TOP_QUICKSETTING_VALUE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "quickscreen",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rb",
+      "token": "SKIN_TOKEN_REC_BITRATE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Re",
+      "token": "SKIN_TOKEN_REC_ENCODER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rf",
+      "token": "SKIN_TOKEN_REC_FREQ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rh",
+      "token": "SKIN_TOKEN_REC_HOURS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rm",
+      "token": "SKIN_TOKEN_REC_MONO",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rn",
+      "token": "SKIN_TOKEN_REC_MINUTES",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rp",
+      "token": "SKIN_TOKEN_HAVE_RECORDING",
+      "rawParameterSpec": "",
+      "rawFlags": "FEATURE_TAG",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rr",
+      "token": "SKIN_TOKEN_IS_RECORDING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Rs",
+      "token": "SKIN_TOKEN_REC_SECONDS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "recording-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Sp",
+      "token": "SKIN_TOKEN_SOUND_PITCH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "sound",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Sr",
+      "token": "SKIN_TOKEN_LANG_IS_RTL",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "setting-option",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ss",
+      "token": "SKIN_TOKEN_SOUND_SPEED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "sound",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "St",
+      "token": "SKIN_TOKEN_SETTING",
+      "rawParameterSpec": "[Sip]|[ip][ip][ip]s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "setting-option",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Sx",
+      "token": "SKIN_TOKEN_TRANSLATEDSTRING",
+      "rawParameterSpec": "S",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "markers",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "T",
+      "token": "SKIN_TOKEN_TOUCHREGION",
+      "rawParameterSpec": "[Sip][ip][ip][ip][Sip]|S*",
+      "rawFlags": "0|NOBREAK",
+      "category": "buttons",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Tc",
+      "token": "SKIN_TOKEN_PRESET_COUNT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Tf",
+      "token": "SKIN_TOKEN_PRESET_FREQ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Ti",
+      "token": "SKIN_TOKEN_PRESET_ID",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Tl",
+      "token": "SKIN_TOKEN_LASTTOUCH",
+      "rawParameterSpec": "|[SD]D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "buttons",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Tn",
+      "token": "SKIN_TOKEN_PRESET_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Tp",
+      "token": "SKIN_TOKEN_HAVE_TOUCH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "buttons",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "V",
+      "token": "SKIN_TOKEN_VIEWPORT_LOAD",
+      "rawParameterSpec": "[IP][IP][ip][ip]i",
+      "rawFlags": "0",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "VB",
+      "token": "SKIN_TOKEN_VIEWPORT_DRAWONBG",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "VI",
+      "token": "SKIN_TOKEN_UIVIEWPORT_ENABLE",
+      "rawParameterSpec": "S",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vb",
+      "token": "SKIN_TOKEN_VIEWPORT_BGCOLOUR",
+      "rawParameterSpec": "s",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vd",
+      "token": "SKIN_TOKEN_VIEWPORT_ENABLE",
+      "rawParameterSpec": "S",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vf",
+      "token": "SKIN_TOKEN_VIEWPORT_FGCOLOUR",
+      "rawParameterSpec": "s",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vg",
+      "token": "SKIN_TOKEN_VIEWPORT_GRADIENT_SETUP",
+      "rawParameterSpec": "SS|s",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vi",
+      "token": "SKIN_TOKEN_UIVIEWPORT_LOAD",
+      "rawParameterSpec": "s[IP][IP][ip][ip]i",
+      "rawFlags": "0",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vl",
+      "token": "SKIN_TOKEN_VIEWPORT_CONDITIONAL",
+      "rawParameterSpec": "S[IP][IP][ip][ip]i",
+      "rawFlags": "0",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vp",
+      "token": "SKIN_TOKEN_VIEWPORT_CUSTOMLIST",
+      "rawParameterSpec": "IC",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC|NOBREAK",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "Vs",
+      "token": "SKIN_TOKEN_VIEWPORT_TEXTSTYLE",
+      "rawParameterSpec": "S|s",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "viewport-display",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "X",
+      "token": "SKIN_TOKEN_IMAGE_BACKDROP",
+      "rawParameterSpec": "f",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "image",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "aL",
+      "token": "SKIN_TOKEN_ALIGN_LEFT_RTL",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "aR",
+      "token": "SKIN_TOKEN_ALIGN_RIGHT_RTL",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ac",
+      "token": "SKIN_TOKEN_ALIGN_CENTER",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "al",
+      "token": "SKIN_TOKEN_ALIGN_LEFT",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "and",
+      "token": "SKIN_TOKEN_LOGICAL_AND",
+      "rawParameterSpec": "T*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "conditional",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ar",
+      "token": "SKIN_TOKEN_ALIGN_RIGHT",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ax",
+      "token": "SKIN_TOKEN_ALIGN_LANGDIRECTION",
+      "rawParameterSpec": "",
+      "rawFlags": "0",
+      "category": "alignment",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bc",
+      "token": "SKIN_TOKEN_BATTERY_CHARGING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bl",
+      "token": "SKIN_TOKEN_BATTERY_PERCENT",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bp",
+      "token": "SKIN_TOKEN_BATTERY_CHARGER_CONNECTED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bs",
+      "token": "SKIN_TOKEN_BATTERY_SLEEPTIME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bt",
+      "token": "SKIN_TOKEN_BATTERY_TIME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bu",
+      "token": "SKIN_TOKEN_USB_INSERTED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "bv",
+      "token": "SKIN_TOKEN_BATTERY_VOLTS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "battery",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cH",
+      "token": "SKIN_TOKEN_RTC_HOUR_24_ZERO_PADDED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cI",
+      "token": "SKIN_TOKEN_RTC_HOUR_12_ZERO_PADDED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cM",
+      "token": "SKIN_TOKEN_RTC_MINUTE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cP",
+      "token": "SKIN_TOKEN_RTC_AM_PM_UPPER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cS",
+      "token": "SKIN_TOKEN_RTC_SECOND",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cY",
+      "token": "SKIN_TOKEN_RTC_YEAR_4_DIGITS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ca",
+      "token": "SKIN_TOKEN_RTC_WEEKDAY_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cb",
+      "token": "SKIN_TOKEN_RTC_MONTH_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cc",
+      "token": "SKIN_TOKEN_RTC_PRESENT",
+      "rawParameterSpec": "",
+      "rawFlags": "FEATURE_TAG",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cd",
+      "token": "SKIN_TOKEN_RTC_DAY_OF_MONTH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ce",
+      "token": "SKIN_TOKEN_RTC_DAY_OF_MONTH_BLANK_PADDED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cf",
+      "token": "SKIN_TOKEN_RTC_12HOUR_CFG",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ck",
+      "token": "SKIN_TOKEN_RTC_HOUR_24",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cl",
+      "token": "SKIN_TOKEN_RTC_HOUR_12",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cm",
+      "token": "SKIN_TOKEN_RTC_MONTH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cp",
+      "token": "SKIN_TOKEN_RTC_AM_PM_LOWER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cs",
+      "token": "SKIN_TOKEN_CURRENT_SCREEN",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "setting-option",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cu",
+      "token": "SKIN_TOKEN_RTC_DAY_OF_WEEK_START_MON",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cw",
+      "token": "SKIN_TOKEN_RTC_DAY_OF_WEEK_START_SUN",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "cy",
+      "token": "SKIN_TOKEN_RTC_YEAR_2_DIGITS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_RTC_REFRESH",
+      "category": "time",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "d",
+      "token": "SKIN_TOKEN_FILE_DIRECTORY",
+      "rawParameterSpec": "I",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "dr",
+      "token": "SKIN_TOKEN_DRAWRECTANGLE",
+      "rawParameterSpec": "[IP][IP][ip][ip]|ss",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "skin-variables",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fb",
+      "token": "SKIN_TOKEN_FILE_BITRATE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fc",
+      "token": "SKIN_TOKEN_FILE_CODEC",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ff",
+      "token": "SKIN_TOKEN_FILE_FREQUENCY",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fk",
+      "token": "SKIN_TOKEN_FILE_FREQUENCY_KHZ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fm",
+      "token": "SKIN_TOKEN_FILE_NAME_WITH_EXTENSION",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fn",
+      "token": "SKIN_TOKEN_FILE_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fp",
+      "token": "SKIN_TOKEN_FILE_PATH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fs",
+      "token": "SKIN_TOKEN_FILE_SIZE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ft",
+      "token": "SKIN_TOKEN_FILE_TEXT",
+      "rawParameterSpec": "F|[is]",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "fv",
+      "token": "SKIN_TOKEN_FILE_VBR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "file",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "iA",
+      "token": "SKIN_TOKEN_METADATA_ALBUM_ARTIST",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "iC",
+      "token": "SKIN_TOKEN_METADATA_COMMENT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "iG",
+      "token": "SKIN_TOKEN_METADATA_GROUPING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ia",
+      "token": "SKIN_TOKEN_METADATA_ARTIST",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ic",
+      "token": "SKIN_TOKEN_METADATA_COMPOSER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "id",
+      "token": "SKIN_TOKEN_METADATA_ALBUM",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "if",
+      "token": "SKIN_TOKEN_LOGICAL_IF",
+      "rawParameterSpec": "TS[ITS]|D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "conditional",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ig",
+      "token": "SKIN_TOKEN_METADATA_GENRE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ik",
+      "token": "SKIN_TOKEN_METADATA_DISC_NUMBER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "in",
+      "token": "SKIN_TOKEN_METADATA_TRACK_NUMBER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "it",
+      "token": "SKIN_TOKEN_METADATA_TRACK_TITLE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "iv",
+      "token": "SKIN_TOKEN_METADATA_VERSION",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "iy",
+      "token": "SKIN_TOKEN_METADATA_YEAR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "metadata",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "lh",
+      "token": "SKIN_TOKEN_VLED_HDD",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "virtual-led",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "mh",
+      "token": "SKIN_TOKEN_MAIN_HOLD",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "hold",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "mm",
+      "token": "SKIN_TOKEN_REPEAT_MODE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "mode",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "mp",
+      "token": "SKIN_TOKEN_PLAYBACK_STATUS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "mode",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "mr",
+      "token": "SKIN_TOKEN_REMOTE_HOLD",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "hold",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "mv",
+      "token": "SKIN_TOKEN_BUTTON_VOLUME",
+      "rawParameterSpec": "|D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "buttons",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "or",
+      "token": "SKIN_TOKEN_LOGICAL_OR",
+      "rawParameterSpec": "T*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "conditional",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pE",
+      "token": "SKIN_TOKEN_TRACK_ENDING",
+      "rawParameterSpec": "|D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pL",
+      "token": "SKIN_TOKEN_PEAKMETER_LEFT",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_PEAK_METER",
+      "category": "peakmeter",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pP",
+      "token": "SKIN_TOKEN_PLAYLIST_PERCENT",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pR",
+      "token": "SKIN_TOKEN_PEAKMETER_RIGHT",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_PEAK_METER",
+      "category": "peakmeter",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pS",
+      "token": "SKIN_TOKEN_TRACK_STARTING",
+      "rawParameterSpec": "|D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pX",
+      "token": "SKIN_TOKEN_PLAYLIST_ELAPSED_PERCENT",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pb",
+      "token": "SKIN_TOKEN_PROGRESSBAR",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_PLAYER_PROGRESS",
+      "category": "progressbar",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pc",
+      "token": "SKIN_TOKEN_TRACK_TIME_ELAPSED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pe",
+      "token": "SKIN_TOKEN_PLAYLIST_ENTRIES",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pf",
+      "token": "SKIN_TOKEN_PLAYER_PROGRESSBAR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC|SKIN_REFRESH_PLAYER_PROGRESS",
+      "category": "progressbar",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pm",
+      "token": "SKIN_TOKEN_PEAKMETER",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_PEAK_METER",
+      "category": "peakmeter",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pn",
+      "token": "SKIN_TOKEN_PLAYLIST_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pp",
+      "token": "SKIN_TOKEN_PLAYLIST_POSITION",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pr",
+      "token": "SKIN_TOKEN_TRACK_TIME_REMAINING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ps",
+      "token": "SKIN_TOKEN_PLAYLIST_SHUFFLE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pt",
+      "token": "SKIN_TOKEN_TRACK_LENGTH",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "pv",
+      "token": "SKIN_TOKEN_VOLUME",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "volume-level",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "px",
+      "token": "SKIN_TOKEN_TRACK_ELAPSED_PERCENT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "current-track",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ra",
+      "token": "SKIN_TOKEN_DATABASE_AUTOSCORE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "database",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "rg",
+      "token": "SKIN_TOKEN_REPLAYGAIN",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "sound",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "rp",
+      "token": "SKIN_TOKEN_DATABASE_PLAYCOUNT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "database",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "rr",
+      "token": "SKIN_TOKEN_DATABASE_RATING",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "database",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "s",
+      "token": "SKIN_TOKEN_SUBLINE_SCROLL",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_SCROLL",
+      "category": "sublines",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ss",
+      "token": "SKIN_TOKEN_SUBSTRING",
+      "rawParameterSpec": "IiT|s",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "skin-variables",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "t",
+      "token": "SKIN_TOKEN_SUBLINE_TIMEOUT",
+      "rawParameterSpec": "D|d",
+      "rawFlags": "0",
+      "category": "sublines",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ta",
+      "token": "SKIN_TOKEN_TUNER_MINFREQ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tb",
+      "token": "SKIN_TOKEN_TUNER_MAXFREQ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tf",
+      "token": "SKIN_TOKEN_TUNER_CURFREQ",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "th",
+      "token": "SKIN_TOKEN_TUNER_RSSI_MAX",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tl",
+      "token": "SKIN_TOKEN_TUNER_RSSI_MIN",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tm",
+      "token": "SKIN_TOKEN_TUNER_SCANMODE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tp",
+      "token": "SKIN_TOKEN_HAVE_TUNER",
+      "rawParameterSpec": "",
+      "rawFlags": "FEATURE_TAG",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tr",
+      "token": "SKIN_TOKEN_TUNER_RSSI",
+      "rawParameterSpec": "?[iP][iP][iP][iP]|s*",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ts",
+      "token": "SKIN_TOKEN_TUNER_STEREO",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tt",
+      "token": "SKIN_TOKEN_TUNER_TUNED",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "radio-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tx",
+      "token": "SKIN_TOKEN_HAVE_RDS",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC",
+      "category": "rds-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "ty",
+      "token": "SKIN_TOKEN_RDS_NAME",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "rds-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "tz",
+      "token": "SKIN_TOKEN_RDS_TEXT",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "rds-tokens",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "vg",
+      "token": "SKIN_TOKEN_VAR_GETVAL",
+      "rawParameterSpec": "S",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "skin-variables",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "vl",
+      "token": "SKIN_TOKEN_VAR_TIMEOUT",
+      "rawParameterSpec": "S|D",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "skin-variables",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "vs",
+      "token": "SKIN_TOKEN_VAR_SET",
+      "rawParameterSpec": "SSi|I",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "skin-variables",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "wd",
+      "token": "SKIN_TOKEN_DISABLE_THEME",
+      "rawParameterSpec": "",
+      "rawFlags": "0|NOBREAK",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "we",
+      "token": "SKIN_TOKEN_ENABLE_THEME",
+      "rawParameterSpec": "",
+      "rawFlags": "0|NOBREAK",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "wi",
+      "token": "SKIN_TOKEN_DRAW_INBUILTBAR",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "playlist",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "x",
+      "token": "SKIN_TOKEN_IMAGE_DISPLAY",
+      "rawParameterSpec": "SF|II",
+      "rawFlags": "SKIN_REFRESH_STATIC|NOBREAK",
+      "category": "image",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "x9",
+      "token": "SKIN_TOKEN_IMAGE_DISPLAY_9SEGMENT",
+      "rawParameterSpec": "S",
+      "rawFlags": "0",
+      "category": "image",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "xd",
+      "token": "SKIN_TOKEN_IMAGE_PRELOAD_DISPLAY",
+      "rawParameterSpec": "S|[IT]I",
+      "rawFlags": "0",
+      "category": "image",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "xf",
+      "token": "SKIN_TOKEN_CROSSFADE",
+      "rawParameterSpec": "",
+      "rawFlags": "SKIN_REFRESH_DYNAMIC",
+      "category": "sound",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    },
+    {
+      "name": "xl",
+      "token": "SKIN_TOKEN_IMAGE_PRELOAD",
+      "rawParameterSpec": "SF|[IP][IP]I",
+      "rawFlags": "0|NOBREAK",
+      "category": "image",
+      "supportLevels": [
+        "preserved",
+        "parsed"
+      ]
+    }
+  ]
+}
