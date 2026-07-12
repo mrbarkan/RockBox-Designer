@@ -29,3 +29,13 @@
 **Decision:** Root and branch `RockboxDocument` values share the original source string and carry absolute, half-open spans. Clean documents serialize their source span directly; clean nodes serialize their exact `raw` slice. Tag arguments remain raw syntax and are not semantically split during initial parsing.
 
 **Consequences:** Untouched source and branches round-trip exactly, line/column diagnostics remain globally meaningful, and Phase 1B can target narrow source regions. Callers must not assume a branch document's source string contains only that branch.
+
+## ADR-0004 — Make lossless source authoritative and derive the legacy preview AST
+
+**Status:** Accepted
+
+**Context:** The canvas evaluator still consumes the legacy AST, but using that simplified tree as the export source would undo Phase 1A preservation guarantees.
+
+**Decision:** Imported screens retain a lossless `RockboxDocument`. All Phase 1B edits and screen compilation use it. After an edit, the application serializes the lossless document and reparses that source into a legacy AST only for the current renderer. Saved projects without a lossless document migrate lazily from their stored raw legacy source.
+
+**Consequences:** Export no longer depends on normalized legacy nodes, existing preview behavior remains available, and migration is incremental. The derived AST may still render approximately, and Phase 2 must move semantic interpretation off the legacy representation.

@@ -1,17 +1,18 @@
 
 import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
-import { ProjectState, WpsElement, SongMetadata, SimulationState, ScreenType, RockboxAstPath } from '../types';
+import { ProjectState, WpsElement, SongMetadata, SimulationState, ScreenType } from '../types';
 import { IPOD_SCREEN_WIDTH, IPOD_SCREEN_HEIGHT, GRAPHIC_ASSETS } from '../constants';
 import { evaluateTheme, renderToCanvas } from '../services/graphicsPipeline';
 import { evaluateAstTheme } from '../services/rockboxAstEvaluator';
 import {
-  AstImageEditable,
-  AstTextEditable,
-  AstViewportEditable,
-  listAstImageNodes,
-  listAstTextNodes,
-  listAstViewports
-} from '../services/rockboxAstEditor';
+  listSyntaxImageNodes,
+  listSyntaxTextNodes,
+  listSyntaxViewports,
+  SyntaxImageEditable,
+  SyntaxTextEditable,
+  SyntaxViewportEditable
+} from '../rockbox/editing';
+import { getProjectSyntaxDocument } from '../services/rockboxSyntaxAdapter';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -26,11 +27,11 @@ interface EditorCanvasProps {
   debugMode?: boolean;
   useAstPreview?: boolean;
   onUpdateAstViewport?: (
-    path: RockboxAstPath,
+    nodeId: string,
     updates: { x: number; y: number; width: number; height: number }
   ) => void;
-  onUpdateAstText?: (path: RockboxAstPath, value: string) => void;
-  onUpdateAstImage?: (path: RockboxAstPath, filename: string) => void;
+  onUpdateAstText?: (nodeId: string, value: string) => void;
+  onUpdateAstImage?: (nodeId: string, filename: string) => void;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -55,7 +56,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   // Interaction State
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [resizingId, setResizingId] = useState<string | null>(null);
-  const [astDragging, setAstDragging] = useState<AstViewportEditable | null>(null);
+  const [astDragging, setAstDragging] = useState<SyntaxViewportEditable | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [elementStart, setElementStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
 
@@ -137,7 +138,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     setElementStart({ x: el.x, y: el.y, w: el.width, h: el.height });
   }
 
-  const handleAstMouseDown = (e: React.MouseEvent, viewport: AstViewportEditable) => {
+  const handleAstMouseDown = (e: React.MouseEvent, viewport: SyntaxViewportEditable) => {
     e.stopPropagation();
     setAstDragging(viewport);
     setResizingId(null);
@@ -145,7 +146,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     setElementStart({ x: viewport.x, y: viewport.y, w: viewport.width, h: viewport.height });
   };
 
-  const handleAstResizeStart = (e: React.MouseEvent, viewport: AstViewportEditable) => {
+  const handleAstResizeStart = (e: React.MouseEvent, viewport: SyntaxViewportEditable) => {
     e.stopPropagation();
     setAstDragging(viewport);
     setResizingId(viewport.id);
@@ -166,7 +167,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             width: Math.max(10, snap(elementStart.w + (resizingId ? deltaX : 0))),
             height: Math.max(10, snap(elementStart.h + (resizingId ? deltaY : 0)))
         };
-        onUpdateAstViewport(astDragging.path, next);
+        onUpdateAstViewport(astDragging.id, next);
         return;
     }
 
@@ -191,37 +192,30 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   // Only render interaction boxes for visible elements on current screen
   const interactionElements = project.elements.filter(el => el.screen === activeScreen);
+  const syntaxDocument = getProjectSyntaxDocument(project, activeScreen);
   const astViewports = useAstPreview
-      ? listAstViewports(
-          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst
-        )
+      ? listSyntaxViewports(syntaxDocument)
       : [];
   const astTextNodes = useAstPreview
-      ? listAstTextNodes(
-          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst,
-          project.settings.uiFont
-        )
+      ? listSyntaxTextNodes(syntaxDocument, project.settings.uiFont)
       : [];
   const astImageNodes = useAstPreview
-      ? listAstImageNodes(
-          activeScreen === 'wps' ? project.wpsAst : activeScreen === 'sbs' ? project.sbsAst : project.fmsAst,
-          project.settings.uiFont
-        )
+      ? listSyntaxImageNodes(syntaxDocument, project.settings.uiFont)
       : [];
 
-  const handleAstTextEdit = (node: AstTextEditable) => {
+  const handleAstTextEdit = (node: SyntaxTextEditable) => {
     if (!onUpdateAstText) return;
     const next = window.prompt('Edit text', node.value);
     if (next !== null) {
-      onUpdateAstText(node.path, next);
+      onUpdateAstText(node.id, next);
     }
   };
 
-  const handleAstImageEdit = (node: AstImageEditable) => {
+  const handleAstImageEdit = (node: SyntaxImageEditable) => {
     if (!onUpdateAstImage) return;
     const next = window.prompt('Image filename', node.filename);
     if (next !== null) {
-      onUpdateAstImage(node.path, next);
+      onUpdateAstImage(node.id, next);
     }
   };
 

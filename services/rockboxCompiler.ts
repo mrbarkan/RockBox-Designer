@@ -2,6 +2,7 @@
 import { ProjectState, ElementType, TextElement, WpsElement, ImageElement, ScreenType, RectElement, ProgressBarElement } from '../types';
 import { GRAPHIC_ASSETS } from '../constants';
 import { serializeDocument } from './rockboxAstSerializer';
+import { serializeRockbox } from '../rockbox/syntax';
 
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex ? hex.replace('#', '') : 'FFFFFF';
@@ -166,6 +167,10 @@ export const compileSbs = (project: ProjectState) => compileScreen(project, 'sbs
 export const compileFms = (project: ProjectState) => compileScreen(project, 'fms');
 
 export const compileAstScreen = (project: ProjectState, screen: ScreenType): string | null => {
+  if (screen === 'wps' && project.wpsDocument) return serializeRockbox(project.wpsDocument);
+  if (screen === 'sbs' && project.sbsDocument) return serializeRockbox(project.sbsDocument);
+  if (screen === 'fms' && project.fmsDocument) return serializeRockbox(project.fmsDocument);
+  // Deprecated saved-project fallback. New imports and edits use the lossless document above.
   if (screen === 'wps' && project.wpsAst) return serializeDocument(project.wpsAst);
   if (screen === 'sbs' && project.sbsAst) return serializeDocument(project.sbsAst);
   if (screen === 'fms' && project.fmsAst) return serializeDocument(project.fmsAst);

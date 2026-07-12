@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1A — Lossless Rockbox syntax engine
-- **Branch:** `codex/phase-1a-lossless-syntax`
-- **Merged milestones:** Phase 0 merged through [PR #5](https://github.com/mrbarkan/RockBox-Designer/pull/5) at `c39026b`.
-- **Status:** Phase 1A acceptance criteria pass locally; awaiting draft pull request review and merge.
-- **Scope boundary:** Lossless syntax, diagnostics, serialization, fixtures, and a migration adapter only. Existing visual editing remains on the legacy AST until Phase 1B.
+- **Phase:** Phase 1B — Source-aware editing and legacy migration
+- **Branch:** `codex/phase-1b-source-aware-editing`
+- **Merged milestones:** Phase 0 through [PR #5](https://github.com/mrbarkan/RockBox-Designer/pull/5); Phase 1A through [PR #6](https://github.com/mrbarkan/RockBox-Designer/pull/6) at `40317a6`.
+- **Status:** Phase 1B acceptance criteria pass locally; awaiting draft pull request review and merge.
+- **Scope boundary:** Immutable source commands, known-tag argument helpers, viewport/text/image UI migration, and lossless export authority only. Package modernization remains Phase 1C.
 
 ## Current architecture
 
@@ -20,7 +20,9 @@ Last updated: 2026-07-12
 - Canvas rendering can use either the visual-element evaluator or the AST evaluator. AST viewports, text, and images have narrow editor helpers.
 - Package assets are currently stored as data URLs keyed primarily by basename. JSZip is provided by a global browser script.
 - `rockbox/syntax/` now provides a separate lossless document model with absolute source spans, exact raw slices, diagnostics, a structural conditional model, a tokenizer, and a minimum-change serializer.
-- `services/rockboxSyntaxAdapter.ts` exposes the lossless document beside the legacy AST without changing current application behavior.
+- `rockbox/editing/` provides immutable commands, semantic argument helpers for the Phase 1B tag subset, stable node-ID queries, and explicit failure diagnostics.
+- New theme imports retain lossless WPS/SBS documents. Existing saved projects migrate lazily from their stored legacy raw source on first edit.
+- The compiler, ZIP exporter, source editor, and code preview prefer the lossless document. A newly derived legacy AST remains only as the current renderer adapter.
 
 ## Baseline findings
 
@@ -44,8 +46,9 @@ Before Phase 0 changes:
 
 ## Known parser and package risks
 
-- The application still uses the early AST parser and serializer; product import/edit/export is not lossless until Phase 1B migrates callers.
-- The new syntax engine preserves tested source exactly and structures nested and parameterized conditionals, but it is not yet semantically interpreted by the UI.
+- Viewport, text, and image interactions now edit the lossless document and synchronize a derived legacy AST for preview.
+- The renderer still interprets the derived legacy AST; broader semantic migration is deferred.
+- The raw source editor displays authoritative source but its Apply action is not a two-way parser/editor workflow yet.
 - Known-tag matching uses a transitional local list until Phase 1D generates the registry from Rockbox source.
 - Legacy pipe-style argument boundaries use a small transitional arity table and need registry-backed expansion.
 - The CFG import is not source-preserving and does not currently load the FMS path.
@@ -61,30 +64,32 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 4 files, 43 tests
+npm test               passed — 6 files, 71 tests
 npm run build          passed — Vite production build
 npm run validate       passed — typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
+browser smoke          passed — canvas and source/AST controls rendered; no console errors
 ```
 
-Phase 1A evidence:
+Phase 1B evidence:
 
-- Twenty named exact round-trip fixtures cover required syntax categories.
-- Three hundred randomized combinations of known-safe fragments and two hundred randomized safe-Unicode samples round-trip exactly per test run.
-- Unknown and malformed source remains serializable, with diagnostics for incomplete tags, unterminated argument regions, missing conditional delimiters, and unexpected separators.
-- Parameterized tests and nested conditional branches are represented structurally.
-- Dirty known tags preserve parenthesis or pipe invocation style and do not invent missing delimiters.
-- The existing UI and legacy parser remain buildable and unchanged.
+- Viewport geometry edits change only the intended arguments and preserve formatting.
+- Text and image edits preserve surrounding tags, comments, unknown source, invocation style, and sibling conditional branches.
+- Stable node IDs survive narrow updates and moves.
+- Insert, delete, move, and conditional-branch replacement commands are immutable and fail safely with diagnostics.
+- Semantic schemas cover `%V`, `%Vl`, `%Vi`, `%Vf`, `%Vb`, `%Fl`, `%x`, `%xl`, `%xd`, `%X`, `%pb`, `%pv`, `%Cl`, `%Cd`, and `%T`.
+- Lossless source wins over conflicting legacy AST source during compilation and export.
+- Saved legacy projects migrate lazily without changing their source before an edit.
 
 ## Known blockers
 
-- No Phase 1A blocker is currently known.
+- No Phase 1B blocker is currently known.
 - Parser compatibility remains intentionally unverified until the later official-validation and real-theme phases.
 
 ## Next task
 
-Finish and merge Phase 1A. Phase 1B must begin from updated `main` on a separate branch and migrate editing callers through the lossless document without broadening rendering or UI scope.
+Finish and merge Phase 1B. Phase 1C must begin from updated `main` on a separate branch and address CFG, ZIP paths, deterministic export, and binary assets without expanding rendering scope.
 
 ## Compatibility summary
 
-The new syntax API demonstrates exact preservation for its synthetic fixture corpus, including unknown and malformed input. The current product workflow has not migrated to that API, and official or real-theme compatibility has not been demonstrated. See `COMPATIBILITY_MATRIX.md` and `PARSER_LIMITATIONS.md` for the evidence level of each subsystem.
+The product now uses lossless source as the authority for imported WPS/SBS editing and export, with tested viewport, text, and image changes. The renderer remains an adapter over the legacy AST, package fidelity is still incomplete, and official or real-theme compatibility has not been demonstrated.

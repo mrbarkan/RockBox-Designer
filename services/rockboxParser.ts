@@ -1,7 +1,8 @@
 
 import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement, RockboxAstDocument } from '../types';
+import { RockboxDocument } from '../rockbox/syntax';
 import { DEFAULT_PROJECT } from '../constants';
-import { parseWpsToAst } from './rockboxAst';
+import { parseRockboxForLegacyConsumer } from './rockboxSyntaxAdapter';
 
 interface ParserContext {
     screen: ScreenType;
@@ -394,19 +395,38 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
         let wpsAst: RockboxAstDocument | undefined;
         let sbsAst: RockboxAstDocument | undefined;
         let fmsAst: RockboxAstDocument | undefined;
+        let wpsDocument: RockboxDocument | undefined;
+        let sbsDocument: RockboxDocument | undefined;
+        let fmsDocument: RockboxDocument | undefined;
 
         if (wpsPath) {
             const wpsContent = await loadContent(wpsPath);
             parseScreen(wpsContent, 'wps');
-            wpsAst = parseWpsToAst(wpsContent);
+            const parsed = parseRockboxForLegacyConsumer(wpsContent);
+            wpsDocument = parsed.sourceDocument;
+            wpsAst = parsed.legacyDocument;
         }
         if (sbsPath) {
             const sbsContent = await loadContent(sbsPath);
             parseScreen(sbsContent, 'sbs');
-            sbsAst = parseWpsToAst(sbsContent);
+            const parsed = parseRockboxForLegacyConsumer(sbsContent);
+            sbsDocument = parsed.sourceDocument;
+            sbsAst = parsed.legacyDocument;
         }
 
-        return { settings, elements, assets, selectedElementIds: [], validationReport: warnings, wpsAst, sbsAst, fmsAst };
+        return {
+            settings,
+            elements,
+            assets,
+            selectedElementIds: [],
+            validationReport: warnings,
+            wpsAst,
+            sbsAst,
+            fmsAst,
+            wpsDocument,
+            sbsDocument,
+            fmsDocument
+        };
 
     } catch (e) {
         console.error(e);

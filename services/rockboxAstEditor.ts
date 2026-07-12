@@ -1,3 +1,7 @@
+/**
+ * @deprecated Legacy AST editing adapter retained for saved-project compatibility.
+ * Product editing callers use rockbox/editing and the lossless source document.
+ */
 import { RockboxAstDocument, RockboxAstNode, RockboxAstPath, RockboxAstPathStep, RockboxTagNode } from '../types';
 
 export type AstViewportEditable = {
