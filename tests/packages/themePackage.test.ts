@@ -24,6 +24,18 @@ const baseCfg = (screens: Array<'wps' | 'sbs' | 'fms'>) => [
 ].join('\r\n');
 
 describe('theme package import', () => {
+  it('resolves standard Rockbox paths inside a single wrapper directory', async () => {
+    const theme = await importThemePackage(await zipFiles({
+      'wrapped/.rockbox/themes/theme.cfg': 'wps: /.rockbox/wps/theme.wps\n',
+      'wrapped/.rockbox/wps/theme.wps': '%x(A,bg.bmp,0,0)',
+      'wrapped/.rockbox/wps/theme/bg.bmp': new Uint8Array([1, 2, 3])
+    }));
+
+    expect(theme.screenPaths.wps).toBe('wrapped/.rockbox/wps/theme.wps');
+    expect(theme.screens.wps?.source).toBe('%x(A,bg.bmp,0,0)');
+    expect(theme.diagnostics).toEqual([]);
+  });
+
   it.each([
     [['wps']],
     [['wps', 'sbs']],

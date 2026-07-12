@@ -7,7 +7,7 @@ Last updated: 2026-07-12
 - **Phase:** Phase 2 — Accurate WPS visual editor
 - **Branch:** `main`
 - **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`.
-- **Status:** Phase 2 is complete and merged. The supported WPS subset is ready for targeted dogfooding.
+- **Status:** Phase 2 is complete and merged. A dogfood-discovered Adwaitapod rendering correction is implemented and locally verified; publication status is recorded below.
 - **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
 
 ## Current architecture
@@ -17,7 +17,7 @@ Last updated: 2026-07-12
 - The project retains the legacy flat visual-element model for synthetic projects and non-WPS fallback, but imported WPS source now renders directly from the lossless document through Phase 2 semantics.
 - ZIP import in `services/rockboxParser.ts` reads a CFG, builds visual elements, and creates early AST documents for WPS and SBS when those paths are present.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
-- WPS canvas rendering uses a source-linked render list at native target pixels with integer coordinates, explicit clipping, nearest-neighbor bitmap scaling, and source-derived editing overlays.
+- WPS canvas rendering uses a source-linked render list at native target pixels with Rockbox-relative viewport dimensions, explicit clipping, font-slot sizing, conditional viewport activation, nearest-neighbor bitmap scaling, transparent bitmap keys, image-backed bars, and non-tinting source-derived editing overlays.
 - Imported package assets are binary and archive-path keyed; legacy upload controls still derive data URLs before export conversion. JSZip is an explicit module dependency.
 - `rockbox/syntax/` now provides a separate lossless document model with absolute source spans, exact raw slices, diagnostics, a structural conditional model, a tokenizer, and a minimum-change serializer.
 - `rockbox/editing/` provides immutable commands, semantic argument helpers for the Phase 1B tag subset, stable node-ID queries, and explicit failure diagnostics.
@@ -64,11 +64,11 @@ Before Phase 0 changes:
 - Official tag names come from generated upstream metadata; interpretation and editing remain intentionally limited to evidenced subsets.
 - Legacy pipe-style argument boundaries still use a small transitional arity table outside the evidenced image/viewport subset.
 - CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
-- Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback.
+- Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback. Conventional ZIPs with one outer wrapper directory resolve their absolute `/.rockbox/...` CFG references inside that wrapper.
 - Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
 - FMS is supported by the package model, but the legacy visual importer still does not populate FMS-derived visual elements.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
-- Browser text uses an approximate monospace font rather than Rockbox `.fnt` glyph metrics. Complex `%?if`, `%?and`, and `%?or` tests are preserved and manually previewable but not automatically evaluated yet.
+- Browser text resolves `%Fl` size/weight but still approximates Rockbox `.fnt` glyph metrics with browser sans-serif glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
 
 ## Validation
 
@@ -76,7 +76,7 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 16 files, 113 tests
+npm test               passed — 17 files, 119 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -109,12 +109,20 @@ Phase 2 evidence:
 - AMusicPod and Adwaitapod each accepted a one-pixel viewport edit, updated the semantic projection, serialized only the intended tag, exported/re-imported exactly, and retained all asset hashes.
 - The authored full-screen package completed import, source-aware edit, export, and re-import, then its edited WPS was accepted by `checkwps.ipodvideo` at the pinned SHA.
 - Conditional playback branches follow simulation state and can be overridden explicitly in the layer panel. Invalid source diagnostics make the preview visibly stale instead of replacing the last valid render.
-- A checked-in 320×240 PPM golden verifies deterministic native-pixel output. The local app loaded successfully in browser smoke orientation; the connected browser session detached before the automated import interaction, so the import/edit workflow is evidenced by integration and package tests rather than a completed browser automation recording.
+- A checked-in 320×240 PPM golden verifies deterministic native-pixel output. The original milestone used integration and package tests for import/edit interaction; the completed real-theme browser comparison for the dogfood correction is recorded below.
+
+Adwaitapod dogfood correction evidence:
+
+- The user-supplied Adwaitapod 3.3 ZIP (`SHA-256 4fda0f1b490a39ff3871b27d5d99d697adbcf3b6c34c2587e132e77bc53dd3a0`) imported its wrapped WPS, SBS, FMS, and referenced assets with zero package diagnostics. The private file is not committed.
+- Its original WPS was accepted by `checkwps.ipodvideo` built from the pinned Rockbox SHA.
+- Its WPS now activates only Player, info, and the correct playtime viewport for the default simulation; false Lockscreen, AOD, volume, and unused playtime branches do not paint.
+- A side-by-side local browser render against the supplied 320×240 reference verified album-art geometry, title/secondary rows, time labels, counter, sprites, transparent bitmap edges, and the image/backdrop/slider progress composition.
+- Interaction overlays remain available for editing but no longer stack translucent fills or labels over the theme when they are neither selected nor in debug mode.
 
 ## Known blockers
 
 - No Phase 2 acceptance blocker is currently known.
-- This is ready for targeted WPS dogfooding, not a claim that every real-theme construct renders accurately.
+- This is ready for targeted WPS dogfooding, not a claim that every real-theme construct or Rockbox font renders exactly.
 
 ## Next task
 
@@ -122,4 +130,4 @@ Dogfood the supported WPS workflow and record any real-theme gaps by preservatio
 
 ## Compatibility summary
 
-Phase 2 is ready for targeted WPS dogfooding: a user can import a real theme, inspect source-aware logic layers, preview supported state branches, move supported viewports, edit known properties or source, export without losing unsupported syntax/assets, and receive official validation evidence for the tested subset. Complex condition functions, exact font metrics, and broad tag rendering remain visible limitations.
+Phase 2 is ready for targeted WPS dogfooding: a user can import wrapped or root-level real-theme ZIPs, inspect source-aware logic layers, preview the evidenced logical-expression and state branches, render only enabled conditional viewports, move supported viewports, edit known properties or source, and export without losing unsupported syntax/assets. Exact `.fnt` metrics, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.

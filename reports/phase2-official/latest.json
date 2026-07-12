@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T20:43:13.320Z",
+  "generatedAt": "2026-07-12T21:18:54.082Z",
   "upstream": {
     "repository": "https://github.com/Rockbox/rockbox.git",
     "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"

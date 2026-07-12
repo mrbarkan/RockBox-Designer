@@ -338,18 +338,18 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     key={vp.id}
                     onMouseDown={(e) => handleAstMouseDown(e, vp)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(vp.id); }}
-                    className={`absolute group hover:outline hover:outline-1 hover:outline-amber-400 outline z-20 ${project.selectedElementIds.includes(vp.id) ? 'outline-2 outline-orange-500' : 'outline-1 outline-amber-600/60'}`}
+                    className={`absolute group z-20 hover:outline hover:outline-1 hover:outline-amber-400 ${project.selectedElementIds.includes(vp.id) ? 'outline outline-2 outline-orange-500' : debugMode ? 'outline outline-1 outline-amber-600/60' : ''}`}
                     style={{
                         left: vp.x,
                         top: vp.y,
                         width: vp.width,
                         height: vp.height,
                         cursor: 'move',
-                        backgroundColor: 'rgba(251, 191, 36, 0.08)'
+                        backgroundColor: project.selectedElementIds.includes(vp.id) || debugMode ? 'rgba(251, 191, 36, 0.08)' : 'transparent'
                     }}
                 >
                     <div
-                        className="absolute -bottom-1 -right-1 w-3 h-3 bg-amber-600 border border-white cursor-se-resize"
+                        className={`absolute -bottom-1 -right-1 w-3 h-3 bg-amber-600 border border-white cursor-se-resize group-hover:opacity-100 ${project.selectedElementIds.includes(vp.id) || debugMode ? 'opacity-100' : 'opacity-0'}`}
                         onMouseDown={(e) => handleAstResizeStart(e, vp)}
                     />
                 </div>
@@ -360,16 +360,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     key={node.id}
                     onDoubleClick={() => handleAstTextEdit(node)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
-                    className={`absolute z-30 border border-dashed text-[9px] text-emerald-100/80 font-mono pointer-events-auto ${project.selectedElementIds.includes(node.id) ? 'border-orange-500 bg-orange-500/10' : 'border-emerald-400/70'}`}
+                    className={`absolute z-30 text-[9px] text-emerald-100/80 font-mono pointer-events-auto hover:border hover:border-dashed hover:border-emerald-400/70 ${project.selectedElementIds.includes(node.id) ? 'border border-dashed border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dashed border-emerald-400/70' : ''}`}
                     style={{
                         left: node.x,
                         top: node.y,
                         width: node.width,
                         height: node.height,
-                        backgroundColor: 'rgba(16, 185, 129, 0.08)'
+                        backgroundColor: project.selectedElementIds.includes(node.id) || debugMode ? 'rgba(16, 185, 129, 0.08)' : 'transparent'
                     }}
                 >
-                    <span className="px-1">TXT</span>
+                    {(project.selectedElementIds.includes(node.id) || debugMode) && <span className="px-1">TXT</span>}
                 </div>
             ))}
 
@@ -378,16 +378,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     key={node.id}
                     onDoubleClick={() => handleAstImageEdit(node)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
-                    className={`absolute z-30 border border-dashed text-[9px] text-sky-100/80 font-mono pointer-events-auto ${project.selectedElementIds.includes(node.id) ? 'border-orange-500 bg-orange-500/10' : 'border-sky-400/70'}`}
+                    className={`absolute z-30 text-[9px] text-sky-100/80 font-mono pointer-events-auto hover:border hover:border-dashed hover:border-sky-400/70 ${project.selectedElementIds.includes(node.id) ? 'border border-dashed border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dashed border-sky-400/70' : ''}`}
                     style={{
                         left: node.x,
                         top: node.y,
                         width: node.width,
                         height: node.height,
-                        backgroundColor: 'rgba(56, 189, 248, 0.08)'
+                        backgroundColor: project.selectedElementIds.includes(node.id) || debugMode ? 'rgba(56, 189, 248, 0.08)' : 'transparent'
                     }}
                 >
-                    <span className="px-1">IMG</span>
+                    {(project.selectedElementIds.includes(node.id) || debugMode) && <span className="px-1">IMG</span>}
                 </div>
             ))}
 
@@ -395,7 +395,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 <div
                     key={`${operation.type}:${operation.source.nodeId}`}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(operation.source.nodeId); }}
-                    className={`absolute z-[25] border border-dotted pointer-events-auto ${project.selectedElementIds.includes(operation.source.nodeId) ? 'border-orange-500 bg-orange-500/10' : 'border-cyan-300/50'}`}
+                    className={`absolute z-[25] pointer-events-auto hover:border hover:border-dotted hover:border-cyan-300/50 ${project.selectedElementIds.includes(operation.source.nodeId) ? 'border border-dotted border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dotted border-cyan-300/50' : ''}`}
                     style={{
                         left: operation.rect.x,
                         top: operation.rect.y,
