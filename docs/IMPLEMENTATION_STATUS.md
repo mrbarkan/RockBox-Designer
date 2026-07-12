@@ -5,9 +5,9 @@ Last updated: 2026-07-12
 ## Current phase
 
 - **Phase:** Phase 2 — Accurate WPS visual editor
-- **Branch:** `codex/phase-2-accurate-wps-editor`
-- **Merged milestones:** Phase 0 through Phase 1G; Phase 1G merged through [PR #12](https://github.com/mrbarkan/RockBox-Designer/pull/12) at `156a79d`.
-- **Status:** Phase 2 acceptance criteria pass locally; ready to publish and merge.
+- **Branch:** `main`
+- **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`.
+- **Status:** Phase 2 is complete and merged. The supported WPS subset is ready for targeted dogfooding.
 - **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
 
 ## Current architecture
@@ -118,7 +118,7 @@ Phase 2 evidence:
 
 ## Next task
 
-Finish and merge Phase 2. Do not start Phase 3 in this branch; SBS, FMS, lists, menus, and the font pipeline begin from updated `main`.
+Dogfood the supported WPS workflow and record any real-theme gaps by preservation, interpretation, rendering, and editing category. Phase 3 is the next planned implementation phase but has not started.
 
 ## Compatibility summary
 
