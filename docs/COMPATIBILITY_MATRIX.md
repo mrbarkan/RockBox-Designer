@@ -4,13 +4,14 @@ This matrix records separate evidence levels. It deliberately does not combine t
 
 | Area | Preserved | Parsed | Interpreted | Rendered | Editable | Officially validated | Baseline note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| WPS source | Partial | Partial | Partial | Partial | Partial | No | Import creates an early AST, but serialization is not exact. |
+| Phase 1A syntax document | Yes for tested corpus | Structural subset | No | No | Serializer primitive only | No | Twenty named fixtures and randomized safe-fragment combinations round-trip exactly. |
+| WPS product workflow | Partial | Partial | Partial | Partial | Partial | No | Import still creates and uses the early AST; Phase 1B performs caller migration. |
 | SBS source | Partial | Partial | Partial | Partial | Partial | No | CFG `sbs` is loaded when found; limitations match WPS. |
 | FMS source | No package evidence | No package evidence | Partial synthetic support | Partial synthetic support | Partial synthetic support | No | Project state supports FMS, but ZIP import does not read the CFG `fms` path. |
 | CFG | No | Partial | Partial | Not applicable | Settings only | No | Comments, duplicate/unknown keys, whitespace, and original ordering are not retained. |
-| Unknown tags | Partial | Generic tag only | No | No | No | No | Names may survive, but argument style and formatting can change. |
-| Malformed syntax | Unverified | No recovery contract | No | No | No | No | There are no parser diagnostics or malformed-source fixtures. |
-| Conditionals | Partial | Approximate | Partial | Partial | Branch content only | No | Parameterized tests and nested separators are not modeled safely. |
+| Unknown tags in new syntax API | Yes | Generic raw tag | No | No | No | No | Unknown names and arguments are preserved; registry-backed name boundaries arrive in Phase 1D. |
+| Malformed syntax in new syntax API | Yes for tested cases | Recovery nodes and diagnostics | No | No | No | No | Incomplete tags, delimiters, and conditionals remain serializable. |
+| Conditionals in new syntax API | Yes for tested corpus | Nested tests and branches | No | No | Serializer primitive only | No | Parameterized tests, nested branches, empty branches, argument pipes, and escaped separators are structural. |
 | Viewports | Partial | Partial | Partial | Partial | Partial | No | Basic `%V` and `%Vl` geometry is supported. |
 | Images and preloads | Partial | Partial | Partial | Partial | Partial | No | Basename asset lookup can collide; sprite behavior is approximate. |
 | Album art | Partial | Partial | Partial | Partial | No | No | `%Cl`/`%Cd` preview support exists for the prototype subset. |
