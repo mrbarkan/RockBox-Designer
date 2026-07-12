@@ -20,6 +20,7 @@ import { storageService } from './services/storageService';
 import { useHistory } from './hooks/useHistory';
 import { EditResult, updateImageReference, updateTextNode, updateViewport } from './rockbox/editing';
 import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from './services/rockboxSyntaxAdapter';
+import { parseProjectData, stringifyProjectData } from './services/projectSerialization';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -277,7 +278,7 @@ export default function App() {
              alert(`Project "${project.settings.name}" saved to cloud!`);
           } catch (e: any) { alert(e.message || "Failed to save"); }
       } else {
-          const json = JSON.stringify(project, null, 2);
+          const json = stringifyProjectData(project, 2);
           const blob = new Blob([json], { type: "application/json" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -295,7 +296,7 @@ export default function App() {
       if (file.name.endsWith('.json')) {
           const reader = new FileReader();
           reader.onload = (ev) => {
-              try { setProject(JSON.parse(ev.target?.result as string)); } catch (err) { alert("Invalid Project JSON"); }
+              try { setProject(parseProjectData<ProjectState>(ev.target?.result as string)); } catch (err) { alert("Invalid Project JSON"); }
           };
           reader.readAsText(file);
       } else { alert("Please upload a valid .json project file."); }

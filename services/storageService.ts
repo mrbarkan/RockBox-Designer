@@ -1,5 +1,6 @@
 
 import { ProjectState, User, CloudProject } from '../types';
+import { parseProjectData, stringifyProjectData } from './projectSerialization';
 
 /**
  * MOCK SERVER SERVICE
@@ -75,7 +76,7 @@ export const storageService = {
 
     const key = `${PROJECTS_PREFIX}${user.username}`;
     const projectsStr = localStorage.getItem(key);
-    let projects: CloudProject[] = projectsStr ? JSON.parse(projectsStr) : [];
+    let projects: CloudProject[] = projectsStr ? parseProjectData(projectsStr) : [];
 
     // Check if project exists (match by name for simplicity in this mock)
     // In real app, we'd use a unique project ID in settings
@@ -95,7 +96,7 @@ export const storageService = {
     }
 
     try {
-        localStorage.setItem(key, JSON.stringify(projects));
+        localStorage.setItem(key, stringifyProjectData(projects));
     } catch (e) {
         throw new Error("Storage full! Project contains too many large images.");
     }
@@ -108,15 +109,15 @@ export const storageService = {
     
     const key = `${PROJECTS_PREFIX}${user.username}`;
     const projectsStr = localStorage.getItem(key);
-    return projectsStr ? JSON.parse(projectsStr) : [];
+    return projectsStr ? parseProjectData(projectsStr) : [];
   },
 
   deleteProject: async (user: User, projectId: string): Promise<void> => {
      const key = `${PROJECTS_PREFIX}${user.username}`;
      const projectsStr = localStorage.getItem(key);
-     let projects: CloudProject[] = projectsStr ? JSON.parse(projectsStr) : [];
+     let projects: CloudProject[] = projectsStr ? parseProjectData(projectsStr) : [];
      
      projects = projects.filter(p => p.id !== projectId);
-     localStorage.setItem(key, JSON.stringify(projects));
+     localStorage.setItem(key, stringifyProjectData(projects));
   }
 };

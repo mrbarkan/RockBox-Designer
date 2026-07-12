@@ -55,29 +55,29 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Available through `RockboxDocument.diagnostics`.
 - **Planned phase:** Expand fixtures as real themes and official parser differences reveal additional recovery cases.
 
-## CFG import remains destructive
+## CFG settings-panel synchronization is incomplete
 
 - **Example:** Comments, blank lines, duplicate keys, unknown settings, or values with significant surrounding whitespace.
-- **Current behavior:** CFG lines are split into selected settings; the original CFG source document is discarded.
-- **Preservation status:** No.
-- **Diagnostic:** These losses are not currently reported.
-- **Planned phase:** Phase 1C source-preserving CFG parser.
+- **Current behavior:** Imported CFG source is preserved exactly and exported unchanged. The low-level update helper preserves formatting, but every settings-panel control is not yet wired to it.
+- **Preservation status:** Exact when untouched and for tested helper updates.
+- **Diagnostic:** Missing package references are reported during import.
+- **Planned phase:** Wire broader CFG editing as the settings and source-editor workflows mature.
 
-## FMS package import remains incomplete
+## FMS visual derivation remains incomplete
 
 - **Example:** `fms: /.rockbox/wps/theme.fms` in a CFG.
-- **Current behavior:** The import path reads `wps` and `sbs` settings but does not capture or load `fms`, so `fmsAst` remains undefined.
-- **Preservation status:** No package-level preservation.
-- **Diagnostic:** None.
-- **Planned phase:** Phase 1C package pipeline.
+- **Current behavior:** The Phase 1C package model resolves and preserves FMS. The legacy visual-element derivation path still covers WPS and SBS only.
+- **Preservation status:** Package source is preserved; visual support is partial.
+- **Diagnostic:** Missing FMS files are reported.
+- **Planned phase:** Phase 3 FMS editor.
 
-## Asset resolution can collide
+## Newly uploaded assets still enter through a compatibility bridge
 
 - **Example:** `dark/icons/play.bmp` and `light/icons/play.bmp` in the same ZIP.
-- **Current behavior:** Assets are keyed and resolved primarily by basename, so one file can overwrite or resolve as the other.
-- **Preservation status:** Unsafe for duplicate basenames.
-- **Diagnostic:** None.
-- **Planned phase:** Phase 1C binary asset store and path-safe resolver.
+- **Current behavior:** Imported assets use binary archive-path identity. Existing upload controls still create data URLs, which are converted into new binary package entries at export.
+- **Preservation status:** Imported duplicate basenames are safe; replacing one duplicate through the old upload UI is not yet path-aware.
+- **Diagnostic:** Missing and case-mismatched references are reported rather than resolved by basename.
+- **Planned phase:** Later asset-library UI migration.
 
 ## Official parser and real themes are not yet test inputs
 
