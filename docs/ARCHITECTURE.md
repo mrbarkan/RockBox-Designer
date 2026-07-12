@@ -91,10 +91,22 @@ ZIP bytes -> path-safe manifest -> source documents + binary asset store
           -> deterministic manifest -> ZIP bytes
 ```
 
+## Phase 1C package implementation
+
+`rockbox/packages/` implements the package flow:
+
+- `cfgParser.ts` retains every CFG line, delimiter, duplicate, unknown setting, whitespace choice, and newline.
+- `paths.ts` normalizes separators and dot segments without basename fallback.
+- `assetStore.ts` stores archive paths, `Uint8Array` bytes, hashes, kind, and MIME hints.
+- `themeImporter.ts` resolves WPS/SBS/FMS from CFG paths, records missing references, and retains all unconsumed files as binary assets.
+- `themeExporter.ts` sorts paths, fixes ZIP metadata, omits absent optional screens, and exports deterministic logical contents.
+
+The existing UI may derive data URLs for `<img>` previews, but imported package bytes remain canonical in `ProjectState.themePackage`. Project persistence has an explicit binary JSON encoding rather than relying on JavaScript's default typed-array serialization.
+
 ## Rendering flow target
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1B boundary
+## Phase 1C boundary
 
-Phase 1B migrates existing viewport, text, and image interactions and export authority. It retains the legacy parser/serializer only as a clearly deprecated saved-project and preview adapter. It does not replace JSZip, make CFG source-preserving, migrate binary assets, expand rendering, or redesign the interface.
+Phase 1C migrates package authority and removes the global JSZip dependency. It does not generate the official tag registry, add device profiles, execute the official parser, expand rendering, or redesign the interface.

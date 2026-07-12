@@ -1,6 +1,8 @@
 
+import JSZip from 'jszip';
 import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement, RockboxAstDocument } from '../types';
 import { RockboxDocument } from '../rockbox/syntax';
+import { importThemePackage } from '../rockbox/packages';
 import { DEFAULT_PROJECT } from '../constants';
 import { parseRockboxForLegacyConsumer } from './rockboxSyntaxAdapter';
 
@@ -28,15 +30,13 @@ const toCssHex = (hex: string) => hex ? '#' + hex.replace(/^0x/, '').replace(/[^
 const USB_ICON_SVG = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="35" y="20" width="30" height="40" fill="#ffffff" /><path d="M35 20 L50 5 L65 20 Z" fill="#ffffff" /><circle cx="42" cy="35" r="4" fill="#000000"/><circle cx="50" cy="50" r="4" fill="#000000"/><rect x="54" y="31" width="8" height="8" fill="#000000"/><rect x="48" y="60" width="4" height="30" fill="#ffffff"/><circle cx="50" cy="92" r="4" fill="#ffffff"/><path d="M30 65 L40 65 L35 75 Z" fill="#ffffff"/><path d="M60 65 L70 65 L65 75 Z" fill="#ffffff"/></svg>`)}`;
 
 export const parseZipTheme = async (file: File): Promise<ProjectState | null> => {
-    // @ts-ignore
-    if (typeof JSZip === 'undefined') return null;
-    // @ts-ignore
-    const zip = new JSZip();
-    
     try {
-        const loadedZip = await zip.loadAsync(file);
+        const [loadedZip, themePackage] = await Promise.all([
+            JSZip.loadAsync(file),
+            importThemePackage(file)
+        ]);
         const assets: Record<string, string> = {};
-        const warnings: string[] = [];
+        const warnings: string[] = themePackage.diagnostics.map(diagnostic => diagnostic.message);
         const elements: WpsElement[] = [];
 
         // --- Helper: File Loading ---
@@ -425,7 +425,8 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             fmsAst,
             wpsDocument,
             sbsDocument,
-            fmsDocument
+            fmsDocument,
+            themePackage
         };
 
     } catch (e) {

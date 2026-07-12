@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1B — Source-aware editing and legacy migration
-- **Branch:** `codex/phase-1b-source-aware-editing`
-- **Merged milestones:** Phase 0 through [PR #5](https://github.com/mrbarkan/RockBox-Designer/pull/5); Phase 1A through [PR #6](https://github.com/mrbarkan/RockBox-Designer/pull/6) at `40317a6`.
-- **Status:** Phase 1B acceptance criteria pass locally; awaiting draft pull request review and merge.
-- **Scope boundary:** Immutable source commands, known-tag argument helpers, viewport/text/image UI migration, and lossless export authority only. Package modernization remains Phase 1C.
+- **Phase:** Phase 1C — Theme packages, CFG, and binary assets
+- **Branch:** `codex/phase-1c-theme-packages`
+- **Merged milestones:** Phase 0 through Phase 1B; Phase 1B merged through [PR #7](https://github.com/mrbarkan/RockBox-Designer/pull/7) at `51c6697`.
+- **Status:** Phase 1C acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** Source-preserving CFG, explicit JSZip, binary assets, safe paths, deterministic logical export, and package fixtures only. Tag registry remains Phase 1D.
 
 ## Current architecture
 
@@ -23,6 +23,9 @@ Last updated: 2026-07-12
 - `rockbox/editing/` provides immutable commands, semantic argument helpers for the Phase 1B tag subset, stable node-ID queries, and explicit failure diagnostics.
 - New theme imports retain lossless WPS/SBS documents. Existing saved projects migrate lazily from their stored legacy raw source on first edit.
 - The compiler, ZIP exporter, source editor, and code preview prefer the lossless document. A newly derived legacy AST remains only as the current renderer adapter.
+- `rockbox/packages/` now owns lossless CFG parsing, strict archive paths, binary assets and hashes, package diagnostics, manifests, import, and deterministic export.
+- Imported packages are canonical binary runtime state in `ProjectState.themePackage`; browser data URLs remain derived preview state.
+- Project JSON and mock-cloud persistence encode `Uint8Array` values explicitly and restore them on load.
 
 ## Baseline findings
 
@@ -51,11 +54,10 @@ Before Phase 0 changes:
 - The raw source editor displays authoritative source but its Apply action is not a two-way parser/editor workflow yet.
 - Known-tag matching uses a transitional local list until Phase 1D generates the registry from Rockbox source.
 - Legacy pipe-style argument boundaries use a small transitional arity table and need registry-backed expansion.
-- The CFG import is not source-preserving and does not currently load the FMS path.
-- Asset lookup can silently collide when separate folders contain the same basename.
-- Assets are stored canonically as data URLs rather than binary bytes.
-- Import/export relies on a global JSZip script and export always creates WPS, SBS, and FMS files.
-- ZIP metadata and file manifests are not normalized or tested for deterministic output.
+- CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
+- Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback.
+- Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
+- FMS is supported by the package model, but the legacy visual importer still does not populate FMS-derived visual elements.
 - Syntax assumptions were inspected against Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`, but no official parser comparison harness or real-theme compatibility report exists yet.
 
 ## Validation
@@ -64,32 +66,31 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 6 files, 71 tests
+npm test               passed — 9 files, 85 tests
 npm run build          passed — Vite production build
 npm run validate       passed — typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
-browser smoke          passed — canvas and source/AST controls rendered; no console errors
 ```
 
-Phase 1B evidence:
+Phase 1C evidence:
 
-- Viewport geometry edits change only the intended arguments and preserve formatting.
-- Text and image edits preserve surrounding tags, comments, unknown source, invocation style, and sibling conditional branches.
-- Stable node IDs survive narrow updates and moves.
-- Insert, delete, move, and conditional-branch replacement commands are immutable and fail safely with diagnostics.
-- Semantic schemas cover `%V`, `%Vl`, `%Vi`, `%Vf`, `%Vb`, `%Fl`, `%x`, `%xl`, `%xd`, `%X`, `%pb`, `%pv`, `%Cl`, `%Cd`, and `%T`.
-- Lossless source wins over conflicting legacy AST source during compilation and export.
-- Saved legacy projects migrate lazily without changing their source before an edit.
+- CFG comments, blank lines, duplicates, unknown keys, colons, whitespace, and CRLF round-trip exactly.
+- WPS-only, WPS+SBS, and WPS+SBS+FMS package fixtures import correctly.
+- Missing CFG, screens, and referenced assets produce explicit diagnostics.
+- Duplicate basenames in separate directories remain distinct; fonts and unknown binary files retain bytes and hashes.
+- Import/export logical manifests and source bytes round-trip, and repeated ZIP exports are deterministic.
+- Product export preserves imported CFG text and does not create absent SBS/FMS files.
+- Runtime and persisted project state round-trip binary `Uint8Array` assets without making data URLs canonical.
 
 ## Known blockers
 
-- No Phase 1B blocker is currently known.
+- No Phase 1C blocker is currently known.
 - Parser compatibility remains intentionally unverified until the later official-validation and real-theme phases.
 
 ## Next task
 
-Finish and merge Phase 1B. Phase 1C must begin from updated `main` on a separate branch and address CFG, ZIP paths, deterministic export, and binary assets without expanding rendering scope.
+Finish and merge Phase 1C. Phase 1D must begin from updated `main` and generate the known-tag registry from the pinned Rockbox source without bundling GPL implementation code.
 
 ## Compatibility summary
 
-The product now uses lossless source as the authority for imported WPS/SBS editing and export, with tested viewport, text, and image changes. The renderer remains an adapter over the legacy AST, package fidelity is still incomplete, and official or real-theme compatibility has not been demonstrated.
+The product uses lossless screen and CFG source plus binary package assets for tested import/export paths. Rendering remains a legacy adapter, tag recognition is still transitional, and official or real-theme compatibility has not been demonstrated.

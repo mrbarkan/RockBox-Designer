@@ -8,7 +8,7 @@ This matrix records separate evidence levels. It deliberately does not combine t
 | WPS product workflow | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | Import/edit/export authority is lossless; rendering remains approximate. |
 | SBS source | Yes for untouched and tested edits | Structural subset | Legacy adapter subset | Legacy adapter subset | Viewport, text, image | No | CFG `sbs` is loaded when found and uses the same lossless edit path. |
 | FMS source | No package evidence | No package evidence | Partial synthetic support | Partial synthetic support | Partial synthetic support | No | Project state supports FMS, but ZIP import does not read the CFG `fms` path. |
-| CFG | No | Partial | Partial | Not applicable | Settings only | No | Comments, duplicate/unknown keys, whitespace, and original ordering are not retained. |
+| CFG | Yes for tested corpus | Settings plus raw lines | Partial | Not applicable | Source helper subset | No | Comments, duplicates, unknown keys, whitespace, colons, ordering, and CRLF survive. |
 | Unknown tags in new syntax API | Yes | Generic raw tag | No | No | No | No | Unknown names and arguments are preserved; registry-backed name boundaries arrive in Phase 1D. |
 | Malformed syntax in new syntax API | Yes for tested cases | Recovery nodes and diagnostics | No | No | No | No | Incomplete tags, delimiters, and conditionals remain serializable. |
 | Conditionals in new syntax API | Yes for tested corpus | Nested tests and branches | No | No | Serializer primitive only | No | Parameterized tests, nested branches, empty branches, argument pipes, and escaped separators are structural. |
@@ -16,8 +16,8 @@ This matrix records separate evidence levels. It deliberately does not combine t
 | Images and preloads | Source reference yes | `%x`, `%xl`, `%xd`, `%X` helpers | Partial | Partial | Image path subset | No | Asset lookup can still collide; sprite behavior is approximate. |
 | Album art | Partial | Partial | Partial | Partial | No | No | `%Cl`/`%Cd` preview support exists for the prototype subset. |
 | Progress and volume bars | Partial | Partial | Partial | Partial | Visual model only | No | Rendering and compiler behavior are approximations. |
-| Theme ZIP assets | Partial | Partial | Partial | Partial | Upload/replace only | No | Data URLs and basename keys are canonical; binary/path fidelity is unproven. |
-| Deterministic export | No evidence | Not applicable | Not applicable | Not applicable | Not applicable | No | ZIP timestamps, manifests, and bytes are not normalized or fixture-tested. |
+| Theme ZIP assets | Yes for tested corpus | Path-safe manifest | Partial | Partial | Upload bridge | No | Archive paths and bytes are canonical; duplicate basenames, fonts, and unknown binaries are tested. |
+| Deterministic export | Yes for tested corpus | Not applicable | Not applicable | Not applicable | Not applicable | No | Sorted logical contents and fixed ZIP metadata produce repeatable bytes in fixtures. |
 
 Support terms:
 

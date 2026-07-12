@@ -1,4 +1,5 @@
 import type { RockboxDocument } from './rockbox/syntax';
+import type { ThemePackage } from './rockbox/packages';
 
 // IDE Data Structures
 
@@ -127,6 +128,7 @@ export interface ProjectState {
   wpsDocument?: RockboxDocument;
   sbsDocument?: RockboxDocument;
   fmsDocument?: RockboxDocument;
+  themePackage?: ThemePackage;
 }
 
 export type RockboxAstNode = RockboxTextNode | RockboxTagNode | RockboxConditionalNode;
