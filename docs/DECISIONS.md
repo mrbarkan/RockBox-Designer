@@ -69,3 +69,13 @@
 **Decision:** Store a source-referenced device profile ID in project settings. Centralize dimensions, capabilities, supported screen files, alias migration, and feature queries under `rockbox/devices/`. Hide unsupported authoring surfaces without deleting preserved project data.
 
 **Consequences:** Existing projects migrate safely, target selection controls canvas geometry and minimal FM/touch/screen-file gates, and identical dimensions no longer imply identical capabilities. New profiles require source evidence and verification rather than UI conditionals.
+
+## ADR-0008 — Use upstream CheckWPS as an external reference oracle
+
+**Status:** Accepted
+
+**Context:** Browser-only fixtures cannot establish agreement with Rockbox, while embedding or translating the GPL parser would cross the current licensing boundary. Rockbox already provides a target-specific validation program that links its real skin engine.
+
+**Decision:** Build upstream `tools/checkwps` unchanged in an external SHA-and-target directory, invoke it as a development-time process, and compare its results with browser preservation and diagnostics. Keep category logic and checked-in reports in this repository, but never source, objects, or binaries from the official tool.
+
+**Consequences:** Official differences and target dependence become visible without altering lossless future-syntax behavior. Local validation needs a matching Rockbox checkout and toolchain; ordinary tests remain offline. macOS may adjust only the generated out-of-tree makefile to select an available compiler.

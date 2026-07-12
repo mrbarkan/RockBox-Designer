@@ -1,0 +1,33 @@
+[
+  {
+    "id": "metadata-tag",
+    "screen": "wps",
+    "source": "%it\n"
+  },
+  {
+    "id": "viewport-and-metadata",
+    "screen": "wps",
+    "source": "%V(0,0,320,240,-)\n%it\n"
+  },
+  {
+    "id": "nested-conditional",
+    "screen": "wps",
+    "source": "%?mp<Stopped|%?ps<Shuffle|Normal>>\n"
+  },
+  {
+    "id": "future-unknown-tag",
+    "screen": "wps",
+    "source": "%zzFuture(alpha)\n"
+  },
+  {
+    "id": "unterminated-conditional",
+    "screen": "wps",
+    "source": "%?mp<Play|Pause\n"
+  },
+  {
+    "id": "touch-feature-conditional",
+    "screen": "wps",
+    "source": "%?Tp<Touch|Buttons>\n",
+    "targetDependent": true
+  }
+]

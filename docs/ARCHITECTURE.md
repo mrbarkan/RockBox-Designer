@@ -115,10 +115,16 @@ The registry is generated outside the browser from a local Rockbox checkout. Che
 
 Project deserialization migrates legacy IDs in direct JSON and nested mock-cloud records. The selected profile supplies dimensions to the canvas, alignment, both legacy evaluators, layout generation, and imported-screen defaults. The UI derives its theme-screen tabs and FM/touch presets from capabilities; unsupported source is hidden, not deleted.
 
+## Phase 1F official validation bridge
+
+`scripts/official/` builds upstream `tools/checkwps` in an external temporary directory and compares it with the browser parser over checked-in fixtures. The runner records both outcomes in `reports/official-parser/latest.json`; it does not make official acceptance the browser parser's source-of-truth or discard unknown syntax that Rockbox rejects.
+
+`rockbox/validation/` owns the comparison categories independently of process execution. Ordinary tests exercise all category branches and verify the checked-in report without requiring Rockbox. The optional `test:official` command is the only path that needs `ROCKBOX_SOURCE_DIR` or executes GPL tooling.
+
 ## Rendering flow target
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1E boundary
+## Phase 1F boundary
 
-Phase 1E establishes two verified profiles and capability gates without redesigning the editor. It does not execute the official parser, add a simulator target, expand semantic rendering, or claim compatibility merely from target metadata.
+Phase 1F adds reference validation evidence without embedding or translating the official parser. It does not add real downloaded themes, change browser acceptance rules, expand semantic rendering, or redesign the interface.

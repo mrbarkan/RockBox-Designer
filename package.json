@@ -9,12 +9,14 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:official": "tsx scripts/official/run-official-validation.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "device:verify": "node scripts/verify-rockbox-device-profiles.mjs",
+    "official:report:verify": "node scripts/verify-official-parser-report.mjs",
     "registry:generate": "node scripts/generate-rockbox-tag-registry.mjs",
     "registry:verify": "node scripts/verify-rockbox-tag-registry.mjs",
-    "validate": "npm run registry:verify && npm run device:verify && npm run typecheck && npm test && npm run build"
+    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
@@ -27,6 +29,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "fast-check": "^4.9.0",
+    "tsx": "^4.23.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.1.10"

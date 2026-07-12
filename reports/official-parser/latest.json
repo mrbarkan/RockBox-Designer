@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T20:03:53.540Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
+  },
+  "harness": {
+    "tool": "tools/checkwps",
+    "target": "ipodvideo",
+    "binaryBundled": false,
+    "buildReused": false
+  },
+  "summary": {
+    "fixtures": 6,
+    "categories": {
+      "accepted-by-both": 3,
+      "browser-diagnostic-differs": 1,
+      "browser-preserved-official-rejected": 1,
+      "target-dependent": 1
+    }
+  },
+  "fixtures": [
+    {
+      "id": "metadata-tag",
+      "screen": "wps",
+      "targetDependent": false,
+      "sourceSha256": "acbfc14173ba04cba727e307ef8183d8a893f91cfa99c55bbba192845144b972",
+      "category": "accepted-by-both",
+      "browser": {
+        "preserved": true,
+        "accepted": true,
+        "diagnostics": []
+      },
+      "official": {
+        "executed": true,
+        "accepted": true,
+        "exitCode": 0,
+        "stdout": "Checking <fixture>...\nWPS parsed OK",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "viewport-and-metadata",
+      "screen": "wps",
+      "targetDependent": false,
+      "sourceSha256": "03dce82d533d78e74e9ab6323c28d8bedda91272defa00c425d53937f7fdfa24",
+      "category": "accepted-by-both",
+      "browser": {
+        "preserved": true,
+        "accepted": true,
+        "diagnostics": []
+      },
+      "official": {
+        "executed": true,
+        "accepted": true,
+        "exitCode": 0,
+        "stdout": "Checking <fixture>...\nWPS parsed OK",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "nested-conditional",
+      "screen": "wps",
+      "targetDependent": false,
+      "sourceSha256": "25c29a507de6c32e28278c2435430d1b4bbdc7e6e51fde53f46ff5939d7464cd",
+      "category": "accepted-by-both",
+      "browser": {
+        "preserved": true,
+        "accepted": true,
+        "diagnostics": []
+      },
+      "official": {
+        "executed": true,
+        "accepted": true,
+        "exitCode": 0,
+        "stdout": "Checking <fixture>...\nWPS parsed OK",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "future-unknown-tag",
+      "screen": "wps",
+      "targetDependent": false,
+      "sourceSha256": "65b4e2a9029b22145f379aee48f74ebaaef2b0b119b4cfdb0e05559a3362cf9e",
+      "category": "browser-preserved-official-rejected",
+      "browser": {
+        "preserved": true,
+        "accepted": true,
+        "diagnostics": []
+      },
+      "official": {
+        "executed": true,
+        "accepted": false,
+        "exitCode": 3,
+        "stdout": "Checking <fixture>...\nWPS parsing failure\nError on line 1.\nzzFuture(alpha)\n^ 'Illegal tag' Here",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "unterminated-conditional",
+      "screen": "wps",
+      "targetDependent": false,
+      "sourceSha256": "64c77f3cb1c0aeddee67a7603feaa9e445cd6248d57a17f653904bcf785d5812",
+      "category": "browser-diagnostic-differs",
+      "browser": {
+        "preserved": true,
+        "accepted": false,
+        "diagnostics": [
+          {
+            "severity": "error",
+            "code": "unterminated-conditional",
+            "message": "A conditional has no closing angle bracket."
+          }
+        ]
+      },
+      "official": {
+        "executed": true,
+        "accepted": false,
+        "exitCode": 3,
+        "stdout": "Checking <fixture>...\nWPS parsing failure\nError on line 1.\n\n^ 'Expected list close' Here",
+        "stderr": ""
+      }
+    },
+    {
+      "id": "touch-feature-conditional",
+      "screen": "wps",
+      "targetDependent": true,
+      "sourceSha256": "a0756d89443ec044417f17d2535c711623f058194fe0c67a1948f3aeba8085d7",
+      "category": "target-dependent",
+      "browser": {
+        "preserved": true,
+        "accepted": true,
+        "diagnostics": []
+      },
+      "official": {
+        "executed": true,
+        "accepted": true,
+        "exitCode": 0,
+        "stdout": "Checking <fixture>...\nWPS parsed OK",
+        "stderr": ""
+      }
+    }
+  ]
+}
