@@ -6,8 +6,8 @@ Last updated: 2026-07-12
 
 - **Phase:** Phase 2 — Accurate WPS visual editor
 - **Branch:** `main`
-- **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`.
-- **Status:** Phase 2 is complete and merged. A dogfood-discovered Adwaitapod rendering correction is implemented and locally verified; publication status is recorded below.
+- **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`, with the Adwaitapod dogfood correction in [PR #15](https://github.com/mrbarkan/RockBox-Designer/pull/15).
+- **Status:** Phase 2 and its dogfood-discovered Adwaitapod rendering correction are complete, verified, and merged. The supported WPS subset is ready for targeted dogfooding.
 - **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
 
 ## Current architecture
