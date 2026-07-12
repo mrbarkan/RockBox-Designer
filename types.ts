@@ -1,5 +1,7 @@
 import type { RockboxDocument } from './rockbox/syntax';
 import type { ThemePackage } from './rockbox/packages';
+import type { DeviceProfileId } from './rockbox/devices';
+import type { DEFAULT_DEVICE_PROFILE_ID } from './rockbox/devices';
 
 // IDE Data Structures
 
@@ -80,7 +82,7 @@ export type WpsElement = TextElement | RectElement | ImageElement | ProgressBarE
 
 export interface ProjectSettings {
   name: string;
-  target: 'ipod_video';
+  target: DeviceProfileId;
   backgroundColor: string;
   statusBarTop: boolean;
   backdrop?: string; 

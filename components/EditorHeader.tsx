@@ -2,6 +2,7 @@
 import React from 'react';
 import { ProjectState, User, ScreenType, WpsElement } from '../types';
 import { ToolIconBtn } from './common/ToolButtons';
+import { getDeviceProfile, getMainScreenFiles } from '../rockbox/devices';
 
 interface EditorHeaderProps {
     project: ProjectState;
@@ -33,6 +34,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
     onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
     debugMode, setDebugMode, useAstPreview, setUseAstPreview
 }) => {
+    const deviceProfile = getDeviceProfile(project.settings.target);
+    const screenFiles = getMainScreenFiles(deviceProfile);
     return (
         <div className="h-14 metal-gradient flex items-center px-6 justify-between border-b border-black select-none">
             <div className="flex items-center gap-6">
@@ -42,9 +45,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                 </div>
                 {user && ( <div className="px-3 py-1 bg-black text-white text-[10px] font-bold uppercase rounded flex items-center gap-3"><span>USER: {user.username}</span><button onClick={onLogout} className="text-orange-500 hover:text-white">✕</button></div> )}
                 <div className="flex bg-[#d4d4d4] p-1 rounded border border-[#999] shadow-inner gap-1">
-                    <TabButton id="wps" label="WPS" activeId={activeScreen} onClick={setActiveScreen} />
-                    <TabButton id="sbs" label="SBS" activeId={activeScreen} onClick={setActiveScreen} />
-                    <TabButton id="fms" label="FMS" activeId={activeScreen} onClick={setActiveScreen} />
+                    {screenFiles.map(screen => (
+                        <React.Fragment key={screen}>
+                            <TabButton id={screen} label={screen.toUpperCase()} activeId={activeScreen} onClick={setActiveScreen} />
+                        </React.Fragment>
+                    ))}
                     <TabButton id="usb" label="USB" activeId={activeScreen} onClick={setActiveScreen} />
                 </div>
                 {selectedElement && rightPanelMode === 'inspector' && (

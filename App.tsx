@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType, User } from './types';
-import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION, IPOD_SCREEN_HEIGHT, IPOD_SCREEN_WIDTH } from './constants';
+import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION } from './constants';
 import { EditorCanvas } from './components/EditorCanvas';
 import { SimulationPanel } from './components/SimulationPanel';
 import { SourceEditor } from './components/SourceEditor';
@@ -21,6 +21,7 @@ import { useHistory } from './hooks/useHistory';
 import { EditResult, updateImageReference, updateTextNode, updateViewport } from './rockbox/editing';
 import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from './services/rockboxSyntaxAdapter';
 import { parseProjectData, stringifyProjectData } from './services/projectSerialization';
+import { getDeviceProfile, supportsScreenFile } from './rockbox/devices';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -61,6 +62,7 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
+  const deviceProfile = getDeviceProfile(project.settings.target);
 
   // Refs for Toolbar Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +108,12 @@ export default function App() {
           alert(msg);
       }
   }, [project]);
+
+  useEffect(() => {
+      if (activeScreen !== 'usb' && !supportsScreenFile(deviceProfile, activeScreen)) {
+          setActiveScreen('wps');
+      }
+  }, [activeScreen, deviceProfile.id]);
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -344,11 +352,11 @@ export default function App() {
       let newX = el.x; let newY = el.y;
       switch(align) {
           case 'left': newX = 0; break;
-          case 'center': newX = Math.round((IPOD_SCREEN_WIDTH - el.width) / 2); break;
-          case 'right': newX = IPOD_SCREEN_WIDTH - el.width; break;
+          case 'center': newX = Math.round((deviceProfile.mainScreen.width - el.width) / 2); break;
+          case 'right': newX = deviceProfile.mainScreen.width - el.width; break;
           case 'top': newY = 0; break;
-          case 'middle': newY = Math.round((IPOD_SCREEN_HEIGHT - el.height) / 2); break;
-          case 'bottom': newY = IPOD_SCREEN_HEIGHT - el.height; break;
+          case 'middle': newY = Math.round((deviceProfile.mainScreen.height - el.height) / 2); break;
+          case 'bottom': newY = deviceProfile.mainScreen.height - el.height; break;
       }
       handleUpdateElement(id, { x: newX, y: newY });
   };
@@ -363,7 +371,7 @@ export default function App() {
       {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={() => {}} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
       <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => globalFontInputRef.current?.click()} />
-      <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} />
+      <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 
       {/* AI Prompt Modal */}

@@ -109,10 +109,16 @@ The existing UI may derive data URLs for `<img>` previews, but imported package 
 
 The registry is generated outside the browser from a local Rockbox checkout. Checked-in JSON contains factual identifiers and metadata only. Validation checks its schema, duplicate names, documented SHA, and—when `ROCKBOX_SOURCE_DIR` is present—exact regeneration. This does not execute or vendor the official parser.
 
+## Phase 1E device profiles
+
+`rockbox/devices/` owns source-referenced target identity, native screen dimensions, capabilities, supported screen files, legacy target aliases, and feature-gate queries. `ProjectSettings.target` now stores a profile ID rather than the old single-target literal.
+
+Project deserialization migrates legacy IDs in direct JSON and nested mock-cloud records. The selected profile supplies dimensions to the canvas, alignment, both legacy evaluators, layout generation, and imported-screen defaults. The UI derives its theme-screen tabs and FM/touch presets from capabilities; unsupported source is hidden, not deleted.
+
 ## Rendering flow target
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1D boundary
+## Phase 1E boundary
 
-Phase 1D replaces hand-maintained known-name matching with upstream-generated metadata. It does not add device profiles, execute the official parser, claim higher support states, expand rendering, or redesign the interface.
+Phase 1E establishes two verified profiles and capability gates without redesigning the editor. It does not execute the official parser, add a simulator target, expand semantic rendering, or claim compatibility merely from target metadata.

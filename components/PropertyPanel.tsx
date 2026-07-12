@@ -2,6 +2,8 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { WpsElement, ElementType, ProjectState, FontDefinition, ImageElement, ProgressBarElement, TextElement } from '../types';
 import { ROCKBOX_STANDARD_FONTS, GRAPHIC_ASSETS } from '../constants';
+import { deviceProfiles } from '../rockbox/devices';
+import type { DeviceProfileId } from '../rockbox/devices';
 
 interface PropertyPanelProps {
   element: WpsElement | null;
@@ -238,6 +240,14 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
         <h3 className="font-bold text-gray-500 uppercase tracking-widest mb-6 border-b border-gray-300 pb-2">Global Config</h3>
         <div className="space-y-6 pb-12">
             <div><label className="block mb-2 font-bold text-gray-600 uppercase">THEME_NAME</label><input type="text" value={project.settings.name} onChange={(e) => onUpdateProject({ name: e.target.value })} className="w-full bg-white border border-black p-2 text-sm" /></div>
+            <div>
+                <label className="block mb-2 font-bold text-gray-600 uppercase">DEVICE_PROFILE</label>
+                <select value={project.settings.target} onChange={(e) => onUpdateProject({ target: e.target.value as DeviceProfileId })} className="w-full bg-white border border-black p-2 text-sm">
+                    {deviceProfiles.map(profile => (
+                        <option key={profile.id} value={profile.id}>{profile.manufacturer} {profile.model}</option>
+                    ))}
+                </select>
+            </div>
             
             <div className="bg-white p-4 border border-gray-300">
                 <div className="text-[10px] font-bold text-gray-400 mb-3 uppercase">Core Colors</div>

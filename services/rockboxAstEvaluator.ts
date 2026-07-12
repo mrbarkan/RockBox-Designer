@@ -1,5 +1,6 @@
 import { ProjectState, RenderList, RenderOp, ScreenType, SimulationState, SongMetadata, RockboxAstDocument, RockboxAstNode, RockboxTagNode } from '../types';
 import { checkCondition, parseRockboxString } from './rockboxTagParser';
+import { getDeviceProfile } from '../rockbox/devices';
 
 const toCssHex = (hex: string) => hex ? `#${hex.replace(/^0x/, '').replace(/[^0-9A-Fa-f]/g, '')}` : '#ffffff';
 
@@ -9,6 +10,7 @@ const getFontSize = (fontId: string) => {
 };
 
 type AstContext = {
+  screen: { width: number; height: number };
   viewport: { x: number; y: number; w: number; h: number };
   namedViewports: Record<string, { x: number; y: number; w: number; h: number }>;
   align: 'left' | 'center' | 'right';
@@ -38,8 +40,8 @@ const resolveViewport = (tag: RockboxTagNode, context: AstContext) => {
     context.viewport = {
       x: parseInt(tag.args[0] || '0', 10),
       y: parseInt(tag.args[1] || '0', 10),
-      w: parseInt(tag.args[2] || '320', 10),
-      h: parseInt(tag.args[3] || '240', 10)
+      w: parseInt(tag.args[2] || String(context.screen.width), 10),
+      h: parseInt(tag.args[3] || String(context.screen.height), 10)
     };
     if (tag.args[4]) {
       context.fontId = tag.args[4].split('/').pop() || context.fontId;
@@ -54,8 +56,8 @@ const resolveViewport = (tag: RockboxTagNode, context: AstContext) => {
     const viewport = {
       x: parseInt(tag.args[1] || '0', 10),
       y: parseInt(tag.args[2] || '0', 10),
-      w: parseInt(tag.args[3] || '320', 10),
-      h: parseInt(tag.args[4] || '240', 10)
+      w: parseInt(tag.args[3] || String(context.screen.width), 10),
+      h: parseInt(tag.args[4] || String(context.screen.height), 10)
     };
     context.namedViewports[name] = viewport;
     context.viewport = viewport;
@@ -303,20 +305,24 @@ export const evaluateAstTheme = (
   const ops: RenderList = [];
   const ast = getDocumentForScreen(project, screen);
   if (!ast) return ops;
+  const profile = getDeviceProfile(project.settings.target);
+  const screenWidth = profile.mainScreen.width;
+  const screenHeight = profile.mainScreen.height;
 
   if (project.settings.backdrop && project.assets[project.settings.backdrop]) {
     ops.push({
       type: 'image',
       x: 0,
       y: 0,
-      w: 320,
-      h: 240,
+      w: screenWidth,
+      h: screenHeight,
       assetKey: project.settings.backdrop
     });
   }
 
   const context: AstContext = {
-    viewport: { x: 0, y: 0, w: 320, h: 240 },
+    screen: { width: screenWidth, height: screenHeight },
+    viewport: { x: 0, y: 0, w: screenWidth, h: screenHeight },
     namedViewports: {},
     align: 'left',
     fontId: project.settings.uiFont,

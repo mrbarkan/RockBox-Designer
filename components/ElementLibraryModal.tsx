@@ -2,17 +2,19 @@
 import React from 'react';
 import { ElementType, ScreenType, WpsElement } from '../types';
 import { GRAPHIC_ASSETS } from '../constants';
+import { canAuthorFm, canAuthorTouch, DeviceProfile } from '../rockbox/devices';
 
 interface ElementLibraryModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAddElement: (element: Partial<WpsElement>) => void;
     activeScreen: ScreenType;
+    deviceProfile: DeviceProfile;
 }
 
 const PLACEHOLDER_ART = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAAE0lEQVR4nGP4wAAgkwB5mk0yBAAAOfEB4m25sAAAAABJRU5ErkJggg==";
 
-export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({ isOpen, onClose, onAddElement, activeScreen }) => {
+export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({ isOpen, onClose, onAddElement, activeScreen, deviceProfile }) => {
     if (!isOpen) return null;
 
     const DEFAULT_BATT = GRAPHIC_ASSETS.BATTERY[0];
@@ -29,7 +31,7 @@ export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({ isOpen
         { label: 'Progress Bar', icon: '▬', type: ElementType.PROGRESS_BAR, category: 'default', content: '', name: 'Progress Bar', width: 300, height: 8, pbMode: 'track', pbStyle: 'flat', foreColor: '#3584e4', backColor: '#333333' },
         { label: 'File Info', icon: '📄', type: ElementType.TEXT, category: 'file', content: '%fn', name: 'File Info', width: 280, height: 20 },
         { label: 'Playlist/Song Info', icon: 'ℹ', type: ElementType.TEXT, category: 'playlist_info', content: '%pc', name: 'Track Time', width: 80, height: 20 },
-        { label: 'Playlist Viewer', icon: '☰', type: ElementType.VIEWPORT, category: 'viewport', name: 'Menu Viewport', width: 320, height: 200, x:0, y:20 },
+        { label: 'Playlist Viewer', icon: '☰', type: ElementType.VIEWPORT, category: 'viewport', name: 'Menu Viewport', width: deviceProfile.mainScreen.width, height: Math.max(20, deviceProfile.mainScreen.height - 40), x:0, y:20 },
         { label: 'Runtime DB / RG', icon: '💿', type: ElementType.TEXT, category: 'database', content: '%rp', name: 'DB Info', width: 80, height: 20 },
         { label: 'Hold Switches', icon: '🔒', type: ElementType.IMAGE, category: 'hold', name: 'Hold Icon', width: 16, height: 16, src: PLACEHOLDER_ART, filename: 'icon_hold.bmp', condition: '%?mh' },
         { label: 'Virtual LED', icon: '🔴', type: ElementType.IMAGE, category: 'led', name: 'HDD LED', width: 10, height: 10, src: PLACEHOLDER_ART, filename: 'led_hdd.bmp', condition: '%?lh' },
@@ -40,7 +42,11 @@ export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({ isOpen
         { label: 'Bitmap Strips / Anim', icon: '🎞', type: ElementType.IMAGE, category: 'strip', name: 'Battery Strip', width: DEFAULT_BATT.width, height: DEFAULT_BATT.height, src: DEFAULT_BATT.src, filename: DEFAULT_BATT.filename, imageType: 'battery_strip', frameCount: 10 },
         { label: 'Album Art', icon: '🖼', type: ElementType.IMAGE, category: 'art', name: 'Album Art', width: 120, height: 120, src: PLACEHOLDER_ART, filename: 'cover_placeholder.bmp', imageType: 'static' },
         { label: 'FM Radio Tokens', icon: '📻', type: ElementType.TEXT, category: 'fm', content: '%tf', name: 'FM Freq', width: 80, height: 20 },
-    ];
+        { label: 'Touch Region', icon: '⌁', type: ElementType.TOUCH_REGION, category: 'touch', name: 'Touch Region', width: 80, height: 40, touchAction: 'play' },
+    ].filter(item =>
+        (item.category !== 'fm' || canAuthorFm(deviceProfile)) &&
+        (item.category !== 'touch' || canAuthorTouch(deviceProfile))
+    );
 
     return (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#e0e0e0] border-2 border-black shadow-[12px_12px_0px_rgba(0,0,0,1)] z-[60] w-[600px] max-h-[85vh] flex flex-col font-mono text-sm animate-bounce-in">

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "apple-ipod-video-5g",
+      "manufacturer": "Apple",
+      "model": "iPod Video 5G/5.5G",
+      "rockboxTarget": "ipodvideo",
+      "mainScreen": {
+        "width": 320,
+        "height": 240,
+        "depth": 16,
+        "dpi": 160
+      },
+      "capabilities": {
+        "touchscreen": false,
+        "fmRadio": true,
+        "recording": true,
+        "remoteLcd": false,
+        "usbHid": true,
+        "rtc": true,
+        "albumArt": true
+      },
+      "supportedScreenFiles": ["wps", "sbs", "fms"],
+      "source": {
+        "rockboxCommit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+        "configPaths": [
+          "firmware/export/config/ipodvideo.h",
+          "tools/configure"
+        ]
+      }
+    },
+    {
+      "id": "apple-ipod-classic-6g",
+      "manufacturer": "Apple",
+      "model": "iPod Classic 6G/7G port",
+      "rockboxTarget": "ipod6g",
+      "mainScreen": {
+        "width": 320,
+        "height": 240,
+        "depth": 16,
+        "dpi": 160
+      },
+      "capabilities": {
+        "touchscreen": false,
+        "fmRadio": false,
+        "recording": true,
+        "remoteLcd": false,
+        "usbHid": true,
+        "rtc": true,
+        "albumArt": true
+      },
+      "supportedScreenFiles": ["wps", "sbs"],
+      "source": {
+        "rockboxCommit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+        "configPaths": [
+          "firmware/export/config/ipod6g.h",
+          "tools/configure"
+        ]
+      }
+    }
+  ]
+}

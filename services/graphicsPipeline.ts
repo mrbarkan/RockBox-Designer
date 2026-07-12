@@ -2,6 +2,7 @@
 import { ProjectState, ScreenType, SimulationState, SongMetadata, RenderList, RenderOp, ElementType, TextElement, ImageElement, ProgressBarElement, RectElement } from '../types';
 import { checkCondition, parseRockboxString } from './rockboxTagParser';
 import { ROCKBOX_STANDARD_FONTS, GRAPHIC_ASSETS } from '../constants';
+import { getDeviceProfile } from '../rockbox/devices';
 
 // --- HELPERS ---
 
@@ -31,20 +32,23 @@ export const evaluateTheme = (
 ): RenderList => {
     const ops: RenderList = [];
     const elements = project.elements.filter(el => el.screen === screen);
+    const profile = getDeviceProfile(project.settings.target);
+    const screenWidth = profile.mainScreen.width;
+    const screenHeight = profile.mainScreen.height;
     
     // Evaluator State
-    let currentViewport = { x: 0, y: 0, w: 320, h: 240 };
-    let artClipRect = { x: 0, y: 0, w: 320, h: 240 }; // For %Cl
+    let currentViewport = { x: 0, y: 0, w: screenWidth, h: screenHeight };
+    let artClipRect = { x: 0, y: 0, w: screenWidth, h: screenHeight }; // For %Cl
 
     // 1. Draw Backdrop (Global)
     if (project.settings.backdrop && project.assets[project.settings.backdrop]) {
         ops.push({
             type: 'image',
-            x: 0, y: 0, w: 320, h: 240,
+            x: 0, y: 0, w: screenWidth, h: screenHeight,
             assetKey: project.settings.backdrop
         });
     } else if (screen === 'usb') {
-        ops.push({ type: 'rect', x: 0, y: 0, w: 320, h: 240, color: '#000000' });
+        ops.push({ type: 'rect', x: 0, y: 0, w: screenWidth, h: screenHeight, color: '#000000' });
     }
 
     // 2. Iterate Elements with State
@@ -251,12 +255,12 @@ export const evaluateTheme = (
 
     // 3. System Overlay
     if (project.settings.statusBarTop) {
-        ops.push({ type: 'set_viewport', x: 0, y: 0, w: 320, h: 14, clip: false });
-        ops.push({ type: 'rect', x: 0, y: 0, w: 320, h: 14, color: 'rgba(0,0,0,0.2)' });
-        ops.push({ type: 'line', x1: 0, y1: 14, x2: 320, y2: 14, color: 'rgba(0,0,0,0.1)', width: 1 });
+        ops.push({ type: 'set_viewport', x: 0, y: 0, w: screenWidth, h: 14, clip: false });
+        ops.push({ type: 'rect', x: 0, y: 0, w: screenWidth, h: 14, color: 'rgba(0,0,0,0.2)' });
+        ops.push({ type: 'line', x1: 0, y1: 14, x2: screenWidth, y2: 14, color: 'rgba(0,0,0,0.1)', width: 1 });
         ops.push({ type: 'text', x: 2, y: 1, w: 20, h: 12, text: '▶', font: 'bold 9px monospace', color: project.settings.foregroundColor, align: 'left', scroll: false });
-        ops.push({ type: 'text', x: 30, y: 1, w: 260, h: 12, text: sim.currentTime, font: '9px monospace', color: project.settings.foregroundColor, align: 'center', scroll: false });
-        ops.push({ type: 'text', x: 280, y: 1, w: 38, h: 12, text: `${sim.batteryLevel}%`, font: '9px monospace', color: project.settings.foregroundColor, align: 'right', scroll: false });
+        ops.push({ type: 'text', x: 30, y: 1, w: Math.max(0, screenWidth - 60), h: 12, text: sim.currentTime, font: '9px monospace', color: project.settings.foregroundColor, align: 'center', scroll: false });
+        ops.push({ type: 'text', x: Math.max(0, screenWidth - 40), y: 1, w: 38, h: 12, text: `${sim.batteryLevel}%`, font: '9px monospace', color: project.settings.foregroundColor, align: 'right', scroll: false });
     }
 
     return ops;

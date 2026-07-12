@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1D — Generated Rockbox tag registry
-- **Branch:** `codex/phase-1d-tag-registry`
-- **Merged milestones:** Phase 0 through Phase 1C; Phase 1C merged through [PR #8](https://github.com/mrbarkan/RockBox-Designer/pull/8) at `0db5b26`.
-- **Status:** Phase 1D acceptance criteria pass locally; ready to publish and merge.
-- **Scope boundary:** Upstream-derived tag identity and metadata, reproducible generation, offline verification, and parser longest-match wiring only. Device profiles remain Phase 1E.
+- **Phase:** Phase 1E — Device profile foundation
+- **Branch:** `codex/phase-1e-device-profiles`
+- **Merged milestones:** Phase 0 through Phase 1D; Phase 1D merged through [PR #9](https://github.com/mrbarkan/RockBox-Designer/pull/9) at `8adf130`.
+- **Status:** Phase 1E acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** Source-referenced iPod Video and Classic profiles, saved-project migration, native dimensions, and minimal capability gates only. Official parser validation remains Phase 1F.
 
 ## Current architecture
 
@@ -18,7 +18,7 @@ Last updated: 2026-07-12
 - ZIP import in `services/rockboxParser.ts` reads a CFG, builds visual elements, and creates early AST documents for WPS and SBS when those paths are present.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
 - Canvas rendering can use either the visual-element evaluator or the AST evaluator. AST viewports, text, and images have narrow editor helpers.
-- Package assets are currently stored as data URLs keyed primarily by basename. JSZip is provided by a global browser script.
+- Imported package assets are binary and archive-path keyed; legacy upload controls still derive data URLs before export conversion. JSZip is an explicit module dependency.
 - `rockbox/syntax/` now provides a separate lossless document model with absolute source spans, exact raw slices, diagnostics, a structural conditional model, a tokenizer, and a minimum-change serializer.
 - `rockbox/editing/` provides immutable commands, semantic argument helpers for the Phase 1B tag subset, stable node-ID queries, and explicit failure diagnostics.
 - New theme imports retain lossless WPS/SBS documents. Existing saved projects migrate lazily from their stored legacy raw source on first edit.
@@ -28,6 +28,8 @@ Last updated: 2026-07-12
 - Project JSON and mock-cloud persistence encode `Uint8Array` values explicitly and restore them on load.
 - `rockbox/registry/` exposes 193 generated Rockbox tag definitions from the pinned upstream SHA, including raw parameter specs, flags, tokens, categories, and baseline support states.
 - The lossless parser now uses the registry for longest official tag-name matching and still preserves unmatched future names generically.
+- `rockbox/devices/` now supplies two verified profile IDs, dimensions, capabilities, supported screen files, legacy aliases, and feature-gate queries.
+- Canvas sizing, alignment, legacy evaluators, layout generation, and import defaults read the selected profile. The UI profile selector capability-gates FMS, FM presets, and touch presets without deleting source.
 
 ## Baseline findings
 
@@ -68,31 +70,32 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 10 files, 90 tests
+npm test               passed — 11 files, 96 tests
 npm run build          passed — Vite production build
-npm run validate       passed — registry verification, typecheck, test, and build
+npm run validate       passed — registry/device verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
-registry verification passed — 193 definitions; exact local regeneration match
+device verification   passed — 2 profiles; local Rockbox source match
+browser smoke         passed — Video shows FMS; Classic hides it; both render 320×240 without page errors
 ```
 
-Phase 1D evidence:
+Phase 1E evidence:
 
-- Generator reads `tag_table.c` and `tag_table.h` from `ROCKBOX_SOURCE_DIR` and records the exact Git SHA, commit timestamp, generation time, repository, and source paths.
-- Generated JSON has 193 unique non-sentinel definitions with tag names, token identifiers, raw parameter specs, raw flags, source-derived categories, and `preserved`/`parsed` states.
-- Verification checks schema, duplicates, attribution, documented SHA, and exact regeneration when the local Rockbox tree is configured.
-- Parser longest-match behavior recognizes three-character official names such as `%and` and `%x9` without consuming unknown future names.
-- Ordinary validation remains offline and no Rockbox parser implementation or comments are bundled.
-- Attribution, GPL-2.0-or-later source licensing, and the required human licensing review are documented.
+- iPod Video (`ipodvideo`) and iPod Classic (`ipod6g`) profiles cite the pinned Rockbox SHA and exact target/config paths.
+- The optional source verifier confirms target entries, 320×240×16 LCDs at 160 DPI, tuner, recording, touch, remote LCD, USB HID, RTC, and album-art definitions.
+- Equal LCD dimensions do not collapse capabilities: Video exposes its configured tuner and FMS; Classic does not.
+- Saved direct and nested mock-cloud projects migrate `ipod_video`, `ipodvideo`, `ipod_6g`, and `ipod6g` aliases to profile IDs.
+- Canvas and evaluator geometry comes from the selected profile; unsupported screen tabs and FM/touch presets are gated without deleting preserved data.
+- Unit tests cover profile evidence, fallback migration, FM, touch, remote LCD, and screen-file gates.
 
 ## Known blockers
 
-- No Phase 1D blocker is currently known.
+- No Phase 1E blocker is currently known.
 - Parser compatibility remains intentionally unverified until the later official-validation and real-theme phases.
 
 ## Next task
 
-Finish and merge Phase 1D. Phase 1E must begin from updated `main` and derive device profiles from the pinned Rockbox target configuration without hardcoded UI assumptions.
+Finish and merge Phase 1E. Phase 1F must begin from updated `main` and build an optional official-parser comparison bridge without bundling GPL implementation code.
 
 ## Compatibility summary
 
-The product uses lossless screen and CFG source, binary package assets, and generated official tag identity for tested paths. Rendering remains a legacy adapter, device assumptions are still hardcoded, and official-parser or real-theme compatibility has not been demonstrated.
+The product uses lossless screen and CFG source, binary package assets, generated official tag identity, and verified device profiles for tested paths. Rendering remains a legacy adapter, and official-parser or real-theme compatibility has not yet been demonstrated.
