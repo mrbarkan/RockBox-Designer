@@ -1,0 +1,733 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T20:21:08.123Z",
+  "scope": {
+    "syntaxPreservationIsNotVisualSupport": true,
+    "officialValidationRequested": true,
+    "roots": [
+      "tests/public-themes",
+      "tests/private-themes"
+    ]
+  },
+  "summary": {
+    "themes": 4,
+    "publicThemes": 2,
+    "privateThemes": 2,
+    "exactRoundTrips": 4,
+    "manifestMatches": 4,
+    "officialAccepted": 2,
+    "officialRejected": 2
+  },
+  "themes": [
+    {
+      "name": "Adwaitapod",
+      "fixture": "Adwaitapod.zip",
+      "sourceClass": "private-local",
+      "provenance": {
+        "source": "User-owned local Rockbox firmware tree",
+        "license": "not-recorded",
+        "redistribution": "not-confirmed-do-not-commit"
+      },
+      "target": "ipodvideo",
+      "sourceFilesFound": [
+        ".rockbox/themes/adwaitapod.cfg",
+        ".rockbox/wps/adwaitapod.wps",
+        ".rockbox/wps/adwaitapod.sbs",
+        ".rockbox/wps/adwaitapod.fms"
+      ],
+      "preservation": {
+        "exactRoundTrip": true,
+        "cfg": true,
+        "screens": {
+          "wps": true,
+          "sbs": true,
+          "fms": true
+        }
+      },
+      "parsing": {
+        "unknownTags": [],
+        "diagnostics": [],
+        "missingAssets": [],
+        "pathCollisions": []
+      },
+      "packageExport": {
+        "manifestMatches": true,
+        "sourceFileCount": 106,
+        "exportedFileCount": 106,
+        "assetHashesPreserved": true
+      },
+      "support": {
+        "interpretedTags": [
+          "Cd",
+          "Cl",
+          "Fl",
+          "V",
+          "Vf",
+          "Vi",
+          "Vl",
+          "pb",
+          "pv",
+          "xd",
+          "xl"
+        ],
+        "unsupportedSemanticTags": [
+          "C",
+          "Lb",
+          "Lc",
+          "Lt",
+          "Re",
+          "Rf",
+          "Rh",
+          "Rn",
+          "Rs",
+          "St",
+          "Sx",
+          "Tn",
+          "VB",
+          "VI",
+          "Vd",
+          "ac",
+          "al",
+          "and",
+          "ar",
+          "bl",
+          "bp",
+          "bs",
+          "cH",
+          "cM",
+          "cP",
+          "cY",
+          "ca",
+          "cb",
+          "cd",
+          "ce",
+          "cf",
+          "cl",
+          "cs",
+          "cu",
+          "d",
+          "dr",
+          "fn",
+          "ia",
+          "id",
+          "if",
+          "it",
+          "lh",
+          "mh",
+          "mm",
+          "mp",
+          "mv",
+          "or",
+          "pR",
+          "pS",
+          "pc",
+          "pe",
+          "pp",
+          "ps",
+          "pt",
+          "s",
+          "ss",
+          "t",
+          "tf",
+          "tm",
+          "ts",
+          "tx",
+          "ty",
+          "tz",
+          "wd"
+        ],
+        "renderedTags": [
+          "Cd",
+          "Cl",
+          "V",
+          "Vd",
+          "Vf",
+          "Vl",
+          "ac",
+          "al",
+          "ar",
+          "bl",
+          "id",
+          "it",
+          "mm",
+          "mp",
+          "pb",
+          "pc",
+          "ps",
+          "pt",
+          "pv",
+          "s",
+          "xd",
+          "xl"
+        ],
+        "unsupportedRenderTags": [
+          "C",
+          "Fl",
+          "Lb",
+          "Lc",
+          "Lt",
+          "Re",
+          "Rf",
+          "Rh",
+          "Rn",
+          "Rs",
+          "St",
+          "Sx",
+          "Tn",
+          "VB",
+          "VI",
+          "Vi",
+          "and",
+          "bp",
+          "bs",
+          "cH",
+          "cM",
+          "cP",
+          "cY",
+          "ca",
+          "cb",
+          "cd",
+          "ce",
+          "cf",
+          "cl",
+          "cs",
+          "cu",
+          "d",
+          "dr",
+          "fn",
+          "ia",
+          "if",
+          "lh",
+          "mh",
+          "mv",
+          "or",
+          "pR",
+          "pS",
+          "pe",
+          "pp",
+          "ss",
+          "t",
+          "tf",
+          "tm",
+          "ts",
+          "tx",
+          "ty",
+          "tz",
+          "wd"
+        ],
+        "editableTags": [
+          "Cd",
+          "Cl",
+          "Fl",
+          "V",
+          "Vf",
+          "Vi",
+          "Vl",
+          "pb",
+          "pv",
+          "xd",
+          "xl"
+        ],
+        "unsupportedEditTags": [
+          "C",
+          "Lb",
+          "Lc",
+          "Lt",
+          "Re",
+          "Rf",
+          "Rh",
+          "Rn",
+          "Rs",
+          "St",
+          "Sx",
+          "Tn",
+          "VB",
+          "VI",
+          "Vd",
+          "ac",
+          "al",
+          "and",
+          "ar",
+          "bl",
+          "bp",
+          "bs",
+          "cH",
+          "cM",
+          "cP",
+          "cY",
+          "ca",
+          "cb",
+          "cd",
+          "ce",
+          "cf",
+          "cl",
+          "cs",
+          "cu",
+          "d",
+          "dr",
+          "fn",
+          "ia",
+          "id",
+          "if",
+          "it",
+          "lh",
+          "mh",
+          "mm",
+          "mp",
+          "mv",
+          "or",
+          "pR",
+          "pS",
+          "pc",
+          "pe",
+          "pp",
+          "ps",
+          "pt",
+          "s",
+          "ss",
+          "t",
+          "tf",
+          "tm",
+          "ts",
+          "tx",
+          "ty",
+          "tz",
+          "wd"
+        ]
+      },
+      "official": {
+        "status": "accepted",
+        "files": [
+          {
+            "screen": "wps",
+            "path": ".rockbox/wps/adwaitapod.wps",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          },
+          {
+            "screen": "sbs",
+            "path": ".rockbox/wps/adwaitapod.sbs",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nTranslated String [Backlight on Hold] NOT FOUND\nTranslated String [Backlight on Hold] NOT FOUND\nTranslated String [Backlight on Hold] NOT FOUND\nTranslated String [Scroll Bar Position] NOT FOUND\nWPS parsed OK"
+          },
+          {
+            "screen": "fms",
+            "path": ".rockbox/wps/adwaitapod.fms",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AMusicPod",
+      "fixture": "AMusicPod.zip",
+      "sourceClass": "private-local",
+      "provenance": {
+        "source": "User-owned local Rockbox firmware tree",
+        "license": "not-recorded",
+        "redistribution": "not-confirmed-do-not-commit"
+      },
+      "target": "ipodvideo",
+      "sourceFilesFound": [
+        ".rockbox/themes/AMusicPod.cfg",
+        ".rockbox/wps/amusicpod-s.wps",
+        ".rockbox/wps/amusicpod-s.sbs"
+      ],
+      "preservation": {
+        "exactRoundTrip": true,
+        "cfg": true,
+        "screens": {
+          "wps": true,
+          "sbs": true
+        }
+      },
+      "parsing": {
+        "unknownTags": [],
+        "diagnostics": [],
+        "missingAssets": [],
+        "pathCollisions": []
+      },
+      "packageExport": {
+        "manifestMatches": true,
+        "sourceFileCount": 35,
+        "exportedFileCount": 35,
+        "assetHashesPreserved": true
+      },
+      "support": {
+        "interpretedTags": [
+          "Cd",
+          "Cl",
+          "Fl",
+          "V",
+          "Vb",
+          "Vf",
+          "Vi",
+          "Vl",
+          "pb",
+          "pv",
+          "x",
+          "xd",
+          "xl"
+        ],
+        "unsupportedSemanticTags": [
+          "C",
+          "Lt",
+          "Sx",
+          "VB",
+          "Vd",
+          "al",
+          "ar",
+          "bc",
+          "bl",
+          "bp",
+          "cH",
+          "cM",
+          "cf",
+          "cl",
+          "fb",
+          "fc",
+          "fn",
+          "ia",
+          "id",
+          "if",
+          "it",
+          "lh",
+          "mh",
+          "mm",
+          "mp",
+          "mv",
+          "pc",
+          "pe",
+          "pp",
+          "pr",
+          "ps",
+          "s",
+          "t",
+          "wd"
+        ],
+        "renderedTags": [
+          "Cd",
+          "Cl",
+          "V",
+          "Vb",
+          "Vd",
+          "Vf",
+          "Vl",
+          "al",
+          "ar",
+          "bl",
+          "id",
+          "it",
+          "mm",
+          "mp",
+          "pb",
+          "pc",
+          "ps",
+          "pv",
+          "s",
+          "x",
+          "xd",
+          "xl"
+        ],
+        "unsupportedRenderTags": [
+          "C",
+          "Fl",
+          "Lt",
+          "Sx",
+          "VB",
+          "Vi",
+          "bc",
+          "bp",
+          "cH",
+          "cM",
+          "cf",
+          "cl",
+          "fb",
+          "fc",
+          "fn",
+          "ia",
+          "if",
+          "lh",
+          "mh",
+          "mv",
+          "pe",
+          "pp",
+          "pr",
+          "t",
+          "wd"
+        ],
+        "editableTags": [
+          "Cd",
+          "Cl",
+          "Fl",
+          "V",
+          "Vb",
+          "Vf",
+          "Vi",
+          "Vl",
+          "pb",
+          "pv",
+          "x",
+          "xd",
+          "xl"
+        ],
+        "unsupportedEditTags": [
+          "C",
+          "Lt",
+          "Sx",
+          "VB",
+          "Vd",
+          "al",
+          "ar",
+          "bc",
+          "bl",
+          "bp",
+          "cH",
+          "cM",
+          "cf",
+          "cl",
+          "fb",
+          "fc",
+          "fn",
+          "ia",
+          "id",
+          "if",
+          "it",
+          "lh",
+          "mh",
+          "mm",
+          "mp",
+          "mv",
+          "pc",
+          "pe",
+          "pp",
+          "pr",
+          "ps",
+          "s",
+          "t",
+          "wd"
+        ]
+      },
+      "official": {
+        "status": "rejected",
+        "files": [
+          {
+            "screen": "wps",
+            "path": ".rockbox/wps/amusicpod-s.wps",
+            "executed": true,
+            "accepted": false,
+            "exitCode": 3,
+            "output": "Checking <screen-file>...\nWPS parsing failure\nError on line 119.\n%V(a,10,193,305,24,9)\n   ^ 'Not enough arguments' Here"
+          },
+          {
+            "screen": "sbs",
+            "path": ".rockbox/wps/amusicpod-s.sbs",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Authored Basic",
+      "fixture": "authored-basic.zip",
+      "sourceClass": "public-authored",
+      "provenance": {
+        "source": "Rockbox Designer Phase 1G fixture",
+        "license": "CC0-1.0",
+        "redistribution": "allowed"
+      },
+      "target": "ipodvideo",
+      "sourceFilesFound": [
+        ".rockbox/themes/authored-basic.cfg",
+        ".rockbox/wps/authored-basic.wps",
+        ".rockbox/wps/authored-basic.sbs"
+      ],
+      "preservation": {
+        "exactRoundTrip": true,
+        "cfg": true,
+        "screens": {
+          "wps": true,
+          "sbs": true
+        }
+      },
+      "parsing": {
+        "unknownTags": [
+          "zzFixture"
+        ],
+        "diagnostics": [],
+        "missingAssets": [],
+        "pathCollisions": [
+          {
+            "basename": "icon.bmp",
+            "paths": [
+              ".rockbox/wps/authored-basic/icon.bmp",
+              ".rockbox/wps/shared/icon.bmp"
+            ]
+          }
+        ]
+      },
+      "packageExport": {
+        "manifestMatches": true,
+        "sourceFileCount": 6,
+        "exportedFileCount": 6,
+        "assetHashesPreserved": true
+      },
+      "support": {
+        "interpretedTags": [
+          "V"
+        ],
+        "unsupportedSemanticTags": [
+          "ia",
+          "it",
+          "mp"
+        ],
+        "renderedTags": [
+          "V",
+          "it",
+          "mp"
+        ],
+        "unsupportedRenderTags": [
+          "ia"
+        ],
+        "editableTags": [
+          "V"
+        ],
+        "unsupportedEditTags": [
+          "ia",
+          "it",
+          "mp"
+        ]
+      },
+      "official": {
+        "status": "rejected",
+        "files": [
+          {
+            "screen": "wps",
+            "path": ".rockbox/wps/authored-basic.wps",
+            "executed": true,
+            "accepted": false,
+            "exitCode": 3,
+            "output": "Checking <screen-file>...\nWPS parsing failure\nError on line 4.\n%zzFixture(alpha)\n ^ 'Illegal tag' Here"
+          },
+          {
+            "screen": "sbs",
+            "path": ".rockbox/wps/authored-basic.sbs",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Authored Full",
+      "fixture": "authored-full.zip",
+      "sourceClass": "public-authored",
+      "provenance": {
+        "source": "Rockbox Designer Phase 1G fixture",
+        "license": "CC0-1.0",
+        "redistribution": "allowed"
+      },
+      "target": "ipodvideo",
+      "sourceFilesFound": [
+        ".rockbox/themes/authored-full.cfg",
+        ".rockbox/wps/authored-full.wps",
+        ".rockbox/wps/authored-full.sbs",
+        ".rockbox/wps/authored-full.fms"
+      ],
+      "preservation": {
+        "exactRoundTrip": true,
+        "cfg": true,
+        "screens": {
+          "wps": true,
+          "sbs": true,
+          "fms": true
+        }
+      },
+      "parsing": {
+        "unknownTags": [],
+        "diagnostics": [],
+        "missingAssets": [],
+        "pathCollisions": []
+      },
+      "packageExport": {
+        "manifestMatches": true,
+        "sourceFileCount": 7,
+        "exportedFileCount": 7,
+        "assetHashesPreserved": true
+      },
+      "support": {
+        "interpretedTags": [
+          "V",
+          "xd",
+          "xl"
+        ],
+        "unsupportedSemanticTags": [
+          "ps",
+          "tf",
+          "tp"
+        ],
+        "renderedTags": [
+          "V",
+          "ps",
+          "xd",
+          "xl"
+        ],
+        "unsupportedRenderTags": [
+          "tf",
+          "tp"
+        ],
+        "editableTags": [
+          "V",
+          "xd",
+          "xl"
+        ],
+        "unsupportedEditTags": [
+          "ps",
+          "tf",
+          "tp"
+        ]
+      },
+      "official": {
+        "status": "accepted",
+        "files": [
+          {
+            "screen": "wps",
+            "path": ".rockbox/wps/authored-full.wps",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          },
+          {
+            "screen": "sbs",
+            "path": ".rockbox/wps/authored-full.sbs",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          },
+          {
+            "screen": "fms",
+            "path": ".rockbox/wps/authored-full.fms",
+            "executed": true,
+            "accepted": true,
+            "exitCode": 0,
+            "output": "Checking <screen-file>...\nWPS parsed OK"
+          }
+        ]
+      }
+    }
+  ]
+}

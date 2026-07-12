@@ -4,11 +4,11 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1F — Official parser validation bridge
-- **Branch:** `codex/phase-1f-official-parser-bridge`
-- **Merged milestones:** Phase 0 through Phase 1E; Phase 1E merged through [PR #10](https://github.com/mrbarkan/RockBox-Designer/pull/10) at `c861677`.
-- **Status:** Phase 1F acceptance criteria pass locally; ready to publish and merge.
-- **Scope boundary:** Optional external CheckWPS build/invocation, structured fixture comparison, and checked-in report verification only. Real-theme corpus work remains Phase 1G.
+- **Phase:** Phase 1G — Real-theme compatibility corpus
+- **Branch:** `codex/phase-1g-real-theme-corpus`
+- **Merged milestones:** Phase 0 through Phase 1F; Phase 1F merged through [PR #11](https://github.com/mrbarkan/RockBox-Designer/pull/11) at `115c2cc`.
+- **Status:** Phase 1G acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** Corpus discovery, provenance, exact preservation/package checks, reports, and optional official validation only. Semantic WPS rendering and UI changes remain Phase 2.
 
 ## Current architecture
 
@@ -32,6 +32,7 @@ Last updated: 2026-07-12
 - Canvas sizing, alignment, legacy evaluators, layout generation, and import defaults read the selected profile. The UI profile selector capability-gates FMS, FM presets, and touch presets without deleting source.
 - `scripts/official/` builds target-specific upstream `checkwps` outside the repository and writes structured comparisons without bundling GPL source or binaries.
 - `rockbox/validation/` models all required official-comparison categories; ordinary validation checks the report without requiring a Rockbox checkout.
+- `scripts/themes/` generates public fixtures, prepares ignored private real-theme fixtures, and reports preservation, package, support, and optional CheckWPS evidence separately.
 
 ## Baseline findings
 
@@ -59,12 +60,12 @@ Before Phase 0 changes:
 - The renderer still interprets the derived legacy AST; broader semantic migration is deferred.
 - The raw source editor displays authoritative source but its Apply action is not a two-way parser/editor workflow yet.
 - Official tag names come from generated upstream metadata; interpretation and editing remain intentionally limited to evidenced subsets.
-- Legacy pipe-style argument boundaries use a small transitional arity table and need registry-backed expansion.
+- Legacy pipe-style argument boundaries use a small transitional arity table. Known no-argument tags are distinguished from conditional separators, while broader tag-specific semantics remain Phase 2 work.
 - CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
 - Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback.
 - Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
 - FMS is supported by the package model, but the legacy visual importer still does not populate FMS-derived visual elements.
-- Syntax assumptions were inspected against Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`, but no official parser comparison harness or real-theme compatibility report exists yet.
+- Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
 
 ## Validation
 
@@ -72,11 +73,12 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 12 files, 102 tests
+npm test               passed — 13 files, 105 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
+npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matches
 ```
 
 Phase 1F evidence:
@@ -88,15 +90,22 @@ Phase 1F evidence:
 - The report records source hashes, browser diagnostics, official output/exit codes, target, tool, repository, and exact SHA.
 - Missing setup fails clearly; `ROCKBOX_OFFICIAL_SKIP=1` is the only explicit skip path. Ordinary tests remain self-contained.
 
+Phase 1G evidence:
+
+- Two deterministic authored public fixtures and two ignored private local real themes were tested.
+- AMusicPod and Adwaitapod preserved every CFG/WPS/SBS byte and complete package manifest through export/re-import with zero browser diagnostics or missing assets.
+- CheckWPS accepted Adwaitapod and Authored Full. Authored Basic is intentionally rejected for its future tag; AMusicPod's original WPS rejection at line 119 is recorded without rewriting the source.
+- Private third-party ZIPs and provenance sidecars remain ignored; only locally authored CC0 fixtures are committed.
+
 ## Known blockers
 
-- No Phase 1F blocker is currently known.
-- The representative official fixture report is not a substitute for the Phase 1G real-theme corpus.
+- No Phase 1G blocker is currently known.
+- Passing preservation and package checks do not imply complete visual or editing support.
 
 ## Next task
 
-Finish and merge Phase 1F. Phase 1G must begin from updated `main` and add a provenance-tracked real-theme corpus plus package/parser/report automation.
+Finish and merge Phase 1G. Phase 2 must begin from updated `main` and add the source-linked semantic WPS interpreter, deterministic pixel renderer, logic-aware editing, and two-way source synchronization.
 
 ## Compatibility summary
 
-The product uses lossless screen and CFG source, binary package assets, generated official tag identity, verified device profiles, and a demonstrated official parser bridge for representative fixtures. Rendering remains a legacy adapter, and real-theme compatibility has not yet been demonstrated.
+Phase 1 is complete locally: the product has lossless screen and CFG source, binary package assets, generated official tag identity, verified device profiles, external official validation, and real-theme preservation evidence. Rendering remains a legacy adapter; Phase 2 must establish the practical, deterministic WPS visual-editor subset.

@@ -79,3 +79,13 @@
 **Decision:** Build upstream `tools/checkwps` unchanged in an external SHA-and-target directory, invoke it as a development-time process, and compare its results with browser preservation and diagnostics. Keep category logic and checked-in reports in this repository, but never source, objects, or binaries from the official tool.
 
 **Consequences:** Official differences and target dependence become visible without altering lossless future-syntax behavior. Local validation needs a matching Rockbox checkout and toolchain; ordinary tests remain offline. macOS may adjust only the generated out-of-tree makefile to select an available compiler.
+
+## ADR-0009 — Separate public authored fixtures from private real themes
+
+**Status:** Accepted
+
+**Context:** Real themes are necessary compatibility evidence, but redistribution rights for locally obtained third-party files are not automatically established.
+
+**Decision:** Commit only deterministic fixtures authored for this repository. Ignore private theme ZIPs and provenance sidecars, provide a helper that derives AMusicPod and Adwaitapod fixtures from a user-owned firmware tree, and check in reports that separate source preservation from semantic, visual, editing, and official-parser support.
+
+**Consequences:** Ordinary validation stays self-contained and legally conservative while developers can reproduce real-theme evidence locally. A passing round trip cannot be advertised as full visual compatibility, and private fixtures must never be force-added without confirmed permission.

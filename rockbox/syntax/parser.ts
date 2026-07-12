@@ -1,5 +1,5 @@
 import { createDiagnostic } from './diagnostics';
-import { getLongestKnownTagAt } from '../registry';
+import { getLongestKnownTagAt, getRawParameterSpec } from '../registry';
 import { createSourceText, SourceText } from './sourceText';
 import { isCommentStart, isEscapeSequence } from './tokenizer';
 import {
@@ -238,7 +238,13 @@ class LosslessParser {
           'The incomplete argument region was preserved verbatim.'
         );
       }
-    } else if (this.source[offset] === '|') {
+    } else if (
+      this.source[offset] === '|' &&
+      // A pipe following a known tag with no parameters is a conditional
+      // branch separator, not the start of a legacy invocation. Unknown tags
+      // remain permissive so future Rockbox syntax is still preserved.
+      getRawParameterSpec(name) !== ''
+    ) {
       invocationStyle = 'pipe';
       const scan = this.scanPipeArguments(name, offset, end, true);
       argumentsClosed = scan.closed;
@@ -458,7 +464,9 @@ class LosslessParser {
     let offset = nameStart + name.length;
     if (!name) return offset;
     if (this.source[offset] === '(') return this.scanParenthesized(offset, end, false).end;
-    if (this.source[offset] === '|') return this.scanPipeArguments(name, offset, end, false).end;
+    if (this.source[offset] === '|' && getRawParameterSpec(name) !== '') {
+      return this.scanPipeArguments(name, offset, end, false).end;
+    }
     return offset;
   }
 

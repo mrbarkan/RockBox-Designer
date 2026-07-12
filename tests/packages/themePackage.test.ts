@@ -76,6 +76,16 @@ describe('theme package import', () => {
     const theme = await importThemePackage(await zipFiles(files));
     expect(theme.diagnostics.some(diagnostic => diagnostic.code === 'missing-asset')).toBe(true);
   });
+
+  it('finds a bitmap in the Rockbox sibling directory named after the screen', async () => {
+    const files = {
+      '.rockbox/themes/theme.cfg': baseCfg(['wps']),
+      '.rockbox/wps/theme.wps': '%x|background.bmp|',
+      '.rockbox/wps/theme/background.bmp': new Uint8Array([1, 2, 3])
+    };
+    const theme = await importThemePackage(await zipFiles(files));
+    expect(theme.diagnostics.some(diagnostic => diagnostic.code === 'missing-asset')).toBe(false);
+  });
 });
 
 describe('deterministic theme package export', () => {
