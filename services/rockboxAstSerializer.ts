@@ -1,3 +1,7 @@
+/**
+ * @deprecated Legacy serializer retained only for projects saved before the
+ * lossless document migration. New imports and edits serialize rockbox/syntax.
+ */
 import { RockboxAstDocument, RockboxAstNode, RockboxTagNode } from '../types';
 
 const TAGS_USE_PIPE = new Set(['x', 'X', 'xl', 'xd']);

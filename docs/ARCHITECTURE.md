@@ -24,6 +24,19 @@ The AST becomes the export source when a screen has one, but it is not lossless.
 
 Every root and conditional-branch document references the same original source string and carries its own absolute span. This prevents branch parsing from losing parent coordinates while allowing clean branch serialization to return only the branch slice.
 
+## Phase 1B editing and migration layer
+
+`rockbox/editing/` adds:
+
+- immutable text, tag-argument, viewport, and image-reference commands;
+- conditional branch replacement plus insert, delete, and move commands;
+- stable node-ID traversal through nested conditional branches;
+- known-tag argument schemas that retain raw whitespace and invocation style;
+- query projections for the existing viewport, text, and image canvas controls;
+- explicit diagnostics when an edit is missing, incompatible, or unsafe.
+
+`ProjectState` may now carry `wpsDocument`, `sbsDocument`, and `fmsDocument`. New imports create lossless and legacy representations together. The lossless document is authoritative; `applyProjectSyntaxDocument()` serializes it and derives a fresh legacy AST only for the current preview evaluator. Old saved projects are parsed lazily from the legacy document's stored raw source.
+
 ## Current data flow
 
 ```text
@@ -41,8 +54,10 @@ During Phase 1A, callers may opt into a parallel syntax result:
 
 ```text
 Raw screen source
-  -> lossless parser -> RockboxDocument (future authority)
-  -> legacy adapter  -> RockboxAstDocument (current UI compatibility)
+  -> lossless parser -> RockboxDocument (authority)
+       -> source-aware commands -> updated RockboxDocument
+       -> compiler/export/source preview
+       -> legacy adapter -> RockboxAstDocument (derived render compatibility)
 ```
 
 ## Required source-of-truth rule
@@ -80,6 +95,6 @@ ZIP bytes -> path-safe manifest -> source documents + binary asset store
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1A boundary
+## Phase 1B boundary
 
-Phase 1A introduces the lossless syntax layer beside the legacy parser. It does not migrate visual editing, delete the legacy serializer, decode tag-specific semantics, replace JSZip, restructure project state, expand rendering, or redesign the interface.
+Phase 1B migrates existing viewport, text, and image interactions and export authority. It retains the legacy parser/serializer only as a clearly deprecated saved-project and preview adapter. It does not replace JSZip, make CFG source-preserving, migrate binary assets, expand rendering, or redesign the interface.

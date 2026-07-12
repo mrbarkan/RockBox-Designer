@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProjectState } from '../types';
-import { compileWps, compileCfg, compileSbs, compileFms } from '../services/rockboxCompiler';
+import { compileAstScreen, compileWps, compileCfg, compileSbs, compileFms } from '../services/rockboxCompiler';
 
 interface SourceEditorProps {
   project: ProjectState;
@@ -14,16 +14,18 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const sourceForTab = (tab: typeof activeTab) => {
+    if (tab === 'cfg') return compileCfg(project);
+    const authoritative = compileAstScreen(project, tab);
+    if (authoritative !== null) return authoritative;
+    if (tab === 'wps') return compileWps(project);
+    if (tab === 'sbs') return compileSbs(project);
+    return compileFms(project);
+  };
+
   // Load initial content on open or tab change
   useEffect(() => {
-    let code = '';
-    switch(activeTab) {
-        case 'wps': code = compileWps(project); break;
-        case 'sbs': code = compileSbs(project); break;
-        case 'fms': code = compileFms(project); break;
-        case 'cfg': code = compileCfg(project); break;
-    }
-    setContent(code);
+    setContent(sourceForTab(activeTab));
     setError(null);
   }, [activeTab, project]);
 
@@ -74,7 +76,7 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
         <div className="bg-[#111] p-3 flex justify-between items-center border-b border-black">
              <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Live Editor</span>
              <div className="flex gap-3">
-                 <button className="px-3 py-1.5 bg-[#333] text-gray-300 text-xs border border-black hover:bg-[#444]" onClick={() => setContent(compileWps(project))}>Reset</button>
+                 <button className="px-3 py-1.5 bg-[#333] text-gray-300 text-xs border border-black hover:bg-[#444]" onClick={() => setContent(sourceForTab(activeTab))}>Reset</button>
                  <button onClick={handleApply} className="px-4 py-1.5 bg-orange-600 text-white text-xs font-bold uppercase border border-black shadow-[2px_2px_0px_black] active:translate-y-[1px] active:shadow-none transition-all">
                      Apply Changes
                  </button>

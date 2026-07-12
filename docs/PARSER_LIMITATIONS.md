@@ -1,19 +1,19 @@
 # Parser Limitations
 
-Phase 1A adds a lossless syntax API beside the existing application parser. The distinction matters:
+Phase 1B makes the lossless syntax API authoritative for imported WPS/SBS editing and export. The distinction still matters:
 
 - **New syntax API:** `rockbox/syntax/` preserves tested source exactly and provides structural diagnostics.
-- **Current product path:** ZIP import, canvas editing, and export still use the legacy AST until Phase 1B.
+- **Current preview path:** Canvas rendering still consumes a derived legacy AST while semantic migration remains incomplete.
 
 Passing synthetic fixtures are evidence for those inputs, not a claim of complete Rockbox compatibility.
 
-## Application callers have not migrated
+## Application migration is intentionally partial
 
 - **Example:** Importing a WPS through the current ZIP workflow and editing it on the canvas.
-- **Current behavior:** `services/rockboxParser.ts`, the AST evaluator, and compiler still use the early `RockboxAstDocument`.
-- **Preservation status:** Product-level exact preservation is not yet guaranteed.
-- **Diagnostic:** The lossless document is available through `services/rockboxSyntaxAdapter.ts`, but legacy UI diagnostics are unchanged.
-- **Planned phase:** Phase 1B source-aware editing and caller migration.
+- **Current behavior:** Import, viewport/text/image editing, compilation, ZIP screen export, and source previews use the lossless document. The renderer receives a derived legacy AST.
+- **Preservation status:** Exact for untouched source and the tested edit subset; visual interpretation remains approximate.
+- **Diagnostic:** Unsafe commands return an edit diagnostic and leave source unchanged.
+- **Planned phase:** Phase 2 semantic interpreter and two-way source synchronization.
 
 ## Known-tag boundaries are transitional
 
@@ -39,13 +39,13 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Delimiter errors are reported; type/arity validation is deferred.
 - **Planned phase:** Phase 1B known-tag argument helpers and Phase 1D registry metadata.
 
-## Dirty conditional editing is only a serializer primitive
+## Conditional editing is structural but intentionally narrow
 
 - **Example:** Replacing or inserting a branch in a malformed conditional.
-- **Current behavior:** The serializer can combine dirty nodes and branch documents while retaining existing separators and missing delimiters, but Phase 1A exposes no public editing commands.
-- **Preservation status:** Clean conditionals round-trip exactly; no user-facing edit claim is made.
-- **Diagnostic:** Structural parse diagnostics remain attached to source spans.
-- **Planned phase:** Phase 1B immutable commands and minimal-diff tests.
+- **Current behavior:** Branch replacement and nested text/image edits are immutable and preserve sibling branches. The current UI does not yet expose a general conditional editor.
+- **Preservation status:** Exact for tested nested edits and branch replacement.
+- **Diagnostic:** Missing conditionals or branch indexes fail without changing source.
+- **Planned phase:** Phase 2 logic-aware layers and conditional inspector controls.
 
 ## Recovery coverage is representative, not exhaustive
 

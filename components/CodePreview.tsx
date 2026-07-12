@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ProjectState } from '../types';
-import { compileWps, compileCfg } from '../services/rockboxCompiler';
+import { compileAstScreen, compileWps, compileCfg } from '../services/rockboxCompiler';
 
 interface CodePreviewProps {
   project: ProjectState;
@@ -8,7 +8,7 @@ interface CodePreviewProps {
 }
 
 export const CodePreview: React.FC<CodePreviewProps> = ({ project, onClose }) => {
-  const wpsCode = useMemo(() => compileWps(project), [project]);
+  const wpsCode = useMemo(() => compileAstScreen(project, 'wps') ?? compileWps(project), [project]);
   const cfgCode = useMemo(() => compileCfg(project), [project]);
 
   return (
