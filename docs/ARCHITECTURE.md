@@ -121,10 +121,16 @@ Project deserialization migrates legacy IDs in direct JSON and nested mock-cloud
 
 `rockbox/validation/` owns the comparison categories independently of process execution. Ordinary tests exercise all category branches and verify the checked-in report without requiring Rockbox. The optional `test:official` command is the only path that needs `ROCKBOX_SOURCE_DIR` or executes GPL tooling.
 
+## Phase 1G real-theme corpus
+
+`scripts/themes/` discovers committed authored fixtures, ignored private fixtures, and configured local fixture directories. It imports each package, checks exact CFG/WPS/SBS/FMS serialization, exports and re-imports it, compares manifests and asset hashes, records syntax and package diagnostics, inventories support levels, and optionally invokes the Phase 1F CheckWPS bridge.
+
+Rockbox bitmap references can resolve beside a screen or in the conventional sibling directory named after that screen. Resolution remains archive-path based and case-sensitive; there is no global basename fallback. Reports explicitly keep preservation, parsing, interpretation, rendering, editing, and official validation as separate evidence dimensions.
+
 ## Rendering flow target
 
 Rendering should operate at the selected device's native pixel dimensions, with integer coordinates and explicit clipping. DOM overlays may provide editing handles but must not define the rendered pixel positions.
 
-## Phase 1F boundary
+## Phase 1G boundary
 
-Phase 1F adds reference validation evidence without embedding or translating the official parser. It does not add real downloaded themes, change browser acceptance rules, expand semantic rendering, or redesign the interface.
+Phase 1G adds reproducible corpus evidence without committing third-party themes, changing browser acceptance rules, expanding semantic rendering, or redesigning the interface. Phase 2 begins the semantic and rendering migration.

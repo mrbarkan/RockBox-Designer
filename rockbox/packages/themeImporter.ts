@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { decodeKnownTag } from '../editing';
+import { decodeKnownTag, splitRawArguments } from '../editing';
 import { parseRockbox, RockboxDocument, RockboxNode } from '../syntax';
 import { createThemeAsset, hashBytes } from './assetStore';
 import { getCfgValues, parseCfg } from './cfgParser';
@@ -14,7 +14,9 @@ const collectAssetReferences = (document: RockboxDocument) => {
   const references: string[] = [];
   const walk = (nodes: RockboxNode[]) => nodes.forEach(node => {
     if (node.kind === 'tag' && ['x', 'X', 'xl'].includes(node.name)) {
-      const path = decodeKnownTag(node)?.values.path;
+      const path = node.name === 'x' && node.invocationStyle === 'parentheses'
+        ? splitRawArguments(node)[1]?.value
+        : decodeKnownTag(node)?.values.path;
       if (path && path !== '-') references.push(path);
     }
     if (node.kind === 'conditional') node.branches.forEach(branch => walk(branch.nodes));
@@ -70,10 +72,13 @@ export const importThemePackage = async (input: ZipInput): Promise<ThemePackage>
     const screenPath = screenPaths[screen];
     if (!document || !screenPath) continue;
     for (const reference of collectAssetReferences(document)) {
-      const resolved = reference.startsWith('/')
-        ? normalizeArchivePath(reference)
-        : joinArchivePath(archiveDirname(screenPath), reference);
-      if (!resolved || !entries.has(resolved)) {
+      const candidates = reference.startsWith('/')
+        ? [normalizeArchivePath(reference)]
+        : [
+            joinArchivePath(archiveDirname(screenPath), reference),
+            joinArchivePath(screenPath.replace(/\.[^./]+$/, ''), reference)
+          ];
+      if (!candidates.some(candidate => candidate && entries.has(candidate))) {
         diagnostics.push({ severity: 'warning', code: 'missing-asset', message: `Referenced asset is missing: ${reference}`, path: reference });
       }
     }

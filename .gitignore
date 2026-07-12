@@ -13,6 +13,10 @@ dist-ssr
 coverage
 *.local
 
+# Legally obtained third-party Rockbox themes remain local.
+tests/private-themes/*
+!tests/private-themes/README.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

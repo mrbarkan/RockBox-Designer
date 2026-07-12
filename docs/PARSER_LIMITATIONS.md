@@ -79,10 +79,10 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Missing and case-mismatched references are reported rather than resolved by basename.
 - **Planned phase:** Later asset-library UI migration.
 
-## Official fixtures are compared; real themes are not yet the corpus
+## Real-theme preservation is measured; semantic and visual support remain partial
 
-- **Example:** Target-dependent tags, complex legacy themes, and constructs outside the authored fixture corpus.
-- **Current behavior:** The optional Phase 1F bridge executes target-specific upstream `checkwps` against six representative fixtures and records both parser outcomes. Ordinary tests only verify the checked-in report.
-- **Preservation status:** All demonstrated fixtures round-trip in the browser parser; one future tag is intentionally preserved even though Rockbox rejects it.
-- **Diagnostic:** `reports/official-parser/latest.json` records browser diagnostic codes/messages beside official exit codes and output.
-- **Planned phase:** Phase 1G expands from representative fixtures to a provenance-tracked real-theme corpus.
+- **Example:** AMusicPod, Adwaitapod, target-dependent tags, and constructs outside the authored fixture corpus.
+- **Current behavior:** The Phase 1G runner measures exact source serialization, package manifests, asset hashes, browser diagnostics, support inventories, and optional CheckWPS results. Local third-party ZIPs stay ignored.
+- **Preservation status:** Both named real themes round-trip exactly with complete manifests. Adwaitapod passes CheckWPS; AMusicPod's original WPS has a documented official rejection while remaining byte-exact.
+- **Diagnostic:** `reports/themes/latest.json` records complete evidence and `reports/themes/latest.md` provides a readable summary.
+- **Planned phase:** Phase 2 expands the interpreted, rendered, and editable WPS subset without weakening preservation.

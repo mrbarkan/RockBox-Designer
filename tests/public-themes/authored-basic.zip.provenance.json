@@ -1,0 +1,8 @@
+{
+  "name": "Authored Basic",
+  "target": "ipodvideo",
+  "sourceClass": "public-authored",
+  "source": "Rockbox Designer Phase 1G fixture",
+  "license": "CC0-1.0",
+  "redistribution": "allowed"
+}

@@ -10,13 +10,18 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:official": "tsx scripts/official/run-official-validation.ts",
+    "test:themes": "npm run themes:fixtures:verify && tsx scripts/themes/run-theme-compatibility.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "device:verify": "node scripts/verify-rockbox-device-profiles.mjs",
     "official:report:verify": "node scripts/verify-official-parser-report.mjs",
+    "theme:report:verify": "node scripts/verify-theme-compatibility-report.mjs",
+    "themes:fixtures:generate": "node scripts/themes/generate-public-theme-fixtures.mjs",
+    "themes:fixtures:verify": "node scripts/themes/generate-public-theme-fixtures.mjs --check",
+    "themes:prepare-private": "tsx scripts/themes/prepare-private-themes.ts",
     "registry:generate": "node scripts/generate-rockbox-tag-registry.mjs",
     "registry:verify": "node scripts/verify-rockbox-tag-registry.mjs",
-    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run typecheck && npm test && npm run build"
+    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run theme:report:verify && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",
