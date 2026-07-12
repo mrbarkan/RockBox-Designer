@@ -89,3 +89,13 @@
 **Decision:** Commit only deterministic fixtures authored for this repository. Ignore private theme ZIPs and provenance sidecars, provide a helper that derives AMusicPod and Adwaitapod fixtures from a user-owned firmware tree, and check in reports that separate source preservation from semantic, visual, editing, and official-parser support.
 
 **Consequences:** Ordinary validation stays self-contained and legally conservative while developers can reproduce real-theme evidence locally. A passing round trip cannot be advertised as full visual compatibility, and private fixtures must never be force-added without confirmed permission.
+
+## ADR-0010 — Render a source-linked semantic operation list at native pixels
+
+**Status:** Accepted
+
+**Context:** The legacy AST and flat visual-element model cannot represent logic-aware WPS editing without weakening the lossless source-of-truth rule.
+
+**Decision:** Interpret a documented WPS subset directly from the CST into device-independent render operations. Link every operation and layer to its source node, render at native device pixels with explicit clipping, and make DOM handles derived overlays. Preserve unsupported nodes as source-only/unsupported layers. When applied source is invalid, retain the last valid render and show the current diagnostics.
+
+**Consequences:** Visual and source edits converge on the same document, conditionals retain logic context, and deterministic pixel goldens become possible. Browser fonts and the documented semantic subset remain approximations; support claims must continue to be tracked per construct rather than inferred from preservation.

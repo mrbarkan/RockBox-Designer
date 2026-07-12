@@ -3,6 +3,8 @@ import React from 'react';
 import { ProjectState, WpsElement, ScreenType, ElementType } from '../types';
 import { FileBrowser } from './FileBrowser';
 import { PropertyPanel } from './PropertyPanel';
+import { SemanticWorkspacePanel } from './SemanticWorkspacePanel';
+import type { BranchOverrides, SemanticResult } from '../rockbox/semantics';
 
 interface EditorSidebarProps {
     rightPanelMode: 'inspector' | 'files' | 'settings';
@@ -17,12 +19,19 @@ interface EditorSidebarProps {
     isLayerStackCollapsed: boolean;
     setIsLayerStackCollapsed: (v: boolean) => void;
     activeScreen: ScreenType;
+    semanticResult?: SemanticResult | null;
+    branchOverrides: BranchOverrides;
+    onSetBranchOverride: (nodeId: string, branch: number | null) => void;
+    onUpdateSourceArguments: (nodeId: string, updates: Record<string, string>) => void;
+    onUpdateSourceText: (nodeId: string, value: string) => void;
 }
 
 export const EditorSidebar: React.FC<EditorSidebarProps> = ({
     rightPanelMode, setRightPanelMode, project, selectedElementIds, onUploadResources,
     onUpdateElement, onUpdateProject, onDeleteElement, onSelectElement,
-    isLayerStackCollapsed, setIsLayerStackCollapsed, activeScreen
+    isLayerStackCollapsed, setIsLayerStackCollapsed, activeScreen,
+    semanticResult, branchOverrides, onSetBranchOverride, onUpdateSourceArguments,
+    onUpdateSourceText
 }) => {
     
     const selectedElement = project.elements.find(el => selectedElementIds.includes(el.id)) || null;
@@ -39,7 +48,17 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             </div>
             <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-1 overflow-y-auto">
-                    {rightPanelMode === 'files' ? ( 
+                    {rightPanelMode === 'inspector' && semanticResult ? (
+                        <SemanticWorkspacePanel
+                            result={semanticResult}
+                            selectedNodeId={selectedElementIds[0]}
+                            branchOverrides={branchOverrides}
+                            onSelectNode={onSelectElement}
+                            onSetBranchOverride={onSetBranchOverride}
+                            onUpdateArguments={onUpdateSourceArguments}
+                            onUpdateText={onUpdateSourceText}
+                        />
+                    ) : rightPanelMode === 'files' ? (
                         <FileBrowser project={project} onUploadResources={onUploadResources} /> 
                     ) : (
                         <PropertyPanel 
@@ -52,7 +71,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                         />
                     )}
                 </div>
-                {rightPanelMode === 'inspector' && (
+                {rightPanelMode === 'inspector' && !semanticResult && (
                     <div className={`border-t border-black flex flex-col bg-[#e0e0e0] sticky bottom-0 flex-shrink-0 transition-all duration-300 ease-in-out ${isLayerStackCollapsed ? 'h-10' : 'h-1/3'}`}>
                         <div onClick={() => setIsLayerStackCollapsed(!isLayerStackCollapsed)} className="h-10 bg-[#d4d4d4] border-b border-black flex items-center justify-between px-6 text-xs font-bold uppercase tracking-wider text-gray-600 cursor-pointer hover:bg-gray-300 select-none"><span>Layer_Stack ({activeScreen.toUpperCase()})</span><span>{isLayerStackCollapsed ? '▲' : '▼'}</span></div>
                         {!isLayerStackCollapsed && (

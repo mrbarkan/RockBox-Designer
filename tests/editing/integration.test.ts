@@ -4,6 +4,7 @@ import {
   listSyntaxImageNodes,
   listSyntaxTextNodes,
   listSyntaxViewports,
+  updateImageReference,
   updateViewport
 } from '../../rockbox/editing';
 import { parseRockbox, serializeRockbox } from '../../rockbox/syntax';
@@ -59,5 +60,13 @@ describe('project lossless-source integration', () => {
     expect(listSyntaxViewports(document)[0]).toMatchObject({ x: 5, y: 6, width: 100, height: 80 });
     expect(listSyntaxTextNodes(document).some(node => node.value.includes('Label'))).toBe(true);
     expect(listSyntaxImageNodes(document)[0]?.filename).toBe('icon.bmp');
+  });
+
+  it('updates the path slot of modern labeled image syntax', () => {
+    const document = parseRockbox('%x(Backdrop,old.bmp,4,5)');
+    const image = listSyntaxImageNodes(document)[0];
+    expect(image.filename).toBe('old.bmp');
+    const updated = updateImageReference(document, image.id, 'new.bmp');
+    expect(serializeRockbox(updated.document)).toBe('%x(Backdrop,new.bmp,4,5)');
   });
 });

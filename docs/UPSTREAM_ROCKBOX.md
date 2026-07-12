@@ -22,6 +22,9 @@ firmware/export/config/ipodvideo.h
 firmware/export/config/ipod6g.h
 tools/configure
 apps/gui/skin_engine/skin_parser.c
+apps/gui/skin_engine/skin_tokens.c
+apps/gui/skin_engine/skin_render.c
+apps/gui/skin_engine/skin_display.c
 apps/gui/statusbar-skinned.c
 apps/radio/radio_skin.c
 apps/gui/usb_screen.c
@@ -69,6 +72,10 @@ Phase 1D generated `rockbox/registry/generated/rockbox-tags.json` from `lib/skin
 ## Official parser harness
 
 Phase 1F builds and runs upstream `tools/checkwps` from a separately checked-out Rockbox tree provided through `ROCKBOX_SOURCE_DIR`. The demonstrated structured report cites this SHA. Ordinary application tests do not require the checkout or network access, and Rockbox parser source or binaries are not bundled into the browser. See `docs/OFFICIAL_PARSER_VALIDATION.md`.
+
+## Phase 2 semantic reference
+
+Phase 2 inspected `apps/gui/skin_engine/skin_tokens.c`, `skin_render.c`, and `skin_display.c` at the recorded SHA for playback status numbering, battery/volume conditional values, album-art presence, charging/USB truth values, viewport clipping, progress bars, and bitmap display behavior. The browser implementation is an independently written documented subset; no upstream implementation code is copied or linked. The edited Authored Full export was accepted by the external CheckWPS harness at this SHA.
 
 ## Licensing note
 

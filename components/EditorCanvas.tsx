@@ -14,6 +14,8 @@ import {
   SyntaxViewportEditable
 } from '../rockbox/editing';
 import { getProjectSyntaxDocument } from '../services/rockboxSyntaxAdapter';
+import type { SemanticResult } from '../rockbox/semantics';
+import { renderSemanticToCanvas } from '../rockbox/rendering';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -33,6 +35,7 @@ interface EditorCanvasProps {
   ) => void;
   onUpdateAstText?: (nodeId: string, value: string) => void;
   onUpdateAstImage?: (nodeId: string, filename: string) => void;
+  semanticResult?: SemanticResult | null;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -49,13 +52,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   useAstPreview = false,
   onUpdateAstViewport,
   onUpdateAstText,
-  onUpdateAstImage
+  onUpdateAstImage,
+  semanticResult
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const deviceProfile = getDeviceProfile(project.settings.target);
   const screenWidth = deviceProfile.mainScreen.width;
   const screenHeight = deviceProfile.mainScreen.height;
+  const syntaxDocument = getProjectSyntaxDocument(project, activeScreen);
+  const sourcePreviewActive = useAstPreview && Boolean(semanticResult || syntaxDocument);
   
   // Interaction State
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -116,14 +122,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       canvas.height = screenHeight;
 
       // 1. Evaluate
-      const renderList = useAstPreview
-          ? evaluateAstTheme(project, activeScreen, sim, song)
-          : evaluateTheme(project, activeScreen, sim, song);
+      if (sourcePreviewActive && semanticResult) {
+          renderSemanticToCanvas(ctx, semanticResult.operations, imageCache, project.settings.backgroundColor);
+      } else {
+          const renderList = sourcePreviewActive
+              ? evaluateAstTheme(project, activeScreen, sim, song)
+              : evaluateTheme(project, activeScreen, sim, song);
+          renderToCanvas(ctx, renderList, imageCache);
+      }
 
-      // 2. Render
-      renderToCanvas(ctx, renderList, imageCache);
-
-  }, [project, activeScreen, sim, song, imageCache, screenWidth, screenHeight]);
+  }, [project, activeScreen, sim, song, imageCache, screenWidth, screenHeight, sourcePreviewActive, semanticResult]);
 
   // 3. Interaction Handlers (DOM Layer)
   const handleMouseDown = (e: React.MouseEvent, el: WpsElement) => {
@@ -196,15 +204,45 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
   // Only render interaction boxes for visible elements on current screen
   const interactionElements = project.elements.filter(el => el.screen === activeScreen);
-  const syntaxDocument = getProjectSyntaxDocument(project, activeScreen);
-  const astViewports = useAstPreview
-      ? listSyntaxViewports(syntaxDocument)
+  const astViewports = sourcePreviewActive
+      ? semanticResult
+          ? semanticResult.operations.filter(operation => operation.type === 'setViewport').map(operation => ({
+              id: operation.source.nodeId,
+              x: operation.rect.x,
+              y: operation.rect.y,
+              width: operation.rect.width,
+              height: operation.rect.height
+          }))
+          : listSyntaxViewports(syntaxDocument)
       : [];
-  const astTextNodes = useAstPreview
-      ? listSyntaxTextNodes(syntaxDocument, project.settings.uiFont)
+  const astTextNodes = sourcePreviewActive
+      ? semanticResult
+          ? semanticResult.operations.filter(operation => operation.type === 'drawText').map(operation => ({
+              id: operation.source.nodeId,
+              value: operation.text,
+              x: operation.rect.x,
+              y: operation.rect.y,
+              width: operation.rect.width,
+              height: operation.rect.height
+          }))
+          : listSyntaxTextNodes(syntaxDocument, project.settings.uiFont)
       : [];
-  const astImageNodes = useAstPreview
-      ? listSyntaxImageNodes(syntaxDocument, project.settings.uiFont)
+  const astImageNodes = sourcePreviewActive
+      ? semanticResult
+          ? semanticResult.operations.filter(operation => operation.type === 'drawBitmap').map(operation => ({
+              id: operation.source.nodeId,
+              filename: operation.assetPath,
+              x: operation.rect.x,
+              y: operation.rect.y,
+              width: Math.min(operation.rect.width, 24),
+              height: Math.min(operation.rect.height, 24)
+          }))
+          : listSyntaxImageNodes(syntaxDocument, project.settings.uiFont)
+      : [];
+  const semanticElements = sourcePreviewActive && semanticResult
+      ? semanticResult.operations.filter(operation =>
+          ['drawProgress', 'drawAlbumArt', 'drawRect', 'debugOverlay'].includes(operation.type)
+        )
       : [];
 
   const handleAstTextEdit = (node: SyntaxTextEditable) => {
@@ -247,10 +285,17 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             <canvas 
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                style={{ imageRendering: 'pixelated' }}
             />
 
+            {sourcePreviewActive && semanticResult?.stale && (
+                <div className="absolute left-2 top-2 z-50 bg-amber-500 text-black border border-black px-2 py-1 text-[9px] font-mono font-bold uppercase shadow-[2px_2px_0_black]">
+                    Preview stale · fix source diagnostics
+                </div>
+            )}
+
             {/* LAYER 2: INTERACTION (DOM) */}
-            {!useAstPreview && interactionElements.map(el => {
+            {!sourcePreviewActive && interactionElements.map(el => {
                 const isSelected = project.selectedElementIds.includes(el.id);
                 // For Interaction, we might show hidden elements as semi-transparent boxes if selected?
                 // Or just follow visibility.
@@ -288,11 +333,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 );
             })}
 
-            {useAstPreview && astViewports.map(vp => (
+            {sourcePreviewActive && astViewports.map(vp => (
                 <div
                     key={vp.id}
                     onMouseDown={(e) => handleAstMouseDown(e, vp)}
-                    className="absolute group hover:outline hover:outline-1 hover:outline-amber-400 outline outline-1 outline-amber-600/60 z-20"
+                    onClick={(e) => { e.stopPropagation(); onSelectElement(vp.id); }}
+                    className={`absolute group hover:outline hover:outline-1 hover:outline-amber-400 outline z-20 ${project.selectedElementIds.includes(vp.id) ? 'outline-2 outline-orange-500' : 'outline-1 outline-amber-600/60'}`}
                     style={{
                         left: vp.x,
                         top: vp.y,
@@ -309,11 +355,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 </div>
             ))}
 
-            {useAstPreview && astTextNodes.map(node => (
+            {sourcePreviewActive && astTextNodes.map(node => (
                 <div
                     key={node.id}
                     onDoubleClick={() => handleAstTextEdit(node)}
-                    className="absolute z-30 border border-dashed border-emerald-400/70 text-[9px] text-emerald-100/80 font-mono pointer-events-auto"
+                    onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
+                    className={`absolute z-30 border border-dashed text-[9px] text-emerald-100/80 font-mono pointer-events-auto ${project.selectedElementIds.includes(node.id) ? 'border-orange-500 bg-orange-500/10' : 'border-emerald-400/70'}`}
                     style={{
                         left: node.x,
                         top: node.y,
@@ -326,11 +373,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 </div>
             ))}
 
-            {useAstPreview && astImageNodes.map(node => (
+            {sourcePreviewActive && astImageNodes.map(node => (
                 <div
                     key={node.id}
                     onDoubleClick={() => handleAstImageEdit(node)}
-                    className="absolute z-30 border border-dashed border-sky-400/70 text-[9px] text-sky-100/80 font-mono pointer-events-auto"
+                    onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
+                    className={`absolute z-30 border border-dashed text-[9px] text-sky-100/80 font-mono pointer-events-auto ${project.selectedElementIds.includes(node.id) ? 'border-orange-500 bg-orange-500/10' : 'border-sky-400/70'}`}
                     style={{
                         left: node.x,
                         top: node.y,
@@ -341,6 +389,21 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 >
                     <span className="px-1">IMG</span>
                 </div>
+            ))}
+
+            {semanticElements.map(operation => (
+                <div
+                    key={`${operation.type}:${operation.source.nodeId}`}
+                    onClick={(e) => { e.stopPropagation(); onSelectElement(operation.source.nodeId); }}
+                    className={`absolute z-[25] border border-dotted pointer-events-auto ${project.selectedElementIds.includes(operation.source.nodeId) ? 'border-orange-500 bg-orange-500/10' : 'border-cyan-300/50'}`}
+                    style={{
+                        left: operation.rect.x,
+                        top: operation.rect.y,
+                        width: operation.rect.width,
+                        height: operation.rect.height
+                    }}
+                    title={operation.type}
+                />
             ))}
             
             {showGuides && <div className="absolute inset-0 pointer-events-none opacity-50"><div className="absolute top-0 bottom-0 left-1/2 border-l border-cyan-400 border-dashed" /><div className="absolute left-0 right-0 top-1/2 border-t border-cyan-400 border-dashed" /></div>}

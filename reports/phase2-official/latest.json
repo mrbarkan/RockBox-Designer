@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T20:43:13.320Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
+  },
+  "harness": {
+    "tool": "tools/checkwps",
+    "target": "ipodvideo",
+    "binaryBundled": false
+  },
+  "workflow": {
+    "fixture": "Authored Full",
+    "imported": true,
+    "edit": {
+      "nodeId": "tag:0:17",
+      "properties": {
+        "x": {
+          "before": 0,
+          "after": 8
+        },
+        "width": {
+          "before": 320,
+          "after": 312
+        }
+      }
+    },
+    "exported": true,
+    "reimported": true,
+    "exactAfterExport": true,
+    "manifestMatches": true,
+    "sourceSha256": "ca6ad0729ae0f6376df7cfe49b563cb7a0ed4277815b06fce8bc9caebf8cc82f"
+  },
+  "official": {
+    "executed": true,
+    "accepted": true,
+    "exitCode": 0,
+    "output": "Checking <screen-file>...\nWPS parsed OK"
+  }
+}

@@ -4,20 +4,20 @@ Last updated: 2026-07-12
 
 ## Current phase
 
-- **Phase:** Phase 1G — Real-theme compatibility corpus
-- **Branch:** `codex/phase-1g-real-theme-corpus`
-- **Merged milestones:** Phase 0 through Phase 1F; Phase 1F merged through [PR #11](https://github.com/mrbarkan/RockBox-Designer/pull/11) at `115c2cc`.
-- **Status:** Phase 1G acceptance criteria pass locally; ready to publish and merge.
-- **Scope boundary:** Corpus discovery, provenance, exact preservation/package checks, reports, and optional official validation only. Semantic WPS rendering and UI changes remain Phase 2.
+- **Phase:** Phase 2 — Accurate WPS visual editor
+- **Branch:** `codex/phase-2-accurate-wps-editor`
+- **Merged milestones:** Phase 0 through Phase 1G; Phase 1G merged through [PR #12](https://github.com/mrbarkan/RockBox-Designer/pull/12) at `156a79d`.
+- **Status:** Phase 2 acceptance criteria pass locally; ready to publish and merge.
+- **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
 
 ## Current architecture
 
 - React 19 and Vite 6 provide the browser application and build pipeline.
 - `App.tsx` owns the active `ProjectState` through the `useHistory` hook and coordinates editing, simulation, import, export, and storage.
-- The project currently has two overlapping representations: a flat visual-element model and an early Rockbox AST for WPS, SBS, and FMS source.
+- The project retains the legacy flat visual-element model for synthetic projects and non-WPS fallback, but imported WPS source now renders directly from the lossless document through Phase 2 semantics.
 - ZIP import in `services/rockboxParser.ts` reads a CFG, builds visual elements, and creates early AST documents for WPS and SBS when those paths are present.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
-- Canvas rendering can use either the visual-element evaluator or the AST evaluator. AST viewports, text, and images have narrow editor helpers.
+- WPS canvas rendering uses a source-linked render list at native target pixels with integer coordinates, explicit clipping, nearest-neighbor bitmap scaling, and source-derived editing overlays.
 - Imported package assets are binary and archive-path keyed; legacy upload controls still derive data URLs before export conversion. JSZip is an explicit module dependency.
 - `rockbox/syntax/` now provides a separate lossless document model with absolute source spans, exact raw slices, diagnostics, a structural conditional model, a tokenizer, and a minimum-change serializer.
 - `rockbox/editing/` provides immutable commands, semantic argument helpers for the Phase 1B tag subset, stable node-ID queries, and explicit failure diagnostics.
@@ -33,6 +33,9 @@ Last updated: 2026-07-12
 - `scripts/official/` builds target-specific upstream `checkwps` outside the repository and writes structured comparisons without bundling GPL source or binaries.
 - `rockbox/validation/` models all required official-comparison categories; ordinary validation checks the report without requiring a Rockbox checkout.
 - `scripts/themes/` generates public fixtures, prepares ignored private real-theme fixtures, and reports preservation, package, support, and optional CheckWPS evidence separately.
+- `rockbox/semantics/` interprets the supported WPS subset without mutating source and retains a CST source link on every render operation.
+- `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for the 320×240 golden screenshot.
+- The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only nodes, and unsupported preserved nodes.
 
 ## Baseline findings
 
@@ -56,16 +59,16 @@ Before Phase 0 changes:
 
 ## Known parser and package risks
 
-- Viewport, text, and image interactions now edit the lossless document and synchronize a derived legacy AST for preview.
-- The renderer still interprets the derived legacy AST; broader semantic migration is deferred.
-- The raw source editor displays authoritative source but its Apply action is not a two-way parser/editor workflow yet.
+- WPS viewport, text, image, color, bar, album-art, touch, and conditional controls project from and edit the lossless document. SBS/FMS still use the legacy preview adapter.
+- The source editor applies WPS/SBS/FMS text through the lossless parser. Invalid source remains authoritative while the canvas visibly holds the last valid WPS render.
 - Official tag names come from generated upstream metadata; interpretation and editing remain intentionally limited to evidenced subsets.
-- Legacy pipe-style argument boundaries use a small transitional arity table. Known no-argument tags are distinguished from conditional separators, while broader tag-specific semantics remain Phase 2 work.
+- Legacy pipe-style argument boundaries still use a small transitional arity table outside the evidenced image/viewport subset.
 - CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
 - Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback.
 - Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
 - FMS is supported by the package model, but the legacy visual importer still does not populate FMS-derived visual elements.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
+- Browser text uses an approximate monospace font rather than Rockbox `.fnt` glyph metrics. Complex `%?if`, `%?and`, and `%?or` tests are preserved and manually previewable but not automatically evaluated yet.
 
 ## Validation
 
@@ -73,12 +76,15 @@ Latest passing validation on 2026-07-12:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 13 files, 105 tests
+npm test               passed — 16 files, 113 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
 npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matches
+npm run test:visual    passed — deterministic 320×240 golden screenshot
+npm run test:phase2-real passed — AMusicPod and Adwaitapod visual edit/export/re-import
+Phase 2 official       passed — edited exported Authored Full WPS accepted by CheckWPS
 ```
 
 Phase 1F evidence:
@@ -97,15 +103,23 @@ Phase 1G evidence:
 - CheckWPS accepted Adwaitapod and Authored Full. Authored Basic is intentionally rejected for its future tag; AMusicPod's original WPS rejection at line 119 is recorded without rewriting the source.
 - Private third-party ZIPs and provenance sidecars remain ignored; only locally authored CC0 fixtures are committed.
 
+Phase 2 evidence:
+
+- Every semantic render operation carries its originating CST node ID and span; unsupported nodes remain visible as preserved source layers.
+- AMusicPod and Adwaitapod each accepted a one-pixel viewport edit, updated the semantic projection, serialized only the intended tag, exported/re-imported exactly, and retained all asset hashes.
+- The authored full-screen package completed import, source-aware edit, export, and re-import, then its edited WPS was accepted by `checkwps.ipodvideo` at the pinned SHA.
+- Conditional playback branches follow simulation state and can be overridden explicitly in the layer panel. Invalid source diagnostics make the preview visibly stale instead of replacing the last valid render.
+- A checked-in 320×240 PPM golden verifies deterministic native-pixel output. The local app loaded successfully in browser smoke orientation; the connected browser session detached before the automated import interaction, so the import/edit workflow is evidenced by integration and package tests rather than a completed browser automation recording.
+
 ## Known blockers
 
-- No Phase 1G blocker is currently known.
-- Passing preservation and package checks do not imply complete visual or editing support.
+- No Phase 2 acceptance blocker is currently known.
+- This is ready for targeted WPS dogfooding, not a claim that every real-theme construct renders accurately.
 
 ## Next task
 
-Finish and merge Phase 1G. Phase 2 must begin from updated `main` and add the source-linked semantic WPS interpreter, deterministic pixel renderer, logic-aware editing, and two-way source synchronization.
+Finish and merge Phase 2. Do not start Phase 3 in this branch; SBS, FMS, lists, menus, and the font pipeline begin from updated `main`.
 
 ## Compatibility summary
 
-Phase 1 is complete locally: the product has lossless screen and CFG source, binary package assets, generated official tag identity, verified device profiles, external official validation, and real-theme preservation evidence. Rendering remains a legacy adapter; Phase 2 must establish the practical, deterministic WPS visual-editor subset.
+Phase 2 is ready for targeted WPS dogfooding: a user can import a real theme, inspect source-aware logic layers, preview supported state branches, move supported viewports, edit known properties or source, export without losing unsupported syntax/assets, and receive official validation evidence for the tested subset. Complex condition functions, exact font metrics, and broad tag rendering remain visible limitations.
