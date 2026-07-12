@@ -440,6 +440,9 @@ export default function App() {
               useAstPreview={useAstPreview}
               onSelectElement={handleSelectElement} 
               onUpdateElement={handleUpdateElement} 
+              onUpdateAstViewport={handleUpdateAstViewport}
+              onUpdateAstText={handleUpdateAstText}
+              onUpdateAstImage={handleUpdateAstImage}
             />
         </div>
         <SimulationPanel sim={sim} meta={song} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
