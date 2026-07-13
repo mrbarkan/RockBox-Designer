@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-13T19:25:13.757Z",
+  "scope": {
+    "fixture": "Adwaitapod",
+    "privateFixtureCommitted": false,
+    "sourceIncluded": false,
+    "preservationIsNotVisualSupport": true
+  },
+  "package": {
+    "assetsPreserved": true,
+    "diagnostics": 0,
+    "screenCount": 3
+  },
+  "screens": [
+    {
+      "screen": "wps",
+      "exactUntouchedRoundTrip": true,
+      "sourceSha256Before": "2168693dc8d6966babf21fbec7fd9d698e113f439473870ecb881e2e95adf599",
+      "sourceSha256After": "d65ce5a246e75f8fe6b1b588061741649d6648d558108f123fa3ffd400e805de",
+      "minimumChange": true,
+      "viewportProjectionUpdated": true,
+      "commentsExcludedFromElements": true,
+      "valid": true,
+      "operationCount": 40,
+      "unsupportedNodesRetained": 17,
+      "menuPreview": false,
+      "quickScreenPreview": false,
+      "fmStatePreview": false,
+      "exactAfterExport": true,
+      "pathRetained": true
+    },
+    {
+      "screen": "sbs",
+      "exactUntouchedRoundTrip": true,
+      "sourceSha256Before": "f4fb013bb06d3d7ebc3747ec0ed258efce07e9e3aeccc03dbe626c7cca683700",
+      "sourceSha256After": "7ed848fa8409b5145914b5872ae494a6c4bba8b1c5e29de3b60593a23d27e93c",
+      "minimumChange": true,
+      "viewportProjectionUpdated": true,
+      "commentsExcludedFromElements": true,
+      "valid": true,
+      "operationCount": 57,
+      "unsupportedNodesRetained": 34,
+      "menuPreview": true,
+      "quickScreenPreview": true,
+      "fmStatePreview": false,
+      "exactAfterExport": true,
+      "pathRetained": true
+    },
+    {
+      "screen": "fms",
+      "exactUntouchedRoundTrip": true,
+      "sourceSha256Before": "fc15c57139dfd6df6f537958f32446d9a9df90f1ab8f6701d8b89b3329ffcfd0",
+      "sourceSha256After": "5ab2a3ebf21d62c78127c4a5ae3d7080b4d7b3ae1ffee2fcc9080cd121c78553",
+      "minimumChange": true,
+      "viewportProjectionUpdated": true,
+      "commentsExcludedFromElements": true,
+      "valid": true,
+      "operationCount": 34,
+      "unsupportedNodesRetained": 14,
+      "menuPreview": false,
+      "quickScreenPreview": false,
+      "fmStatePreview": true,
+      "exactAfterExport": true,
+      "pathRetained": true
+    }
+  ]
+}

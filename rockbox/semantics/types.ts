@@ -12,7 +12,7 @@ export type RenderOperation =
   | { type: 'drawText'; rect: Rect; text: string; color: string; fontSize: number; fontWeight: 'normal' | 'bold'; align: 'left' | 'center' | 'right'; scroll: boolean; scrollOffset: number; source: SourceLink }
   | { type: 'drawBitmap'; rect: Rect; assetPath: string; frame: number; frameCount: number; source: SourceLink }
   | { type: 'drawRect'; rect: Rect; color: string; source: SourceLink }
-  | { type: 'drawProgress'; rect: Rect; value: number; foreground: string; background: string; mode: 'track' | 'volume' | 'battery'; image?: string; slider?: string; backdrop?: string; source: SourceLink }
+  | { type: 'drawProgress'; rect: Rect; value: number; foreground: string; background: string; mode: 'track' | 'volume' | 'battery' | 'signal'; image?: string; slider?: string; backdrop?: string; source: SourceLink }
   | { type: 'drawAlbumArt'; rect: Rect; source: SourceLink }
   | { type: 'setClip'; rect: Rect; source: SourceLink }
   | { type: 'debugOverlay'; rect: Rect; label: string; source: SourceLink };
@@ -49,7 +49,10 @@ export type SemanticLayer = {
 
 export type BranchOverrides = Record<string, number>;
 
+export type SkinScreen = 'wps' | 'sbs' | 'fms';
+
 export type SemanticResult = {
+  screen: SkinScreen;
   operations: RenderOperation[];
   layers: SemanticLayer[];
   diagnostics: Diagnostic[];

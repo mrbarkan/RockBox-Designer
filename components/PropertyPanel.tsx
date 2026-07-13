@@ -306,6 +306,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
             
             <div className="bg-white p-4 border border-gray-300">
                 <div className="text-[10px] font-bold text-gray-400 mb-3 uppercase">Assets</div>
+                <div className="mb-3 border border-gray-200 bg-gray-50 p-3">
+                    <div className="text-[10px] font-bold uppercase text-gray-500">UI Font</div>
+                    <div className="mt-1 break-all font-bold">{project.settings.uiFont}</div>
+                    {project.settings.fontMetrics && (
+                        <div className="mt-2 text-[10px] leading-relaxed text-gray-500">
+                            RB12 · {project.settings.fontMetrics.height}px high · {project.settings.fontMetrics.maxWidth}px max width · {project.settings.fontMetrics.glyphCount} glyph slots · ascent {project.settings.fontMetrics.ascent}px
+                        </div>
+                    )}
+                </div>
                 <div className="flex flex-col gap-3">
                     <button onClick={() => backdropInputRef.current?.click()} className="w-full py-2 bg-[#d4d4d4] border border-black hover:bg-white uppercase text-[10px] font-bold shadow-sm">{project.settings.backdrop ? 'Change Backdrop' : 'Upload Backdrop'}</button>
                     <button onClick={() => iconsetInputRef.current?.click()} className="w-full py-2 bg-[#d4d4d4] border border-black hover:bg-white uppercase text-[10px] font-bold shadow-sm">{project.settings.iconset ? 'Change Icons' : 'Upload Iconset'}</button>

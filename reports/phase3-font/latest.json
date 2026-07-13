@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-13T19:25:34.647Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
+  },
+  "tool": {
+    "source": "tools/convttf.c",
+    "binaryBundled": false,
+    "sourceBundled": false,
+    "generatedFontCommitted": false
+  },
+  "input": {
+    "pathRecorded": false,
+    "bytesCommitted": false,
+    "pixelSize": 16,
+    "glyphRange": {
+      "start": 32,
+      "limit": 126
+    }
+  },
+  "output": {
+    "sha256": "d6f0fc1cec20526108aaa64432d0fef516ab87ccd40474fb2609bd5837be99fb",
+    "bytes": 5337,
+    "metrics": {
+      "format": "RB12",
+      "maxWidth": 13,
+      "height": 16,
+      "ascent": 13,
+      "depth": 1,
+      "firstCharacter": 32,
+      "defaultCharacter": 32,
+      "glyphCount": 95,
+      "bitmapBytes": 5016,
+      "offsetCount": 95,
+      "widthCount": 95,
+      "fileBytes": 5337
+    },
+    "packageRoundTripVerified": true
+  },
+  "simulator": {
+    "buildDirectoryRecorded": false,
+    "binaryBundled": false,
+    "verified": true,
+    "loadedName": true,
+    "loadedHeight": 16,
+    "loadedFirstCharacter": 32,
+    "loadedGlyphCount": 95,
+    "fontLoadError": false
+  }
+}

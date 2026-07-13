@@ -1,6 +1,6 @@
 # Theme Compatibility Report
 
-Generated: 2026-07-12T20:43:12.165Z
+Generated: 2026-07-13T19:25:31.744Z
 
 > Exact preservation and package fidelity are independent from semantic, rendering, editing, and official-parser support.
 

@@ -67,7 +67,7 @@ export const SemanticWorkspacePanel: React.FC<Props> = ({
       <div className="border-b border-black bg-[#ececec] p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">Source-linked WPS</div>
+            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">Source-linked {result.screen.toUpperCase()}</div>
             <div className="mt-1 text-xs font-bold uppercase text-gray-800">
               {result.stale ? 'Stale preview' : 'Preview synchronized'}
             </div>

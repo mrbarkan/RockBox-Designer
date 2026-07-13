@@ -23,7 +23,9 @@ import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from './services
 import { parseProjectData, stringifyProjectData } from './services/projectSerialization';
 import { getDeviceProfile, supportsScreenFile } from './rockbox/devices';
 import { parseRockbox } from './rockbox/syntax';
-import { BranchOverrides, interpretWps, SemanticResult } from './rockbox/semantics';
+import { BranchOverrides, interpretSkin, SemanticResult, SkinScreen } from './rockbox/semantics';
+import { parseRb12Font } from './rockbox/fonts';
+import { createThemeAsset } from './rockbox/packages';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -66,12 +68,12 @@ export default function App() {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const deviceProfile = getDeviceProfile(project.settings.target);
-  const latestValidSemantic = useRef<{ projectName: string; result: SemanticResult } | null>(null);
-  const wpsDocument = useMemo(
-    () => getProjectSyntaxDocument(project, 'wps'),
-    [project.wpsDocument, project.wpsAst]
+  const latestValidSemantic = useRef<Record<string, SemanticResult>>({});
+  const activeDocument = useMemo(
+    () => activeScreen === 'usb' ? undefined : getProjectSyntaxDocument(project, activeScreen),
+    [activeScreen, project.wpsDocument, project.wpsAst, project.sbsDocument, project.sbsAst, project.fmsDocument, project.fmsAst]
   );
-  const interpretedWps = useMemo(() => wpsDocument ? interpretWps(wpsDocument, {
+  const interpretedSkin = useMemo(() => activeDocument && activeScreen !== 'usb' ? interpretSkin(activeDocument, {
     width: deviceProfile.mainScreen.width,
     height: deviceProfile.mainScreen.height,
     defaultFont: project.settings.uiFont,
@@ -84,11 +86,24 @@ export default function App() {
       'volume display': project.settings.volumeDisplay,
       statusbar: project.settings.statusBarTop ? 'top' : 'off',
       'backlight on button hold': project.settings.backlightOnHold,
-      lang: 'english-us'
+      lang: 'english-us',
+      'selector color': project.settings.selectorColor,
+      'selector text color': project.settings.selectorTextColor,
+      'line selector': project.settings.lineSelectorType,
+      scrollbar: project.settings.scrollbar,
+      'scrollbar width': project.settings.scrollbarWidth,
+      'show icons': project.settings.showIcons,
+      iconset: project.settings.iconset,
+      'qs top': project.settings.qsTop,
+      'qs bottom': project.settings.qsBottom,
+      'qs left': project.settings.qsLeft,
+      'qs right': project.settings.qsRight
     },
-    branchOverrides
+    branchOverrides,
+    screen: activeScreen as SkinScreen
   }) : null, [
-    wpsDocument,
+    activeDocument,
+    activeScreen,
     project.settings.uiFont,
     project.settings.foregroundColor,
     project.settings.backgroundColor,
@@ -96,27 +111,39 @@ export default function App() {
     project.settings.volumeDisplay,
     project.settings.statusBarTop,
     project.settings.backlightOnHold,
+    project.settings.selectorColor,
+    project.settings.selectorTextColor,
+    project.settings.lineSelectorType,
+    project.settings.scrollbar,
+    project.settings.scrollbarWidth,
+    project.settings.showIcons,
+    project.settings.iconset,
+    project.settings.qsTop,
+    project.settings.qsBottom,
+    project.settings.qsLeft,
+    project.settings.qsRight,
     deviceProfile.id,
     sim,
     song,
     branchOverrides
   ]);
   const semanticResult = useMemo(() => {
-    if (!interpretedWps) return null;
-    if (interpretedWps.valid) {
-      latestValidSemantic.current = { projectName: project.settings.name, result: interpretedWps };
-      return interpretedWps;
+    if (!interpretedSkin) return null;
+    const key = `${project.settings.name}:${activeScreen}`;
+    if (interpretedSkin.valid) {
+      latestValidSemantic.current[key] = interpretedSkin;
+      return interpretedSkin;
     }
-    return latestValidSemantic.current?.projectName === project.settings.name
+    return latestValidSemantic.current[key]
       ? {
-          ...latestValidSemantic.current.result,
-          layers: interpretedWps.layers,
-          diagnostics: interpretedWps.diagnostics,
+          ...latestValidSemantic.current[key],
+          layers: interpretedSkin.layers,
+          diagnostics: interpretedSkin.diagnostics,
           valid: false,
           stale: true
         }
-      : { ...interpretedWps, stale: true };
-  }, [interpretedWps, project.settings.name]);
+      : { ...interpretedSkin, stale: true };
+  }, [interpretedSkin, project.settings.name, activeScreen]);
 
   // Refs for Toolbar Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +158,7 @@ export default function App() {
               ...prev,
               sublineCycle: prev.sublineCycle + 0.1, // Increment 0.1s every 100ms
               // Also auto-increment song progress if playing
-              currentTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              currentTime: `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
           }));
       }, 100);
       return () => clearInterval(interval);
@@ -169,7 +196,14 @@ export default function App() {
       }
   }, [activeScreen, deviceProfile.id]);
 
-  useEffect(() => setBranchOverrides({}), [project.settings.name]);
+  useEffect(() => setBranchOverrides({}), [project.settings.name, activeScreen]);
+
+  useEffect(() => {
+    const activity = { wps: 2, sbs: 1, fms: 4, usb: 21 }[activeScreen];
+    setSim(current => current.currentActivity === activity
+      ? current
+      : { ...current, currentActivity: activity });
+  }, [activeScreen]);
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -281,17 +315,36 @@ export default function App() {
       alert(`${files.length} resources loaded.`);
   };
 
-  const handleGlobalFontUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGlobalFontUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       if (!file.name.toLowerCase().endsWith('.fnt')) { alert("Please upload a .fnt file"); return; }
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-          setProject({ ...project, assets: { ...project.assets, [file.name]: ev.target?.result as string } });
-          alert(`Font "${file.name}" imported.`);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
+      try {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const metrics = parseRb12Font(bytes);
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(reader.error);
+              reader.readAsDataURL(file);
+          });
+          const archivePath = `.rockbox/fonts/${file.name}`;
+          const asset = await createThemeAsset(archivePath, bytes);
+          setProject({
+              ...project,
+              settings: { ...project.settings, uiFont: file.name, fontMetrics: metrics },
+              assets: { ...project.assets, [file.name]: dataUrl },
+              themePackage: project.themePackage ? {
+                  ...project.themePackage,
+                  assets: [...project.themePackage.assets.filter(candidate => candidate.archivePath !== archivePath), asset]
+              } : undefined
+          });
+          alert(`Font imported · ${metrics.height}px high · ${metrics.glyphCount} glyph slots · ascent ${metrics.ascent}px.\n\nOnly use fonts whose license allows redistribution.`);
+      } catch (error) {
+          alert(error instanceof Error ? error.message : 'The selected file is not a supported RB12 Rockbox font.');
+      } finally {
+          e.target.value = '';
+      }
   };
 
   const handleTrackUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -505,10 +558,10 @@ export default function App() {
               onUpdateAstViewport={handleUpdateAstViewport}
               onUpdateAstText={handleUpdateAstText}
               onUpdateAstImage={handleUpdateAstImage}
-              semanticResult={activeScreen === 'wps' ? semanticResult : null}
+              semanticResult={semanticResult}
             />
         </div>
-        <SimulationPanel sim={sim} meta={song} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
+        <SimulationPanel sim={sim} meta={song} activeScreen={activeScreen} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
       </div>
 
       {/* RIGHT SIDEBAR */}
@@ -519,7 +572,7 @@ export default function App() {
           onUpdateProject={handleUpdateProjectSettings} onDeleteElement={handleDeleteElement}
           onSelectElement={handleSelectElement} isLayerStackCollapsed={isLayerStackCollapsed}
           setIsLayerStackCollapsed={setIsLayerStackCollapsed} activeScreen={activeScreen}
-          semanticResult={activeScreen === 'wps' ? semanticResult : null}
+          semanticResult={semanticResult}
           branchOverrides={branchOverrides}
           onSetBranchOverride={(nodeId, branch) => setBranchOverrides(current => {
             if (branch === null) {

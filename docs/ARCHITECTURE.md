@@ -155,3 +155,27 @@ The source editor reparses applied WPS/SBS/FMS text. For WPS, a document with er
 ## Phase 2 boundary
 
 Phase 2 migrates the documented WPS subset only. The legacy visual-element path remains available for synthetic projects and non-WPS screens. Exact Rockbox font metrics, expression operands outside the evidenced subset, SBS/FMS semantics, list/menu behavior, and broad simulator-reference comparison are explicit later-phase work.
+
+## Phase 3 screen semantics
+
+The Phase 2 operation and layer model now accepts an explicit WPS, SBS, or FMS screen context. `App.tsx` caches the last valid interpretation per project and screen so invalid source cannot replace another screen's render state. Imports retain all three authoritative documents and project relevant lossless CFG values into the simulation/render settings without rewriting the CFG.
+
+```text
+WPS/SBS/FMS RockboxDocument
+  -> screen-aware semantic interpreter
+       -> authored operations linked to CST nodes
+       -> firmware-derived operations labeled by screen state
+  -> native canvas + logic-aware layer panel
+```
+
+SBS interpretation tracks current activity and active `%Vi` UI viewports. Menu/list rows, selector, scrollbar, and themeable icon-strip frames are derived from verified firmware state rather than flattened into source elements. The quick-screen uses the same SBS parent and is labeled as a firmware-controlled layout. USB is an explicit stock/firmware boundary, not a fictional source file. FMS interpretation projects the documented frequency, preset, signal, stereo, tuned/scan, and RDS subset.
+
+Comments are a syntax concern only. They remain exact in the source document and serializer and are excluded from both compatibility elements and semantic layer inventory.
+
+## Phase 3 font boundary
+
+`rockbox/fonts/` independently validates the RB12 file header and exposes actual Rockbox font metrics. Existing `.fnt` bytes are canonical package assets under `.rockbox/fonts/`; UI display of metrics does not decode or redraw the bitmap glyphs.
+
+Development conversion uses the pinned upstream `tools/convttf.c` from a separate checkout. `scripts/fonts/` builds its executable into a temporary directory, converts a licensed TTF/OTF/TTC input, validates the generated RB12 file, preserves it through package export/re-import, and can confirm that current Rockbox loads it in an external simulator. The repository distributes none of the GPL source, executable, input font, or generated font.
+
+Direct browser TTF/OTF conversion is deliberately paused. A local companion, backend service, or GPL-compatible WebAssembly distribution would each change the product architecture or licensing obligations and requires an explicit decision before implementation.

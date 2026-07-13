@@ -4,18 +4,18 @@ Last updated: 2026-07-13
 
 ## Current phase
 
-- **Phase:** Phase 2 dogfood hardening — Accurate WPS visual editor
-- **Branch:** `codex/phase-2-dogfood-hardening`
-- **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`, with the Adwaitapod dogfood correction in [PR #15](https://github.com/mrbarkan/RockBox-Designer/pull/15).
-- **Status:** Phase 2 acceptance was reopened for two dogfood regressions. Comments now remain source-only without appearing as visual elements, and the file-menu highlight no longer remounts on every simulation timer tick. The full Phase 2 acceptance run passes and the focused hardening change is ready to merge.
-- **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
+- **Phase:** Phase 3 — SBS/FMS screen editor and font pipeline
+- **Branch:** `codex/phase-3-screen-editor`
+- **Merged milestones:** Phase 0 through Phase 2; the final Phase 2 dogfood hardening merged through [PR #16](https://github.com/mrbarkan/RockBox-Designer/pull/16) at `9b62470`.
+- **Status:** Phase 3 screen acceptance and the external native font acceptance pass locally. WPS, SBS, and FMS now share source-linked semantics, real Adwaitapod exercises all three states, and generated `.fnt` output loads in current Rockbox. The remaining Phase 3 stop condition is selecting a delivery/licensing architecture for no-code TTF/OTF conversion inside the browser.
+- **Scope boundary:** Menu/list and quick-screen contents are explicitly firmware-derived projections inside source-defined SBS viewports. USB stays stock/firmware controlled. Existing `.fnt` files are usable in-browser; TTF/OTF conversion currently runs only through the external native development workflow.
 
 ## Current architecture
 
 - React 19 and Vite 6 provide the browser application and build pipeline.
 - `App.tsx` owns the active `ProjectState` through the `useHistory` hook and coordinates editing, simulation, import, export, and storage.
-- The project retains the legacy flat visual-element model for synthetic projects and non-WPS fallback, but imported WPS source now renders directly from the lossless document through Phase 2 semantics.
-- ZIP import in `services/rockboxParser.ts` reads a CFG, builds visual elements, and creates early AST documents for WPS and SBS when those paths are present.
+- The project retains the legacy flat visual-element model for synthetic projects and fallback content, but imported WPS/SBS/FMS source now renders directly from its lossless document through shared screen-aware semantics.
+- ZIP import in `services/rockboxParser.ts` reads a lossless CFG, builds compatibility elements without comments, creates WPS/SBS/FMS source documents, imports render-relevant CFG settings, and retains package bytes.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
 - WPS canvas rendering uses a source-linked render list at native target pixels with Rockbox-relative viewport dimensions, explicit clipping, font-slot sizing, conditional viewport activation, nearest-neighbor bitmap scaling, transparent bitmap keys, image-backed bars, and non-tinting source-derived editing overlays.
 - Imported package assets are binary and archive-path keyed; legacy upload controls still derive data URLs before export conversion. JSZip is an explicit module dependency.
@@ -33,9 +33,11 @@ Last updated: 2026-07-13
 - `scripts/official/` builds target-specific upstream `checkwps` outside the repository and writes structured comparisons without bundling GPL source or binaries.
 - `rockbox/validation/` models all required official-comparison categories; ordinary validation checks the report without requiring a Rockbox checkout.
 - `scripts/themes/` generates public fixtures, prepares ignored private real-theme fixtures, and reports preservation, package, support, and optional CheckWPS evidence separately.
-- `rockbox/semantics/` interprets the supported WPS subset without mutating source and retains a CST source link on every render operation.
-- `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for the 320×240 golden screenshot.
+- `rockbox/semantics/` interprets the supported WPS/SBS/FMS subsets without mutating source, retains a CST source link on every authored render operation, and labels firmware-derived menu, quick-screen, and tuner projections separately.
+- `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for 320×240 WPS, SBS, and FMS goldens.
 - The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Losslessly preserved comments stay in the source editor and are intentionally omitted from the visual layer projection.
+- `rockbox/fonts/` validates RB12 `.fnt` binaries and exposes actual height, ascent, width, range, and glyph metrics. Font assets are packaged byte-exact under `.rockbox/fonts/`.
+- `scripts/fonts/` builds the pinned upstream `tools/convttf.c` only from an external checkout, converts licensed TTF/OTF/TTC inputs, and can verify generated output in an external Rockbox simulator. No GPL source, binary, or third-party generated font is bundled.
 
 ## Baseline findings
 
@@ -59,16 +61,16 @@ Before Phase 0 changes:
 
 ## Known parser and package risks
 
-- WPS viewport, text, image, color, bar, album-art, touch, and conditional controls project from and edit the lossless document. SBS/FMS still use the legacy preview adapter.
-- The source editor applies WPS/SBS/FMS text through the lossless parser. Invalid source remains authoritative while the canvas visibly holds the last valid WPS render.
+- WPS viewport, text, image, color, bar, album-art, touch, and conditional controls project from and edit the lossless document. SBS/FMS share that engine for the documented screen-specific subset.
+- The source editor applies WPS/SBS/FMS text through the lossless parser. Invalid source remains authoritative while the canvas visibly holds the last valid semantic render for the active screen.
 - Official tag names come from generated upstream metadata; interpretation and editing remain intentionally limited to evidenced subsets.
 - Legacy pipe-style argument boundaries still use a small transitional arity table outside the evidenced image/viewport subset.
-- CFG source and unknown settings are preserved, but ordinary settings-panel edits are not yet merged back into imported CFG text automatically.
+- CFG source and unknown settings are preserved. Imported font, icon, color, selector, statusbar, scrollbar, display, backlight, scroll, and quick-setting values project into preview settings; broad settings-panel write-back to CFG remains incomplete.
 - Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback. Conventional ZIPs with one outer wrapper directory resolve their absolute `/.rockbox/...` CFG references inside that wrapper.
 - Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
-- FMS is supported by the package model, but the legacy visual importer still does not populate FMS-derived visual elements.
+- FMS is supported by the package model and screen-aware semantics for frequency, presets, signal, stereo, tuned/scan, and RDS state. Tags outside that subset remain preserved and visibly unsupported.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
-- Browser text resolves `%Fl` size/weight but still approximates Rockbox `.fnt` glyph metrics with browser sans-serif glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
+- Imported RB12 font metrics are exact and the binary packages exactly, but browser glyph rasterization still uses browser text rather than the Rockbox bitmap glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
 
 ## Validation
 
@@ -76,7 +78,7 @@ Latest passing validation on 2026-07-13:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 17 files, 120 tests
+npm test               passed — 21 files, 132 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -85,6 +87,9 @@ npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matc
 npm run test:visual    passed — deterministic 320×240 golden screenshot
 npm run test:phase2-real passed — AMusicPod and Adwaitapod visual edit/export/re-import
 Phase 2 official       passed — edited exported Authored Full WPS accepted by CheckWPS
+npm run test:phase3-real passed — Adwaitapod WPS/SBS/FMS exact import/edit/export/re-import
+Phase 3 official       passed — edited exported Authored Full WPS/SBS/FMS accepted by CheckWPS
+Phase 3 font           passed — generated RB12 package round-trip and current Rockbox simulator load
 ```
 
 Phase 1F evidence:
@@ -125,15 +130,23 @@ Phase 2 dogfood-hardening evidence:
 - Menu operation rows now have stable component identity outside the timer-driven application render, preventing hover state from being discarded every 100 ms.
 - A local browser smoke held the menu open while the simulation subline timer advanced and confirmed the menu rows remained mounted and available.
 
+Phase 3 evidence:
+
+- The ignored user-supplied Adwaitapod fixture imports WPS, SBS, and FMS with zero package diagnostics. Every untouched source is exact, a one-pixel viewport edit updates each semantic projection, and export/re-import retains the edited source path and every asset.
+- Comments remain lossless source-only constructs on all three screens. SBS projects the active `%Vi` menu or quick-screen viewport using source-verified activity and icon IDs, imported selector/icon/scrollbar settings, and stable firmware-derived rows. FMS projects frequency, preset, signal, stereo, and RDS simulation state.
+- The authored WPS, SBS, and FMS edited exports were each accepted by target-specific `checkwps.ipodvideo` built at the pinned upstream SHA. Deterministic SBS and FMS 320×240 goldens supplement the WPS golden.
+- The external native font workflow converted a licensed local TTF sample into a 5,337-byte RB12 file with 95 glyph slots, preserved those bytes through a theme package, and loaded it in a current Rockbox iPod Video simulator with matching 16-pixel height, first character, and glyph count.
+- Rockbox source, tools, binaries, generated font bytes, and private theme ZIPs remain outside the repository.
+
 ## Known blockers
 
-- No Phase 2 dogfood-hardening blocker is currently known; the full acceptance run passes on the active branch.
-- This remains targeted WPS dogfood support, not a claim that every real-theme construct or Rockbox font renders exactly.
+- The browser cannot execute native `convttf`. Completing the planned no-code TTF/OTF upload-and-convert workflow requires an explicit choice among a local companion helper, a backend conversion service, or distribution of a GPL-compatible WebAssembly build. The execution plan classifies backend, native-helper, and GPL distribution choices as stop conditions.
+- This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Complete and merge the Phase 2 dogfood-hardening gate, then begin Phase 3 from updated `main`. Phase 3 must add SBS/FMS/menu semantics rather than routing those screens through the legacy preview adapter.
+Complete the Phase 3 review and draft pull request. Do not begin Phase 4 or implement browser TTF/OTF conversion until the project owner chooses the delivery/licensing architecture at the documented stop condition.
 
 ## Compatibility summary
 
-Phase 2 is ready for targeted WPS dogfooding: a user can import wrapped or root-level real-theme ZIPs, inspect source-aware logic layers, preview the evidenced logical-expression and state branches, render only enabled conditional viewports, move supported viewports, edit known properties or source, and export without losing unsupported syntax/assets. Exact `.fnt` metrics, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.
+Phase 3 is ready for targeted WPS/SBS/FMS dogfooding: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, move supported viewports, edit known properties or source, import and package a valid RB12 `.fnt`, and export without losing unsupported syntax/assets. Browser TTF/OTF conversion, bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.

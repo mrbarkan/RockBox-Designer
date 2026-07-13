@@ -14,6 +14,7 @@ import type {
   SemanticLayer,
   SemanticProperty,
   SemanticResult,
+  SkinScreen,
   SourceLink
 } from './types';
 
@@ -27,6 +28,7 @@ export type InterpreterOptions = {
   song: SongMetadata;
   settings?: Record<string, string | number | boolean | undefined>;
   branchOverrides?: BranchOverrides;
+  screen?: SkinScreen;
 };
 
 type Preload = { path: string; x: number; y: number; count: number };
@@ -52,12 +54,16 @@ type Context = {
 const SUPPORTED_TEXT_TAGS = new Set([
   'it', 'ia', 'id', 'iA', 'ig', 'iy', 'in', 'ik', 'ic', 'fn',
   'pc', 'pr', 'pt', 'pp', 'pe', 'fc', 'fb', 'bl', 'pv', 'mp',
-  'mm', 'ps', 'cH', 'cM', 'cl', 'cP', 'cp', 'Sx'
+  'mm', 'ps', 'cH', 'cM', 'cl', 'cP', 'cp', 'Sx', 'cs',
+  'Lt', 'LT', 'LN', 'LR', 'LC',
+  'tf', 'ta', 'tb', 'tr', 'tl', 'th', 'Tn', 'Tf', 'Ti', 'Tc', 'ty', 'tz',
+  'QT', 'QB', 'QL', 'QR', 'Qt', 'Qb', 'Ql', 'Qr'
 ]);
-const SOURCE_ONLY_TAGS = new Set(['wd', 'we', 'Fl', 'VI', 's', 't', 'VB']);
+const SOURCE_ONLY_TAGS = new Set(['wd', 'we', 'Fl', 'VI', 's', 't', 'VB', 'Lb', 'Vp', 'Vs', 'Vg', 'wi']);
 const SUPPORTED_CONDITIONAL_TAGS = new Set([
   'if', 'and', 'or', 'mp', 'mm', 'bl', 'pv', 'ps', 'mh', 'bc', 'bp', 'bu',
-  'lh', 'C', 'mv', 'it', 'ia', 'id', 'pe', 'pt', 'fc', 'ss'
+  'lh', 'C', 'mv', 'it', 'ia', 'id', 'pe', 'pt', 'fc', 'ss', 'cs',
+  'cf', 'Lc', 'tp', 'tt', 'tm', 'ts', 'tx'
 ]);
 
 const numberValue = (value: string | undefined, fallback: number) => {
@@ -66,6 +72,7 @@ const numberValue = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+const ROCKBOX_THEMEABLE_ICON_COUNT = 32;
 const playbackBranch = (status: SimulationState['playStatus']) =>
   ({ stop: 0, play: 1, pause: 2, ffwd: 3, rew: 4 })[status] ?? 0;
 const normalizeColor = (value: string | undefined, fallback: string) => {
@@ -114,6 +121,8 @@ const relativeRect = (context: Context, values: string[], fallback: Rect): Rect 
 const textForTag = (tag: TagNode, options: InterpreterOptions) => {
   const { song, sim } = options;
   const elapsed = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  const [clockHour = '0', clockMinute = '00'] = sim.currentTime.split(':');
+  const hour = Number.parseInt(clockHour, 10) || 0;
   const values: Record<string, string> = {
     it: song.title || 'No title', ia: song.artist || 'No artist', id: song.album || 'No album',
     iA: song.artist || 'No artist', ig: 'Genre', iy: '2026', in: String(song.trackNum), ik: '1',
@@ -121,10 +130,21 @@ const textForTag = (tag: TagNode, options: InterpreterOptions) => {
     pr: `-${elapsed(Math.max(0, song.totalSec - song.currentSec))}`, pp: String(song.trackNum),
     pe: String(song.totalTracks), fc: song.format, fb: String(song.kbps), bl: String(sim.batteryLevel),
     pv: `${sim.volume} dB`, mp: sim.playStatus, mm: sim.repeat, ps: sim.shuffle ? 'Shuffle' : '',
-    cH: sim.currentTime.split(':')[0] ?? '00', cM: sim.currentTime.split(':')[1] ?? '00',
-    cl: String(Number.parseInt(sim.currentTime.split(':')[0] ?? '0', 10) % 12 || 12),
-    cP: Number.parseInt(sim.currentTime.split(':')[0] ?? '0', 10) >= 12 ? 'PM' : 'AM',
-    cp: Number.parseInt(sim.currentTime.split(':')[0] ?? '0', 10) >= 12 ? 'pm' : 'am'
+    cH: String(hour).padStart(2, '0'), cM: clockMinute.slice(0, 2).padStart(2, '0'),
+    cl: String(hour % 12 || 12),
+    cP: hour >= 12 ? 'PM' : 'AM',
+    cp: hour >= 12 ? 'pm' : 'am',
+    cs: String(sim.currentActivity), Lt: sim.menuTitle,
+    LT: sim.menuItems[sim.menuSelectedIndex] ?? '', LN: String(sim.menuSelectedIndex + 1),
+    LR: String(sim.menuSelectedIndex), LC: '0',
+    tf: sim.fmFrequency.toFixed(1), ta: '87.5', tb: '108.0', tr: String(sim.fmSignalStrength), tl: '0', th: '100',
+    Tn: sim.fmPresetName, Tf: sim.fmFrequency.toFixed(1), Ti: String(sim.fmPresetIndex), Tc: String(sim.fmPresetCount),
+    ty: sim.fmRdsName, tz: sim.fmRdsText,
+    QT: String(options.settings?.['qs top'] ?? 'Brightness'), QB: String(options.settings?.['qs bottom'] ?? 'Brightness'),
+    QL: String(options.settings?.['qs left'] ?? 'Shuffle'), QR: String(options.settings?.['qs right'] ?? 'Repeat'),
+    Qt: String(options.settings?.['qs top value'] ?? '70%'), Qb: String(options.settings?.['qs bottom value'] ?? '70%'),
+    Ql: String(options.settings?.['qs left value'] ?? (sim.shuffle ? 'Yes' : 'No')),
+    Qr: String(options.settings?.['qs right value'] ?? sim.repeat)
   };
   if (tag.name === 'Sx') return args(tag)[0] ?? '';
   return values[tag.name] ?? `%${tag.name}`;
@@ -207,6 +227,22 @@ function tagValue(tag: TagNode, options: InterpreterOptions): string | number | 
   if (tag.name === 'ia') return song.artist;
   if (tag.name === 'id') return song.album;
   if (tag.name === 'fc') return song.format;
+  if (tag.name === 'cs') return sim.currentActivity;
+  if (tag.name === 'cf') return sim.clock12Hour ? 2 : 1;
+  if (tag.name === 'Lt') return sim.menuTitle;
+  if (tag.name === 'LT') return sim.menuItems[sim.menuSelectedIndex] ?? '';
+  if (tag.name === 'LN') return sim.menuSelectedIndex + 1;
+  if (tag.name === 'LR') return sim.menuSelectedIndex;
+  if (tag.name === 'Lc') return true;
+  if (tag.name === 'tp') return sim.fmAvailable;
+  if (tag.name === 'tt') return sim.fmTuned;
+  if (tag.name === 'tm') return sim.fmScanMode;
+  if (tag.name === 'ts') return sim.fmStereo;
+  if (tag.name === 'tx') return sim.fmRdsAvailable;
+  if (tag.name === 'tf' || tag.name === 'Tf') return sim.fmFrequency;
+  if (tag.name === 'tr') return sim.fmSignalStrength;
+  if (tag.name === 'Ti') return sim.fmPresetIndex;
+  if (tag.name === 'Tc') return sim.fmPresetCount;
   if (SUPPORTED_TEXT_TAGS.has(tag.name)) return textForTag(tag, options);
   return undefined;
 }
@@ -216,8 +252,9 @@ const conditionalBranch = (node: ConditionalNode, options: InterpreterOptions): 
   if (override !== undefined) return Math.max(0, Math.min(node.branches.length - 1, override));
   if (node.test.kind !== 'tag') return node.branches.length ? 0 : undefined;
   const name = node.test.name;
-  if (name === 'mp' && node.branches.length > 2) return Math.min(node.branches.length - 1, playbackBranch(options.sim.playStatus));
-  if (name === 'mm' && node.branches.length > 2) return Math.min(node.branches.length - 1, ({ off: 0, all: 1, one: 2 })[options.sim.repeat] ?? 0);
+  if (name === 'mp') return Math.min(node.branches.length - 1, playbackBranch(options.sim.playStatus));
+  if (name === 'mm') return Math.min(node.branches.length - 1, ({ off: 0, all: 1, one: 2 })[options.sim.repeat] ?? 0);
+  if (name === 'cf') return Math.min(node.branches.length - 1, options.sim.clock12Hour ? 1 : 0);
   if (name === 'bl' && node.branches.length > 2) return Math.min(node.branches.length - 1, Math.floor(clamp01(options.sim.batteryLevel / 100) * node.branches.length));
   if (name === 'pv' && node.branches.length > 2) return Math.min(node.branches.length - 1, Math.floor(clamp01((options.sim.volume + 90) / 90) * node.branches.length));
   const truthy = Boolean(tagValue(node.test, options));
@@ -237,7 +274,10 @@ const tagProperties = (tag: TagNode): SemanticProperty[] => {
     pb: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
     pv: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
     Cl: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number']],
-    T: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['action', 'Action', 'text']]
+    T: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['action', 'Action', 'text']],
+    tr: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
+    LB: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
+    Lb: [['id', 'List config ID', 'text'], ['width', 'Item width', 'number'], ['height', 'Item height', 'number']]
   };
   if (tag.name === 'x') {
     const modern = tag.invocationStyle === 'parentheses' && values.length >= 4;
@@ -251,8 +291,18 @@ const tagProperties = (tag: TagNode): SemanticProperty[] => {
 
 const collectViewportState = (document: RockboxDocument, options: InterpreterOptions) => {
   const definitions = new Set<string>();
+  const uiDefinitions = new Map<string, { node: TagNode; rect: Rect; fontSlot?: string }>();
   const collect = (nodes: RockboxNode[]) => nodes.forEach(node => {
     if (node.kind === 'tag' && node.name === 'Vl') definitions.add(args(node)[0] ?? '');
+    if (node.kind === 'tag' && node.name === 'Vi') {
+      const values = args(node);
+      const name = values[0] ?? '';
+      if (name) uiDefinitions.set(name, {
+        node,
+        rect: viewportRect(values, 1, options),
+        fontSlot: values[5]
+      });
+    }
     if (node.kind === 'conditional') node.branches.forEach(branch => collect(branch.nodes));
   });
   collect(document.nodes);
@@ -280,15 +330,35 @@ const collectViewportState = (document: RockboxDocument, options: InterpreterOpt
     scan(document.nodes, true);
     if (enabled.size === before) break;
   }
-  return { definitions, enabled };
+
+  const activeUiNames: string[] = [];
+  const scanUi = (nodes: RockboxNode[], initialActive: boolean) => {
+    let active = initialActive;
+    for (const node of nodes) {
+      if (node.kind === 'conditional') {
+        if (!active) continue;
+        const selected = conditionalBranch(node, options);
+        if (selected !== undefined) scanUi(node.branches[selected]?.nodes ?? [], active);
+        continue;
+      }
+      if (node.kind !== 'tag') continue;
+      const values = args(node);
+      if (node.name === 'V') active = true;
+      else if (node.name === 'Vl') active = enabled.has(values[0] ?? '');
+      else if (node.name === 'Vi') active = false;
+      else if (node.name === 'VI' && active && uiDefinitions.has(values[0] ?? '')) activeUiNames.push(values[0] ?? '');
+    }
+  };
+  scanUi(document.nodes, true);
+  return { definitions, enabled, uiDefinitions, activeUiNames };
 };
 
-export const interpretWps = (document: RockboxDocument, options: InterpreterOptions): SemanticResult => {
+export const interpretSkin = (document: RockboxDocument, options: InterpreterOptions): SemanticResult => {
   const operations: RenderOperation[] = [];
   const layers: SemanticLayer[] = [];
   const textOperations = new Map<string, Extract<RenderOperation, { type: 'drawText' }>>();
   const sourceLines = document.source.split(/\r\n|\r|\n/);
-  const { definitions, enabled } = collectViewportState(document, options);
+  const { definitions, enabled, uiDefinitions, activeUiNames } = collectViewportState(document, options);
   const initialViewport = { x: 0, y: 0, width: options.width, height: options.height };
   const context: Context = {
     viewport: initialViewport,
@@ -389,6 +459,113 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
     flush();
   };
 
+  const appendMenuPreview = (name: string, definition: { node: TagNode; rect: Rect; fontSlot?: string }) => {
+    const rect = definition.rect;
+    const link = sourceLink(definition.node);
+    const items = options.sim.menuItems.length ? options.sim.menuItems : ['Empty list'];
+    const selected = Math.max(0, Math.min(items.length - 1, options.sim.menuSelectedIndex));
+    const loadedFont = definition.fontSlot ? context.fontSlots.get(definition.fontSlot) : undefined;
+    const size = loadedFont?.size ?? fontSize(options.defaultFont);
+    const weight = loadedFont?.weight ?? fontWeight(options.defaultFont);
+    const rowHeight = Math.max(12, size + 4);
+    const visibleRows = Math.max(1, Math.floor(rect.height / rowHeight));
+    const start = Math.max(0, Math.min(selected - Math.floor(visibleRows / 2), items.length - visibleRows));
+    const scrollbar = String(options.settings?.scrollbar ?? 'off');
+    const scrollbarWidth = numberValue(String(options.settings?.['scrollbar width'] ?? 6), 6);
+    const showIcons = options.settings?.['show icons'] !== false;
+    const iconset = String(options.settings?.iconset ?? '');
+    const selector = normalizeColor(String(options.settings?.['selector color'] ?? ''), '#d8d8d8');
+    const selectorText = normalizeColor(String(options.settings?.['selector text color'] ?? ''), options.foreground);
+    const selectorType = String(options.settings?.['line selector'] ?? 'bar_color');
+    const leftScrollbar = scrollbar === 'left' ? scrollbarWidth + 2 : 0;
+    const rightScrollbar = scrollbar === 'right' ? scrollbarWidth + 2 : 0;
+    const iconWidth = showIcons ? 26 : 0;
+
+    operations.push({ type: 'setClip', rect, source: link });
+    for (let row = 0; row < visibleRows && start + row < items.length; row += 1) {
+      const index = start + row;
+      const rowRect = { x: rect.x + leftScrollbar, y: rect.y + row * rowHeight, width: rect.width - leftScrollbar - rightScrollbar, height: rowHeight };
+      const isSelected = index === selected;
+      if (isSelected && selectorType !== 'pointer') operations.push({ type: 'drawRect', rect: rowRect, color: selector, source: link });
+      if (showIcons && iconset) {
+        operations.push({
+          type: 'drawBitmap',
+          rect: { x: rowRect.x + 2, y: rowRect.y + Math.max(0, (rowHeight - 16) / 2), width: 16, height: 16 },
+          assetPath: iconset,
+          frame: Math.max(0, Math.min(ROCKBOX_THEMEABLE_ICON_COUNT - 1, options.sim.menuIconIds[index] ?? 0)),
+          frameCount: ROCKBOX_THEMEABLE_ICON_COUNT,
+          source: link
+        });
+      }
+      operations.push({
+        type: 'drawText',
+        rect: { x: rowRect.x + iconWidth, y: rowRect.y + 1, width: Math.max(0, rowRect.width - iconWidth), height: rowRect.height },
+        text: `${isSelected && selectorType === 'pointer' ? '› ' : ''}${items[index]}`,
+        color: isSelected ? selectorText : options.foreground,
+        fontSize: size,
+        fontWeight: weight,
+        align: 'left',
+        scroll: isSelected,
+        scrollOffset: options.sim.sublineCycle * 20,
+        source: link
+      });
+    }
+    if (scrollbar !== 'off' && items.length > visibleRows) {
+      const track = {
+        x: scrollbar === 'left' ? rect.x : rect.x + rect.width - scrollbarWidth,
+        y: rect.y,
+        width: scrollbarWidth,
+        height: rect.height
+      };
+      operations.push({ type: 'drawRect', rect: track, color: options.background, source: link });
+      operations.push({
+        type: 'drawRect',
+        rect: {
+          x: track.x,
+          y: track.y + (track.height - Math.max(rowHeight, track.height * visibleRows / items.length)) * (selected / Math.max(1, items.length - 1)),
+          width: track.width,
+          height: Math.max(rowHeight, track.height * visibleRows / items.length)
+        },
+        color: selector,
+        source: link
+      });
+    }
+    layers.push({
+      id: `element:${definition.node.id}:menu`, sourceNodeId: definition.node.id, depth: 0,
+      kind: 'element', label: `Rockbox menu list in ${name}`, active: true, supported: true, properties: []
+    });
+  };
+
+  const appendQuickScreenPreview = (name: string, definition: { node: TagNode; rect: Rect }) => {
+    const rect = definition.rect;
+    const link = sourceLink(definition.node);
+    const size = Math.max(9, fontSize(options.defaultFont) - 2);
+    const entries = [
+      { label: textForTag(expressionTag('%QT')!, options), value: textForTag(expressionTag('%Qt')!, options), x: rect.x + rect.width * 0.25, y: rect.y },
+      { label: textForTag(expressionTag('%QL')!, options), value: textForTag(expressionTag('%Ql')!, options), x: rect.x, y: rect.y + rect.height * 0.45 },
+      { label: textForTag(expressionTag('%QR')!, options), value: textForTag(expressionTag('%Qr')!, options), x: rect.x + rect.width * 0.5, y: rect.y + rect.height * 0.45 },
+      { label: textForTag(expressionTag('%QB')!, options), value: textForTag(expressionTag('%Qb')!, options), x: rect.x + rect.width * 0.25, y: rect.y + rect.height - size * 2 }
+    ];
+    operations.push({ type: 'setClip', rect, source: link });
+    entries.forEach(entry => operations.push({
+      type: 'drawText',
+      rect: { x: entry.x, y: entry.y, width: rect.width / 2, height: size * 2 },
+      text: `${entry.label}: ${entry.value}`,
+      color: options.foreground,
+      fontSize: size,
+      fontWeight: 'normal',
+      align: 'center',
+      scroll: false,
+      scrollOffset: 0,
+      source: link
+    }));
+    layers.push({
+      id: `source-only:${definition.node.id}:quickscreen`, sourceNodeId: definition.node.id, depth: 0,
+      kind: 'source-only', label: `Rockbox quick-screen layout in ${name} (firmware controlled)`, active: true,
+      supported: true, properties: []
+    });
+  };
+
   const inactiveKind = (node: RockboxNode): SemanticLayer['kind'] => {
     if (node.kind === 'comment' || node.kind === 'escape') return 'source-only';
     if (node.kind === 'invalid') return 'unsupported';
@@ -406,6 +583,7 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
 
   const inventoryInactive = (nodes: RockboxNode[], depth: number, parentId: string) => {
     for (const node of nodes) {
+      if (node.kind === 'comment') continue;
       if (node.kind === 'conditional') {
         const layerId = `conditional:${node.id}:${layers.length}`;
         const selected = conditionalBranch(node, options);
@@ -602,23 +780,23 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
         addLayer(node, depth, 'element', 'Album art', true, parentId);
         continue;
       }
-      if (node.name === 'pb' || (node.name === 'pv' && values.length > 0)) {
+      if (node.name === 'pb' || (node.name === 'pv' && values.length > 0) || (node.name === 'tr' && values.length > 0)) {
         const hasGeometry = values.length >= 4 && values.slice(0, 4).some(value => value !== '');
         const rect = hasGeometry ? relativeRect(current, values, current.viewport) : current.viewport;
         const value = node.name === 'pb'
           ? clamp01(options.song.totalSec ? options.song.currentSec / options.song.totalSec : 0)
-          : clamp01((options.sim.volume + 90) / 90);
+          : node.name === 'tr' ? clamp01(options.sim.fmSignalStrength / 100) : clamp01((options.sim.volume + 90) / 90);
         const named: Record<string, string> = {};
         for (let index = 5; index < values.length - 1; index += 2) named[values[index].toLowerCase()] = values[index + 1];
         operations.push({
           type: 'drawProgress', rect, value, foreground: current.foreground,
-          background: current.background, mode: node.name === 'pb' ? 'track' : 'volume',
+          background: current.background, mode: node.name === 'pb' ? 'track' : node.name === 'tr' ? 'signal' : 'volume',
           image: values[4] && values[4] !== '-' ? values[4] : undefined,
           slider: named.slider ? current.preloads.get(named.slider)?.path ?? named.slider : undefined,
           backdrop: named.backdrop ? current.preloads.get(named.backdrop)?.path ?? named.backdrop : undefined,
           source: link
         });
-        addLayer(node, depth, 'element', node.name === 'pb' ? 'Track progress' : 'Volume bar', true, parentId, properties);
+        addLayer(node, depth, 'element', node.name === 'pb' ? 'Track progress' : node.name === 'tr' ? 'FM signal bar' : 'Volume bar', true, parentId, properties);
         continue;
       }
       if (node.name === 'dr') {
@@ -630,6 +808,39 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
         const rect = relativeRect(current, values, current.viewport);
         operations.push({ type: 'debugOverlay', rect, label: `Touch: ${values[4] ?? 'action'}`, source: link });
         addLayer(node, depth, 'element', `Touch ${values[4] ?? ''}`, true, parentId, properties);
+        continue;
+      }
+      if (node.name === 'LI' || node.name === 'Li') {
+        const iconset = String(options.settings?.iconset ?? '');
+        if (iconset) operations.push({
+          type: 'drawBitmap',
+          rect: { x: current.viewport.x, y: current.viewport.y, width: 16, height: 16 },
+          assetPath: iconset,
+          frame: node.name === 'Li'
+            ? options.sim.menuTitleIconId
+            : options.sim.menuIconIds[Math.max(0, options.sim.menuSelectedIndex)] ?? 0,
+          frameCount: ROCKBOX_THEMEABLE_ICON_COUNT,
+          source: link
+        });
+        addLayer(node, depth, iconset ? 'element' : 'unsupported', node.name === 'Li' ? 'List title icon' : 'List item icon', Boolean(iconset), parentId, properties);
+        continue;
+      }
+      if (node.name === 'LB') {
+        const rect = relativeRect(current, values, current.viewport);
+        const thumbHeight = Math.max(4, rect.height / Math.max(1, options.sim.menuItems.length));
+        operations.push({ type: 'drawRect', rect, color: current.background, source: link });
+        operations.push({
+          type: 'drawRect',
+          rect: {
+            x: rect.x,
+            y: rect.y + (rect.height - thumbHeight) * (options.sim.menuSelectedIndex / Math.max(1, options.sim.menuItems.length - 1)),
+            width: rect.width,
+            height: thumbHeight
+          },
+          color: current.foreground,
+          source: link
+        });
+        addLayer(node, depth, 'element', 'List scrollbar', true, parentId, properties);
         continue;
       }
       if (SUPPORTED_TEXT_TAGS.has(node.name)) {
@@ -646,7 +857,14 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
   };
 
   walk(document.nodes, context, 0);
+  if ((options.screen ?? 'wps') === 'sbs' && activeUiNames.length > 0) {
+    const name = activeUiNames[activeUiNames.length - 1];
+    const definition = uiDefinitions.get(name);
+    if (definition && options.sim.currentActivity === 10) appendQuickScreenPreview(name, definition);
+    else if (definition && ![2, 3, 4, 21].includes(options.sim.currentActivity)) appendMenuPreview(name, definition);
+  }
   return {
+    screen: options.screen ?? 'wps',
     operations: operations.filter(operation => operation.type !== 'drawText' || operation.text.trim().length > 0),
     layers,
     diagnostics: document.diagnostics,
@@ -654,3 +872,6 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
     stale: false
   };
 };
+
+export const interpretWps = (document: RockboxDocument, options: InterpreterOptions): SemanticResult =>
+  interpretSkin(document, { ...options, screen: 'wps' });

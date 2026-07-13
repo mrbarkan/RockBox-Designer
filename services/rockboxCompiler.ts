@@ -265,7 +265,9 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     const addedAssets: ThemeAsset[] = [];
     for (const [filename, dataUri] of Object.entries(assetsToInclude)) {
         if (existingBasenames.has(filename) || !dataUri.startsWith('data:')) continue;
-        const path = filename === project.settings.backdrop
+        const path = filename.toLowerCase().endsWith('.fnt')
+            ? `.rockbox/fonts/${filename}`
+            : filename === project.settings.backdrop
             ? `.rockbox/wps/${themeName}_bg.bmp`
             : `.rockbox/wps/${themeName}_img/${filename}`;
         addedAssets.push(await createThemeAsset(path, dataURItoBytes(dataUri)));

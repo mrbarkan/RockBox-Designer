@@ -3,17 +3,17 @@
 The lossless syntax API is authoritative for imported WPS/SBS/FMS editing and export. The distinction still matters:
 
 - **New syntax API:** `rockbox/syntax/` preserves tested source exactly and provides structural diagnostics.
-- **WPS preview path:** Phase 2 interprets a documented subset directly from the lossless document. SBS and FMS still use the derived legacy adapter.
+- **Screen preview path:** Phase 3 interprets documented WPS, SBS, and FMS subsets directly from their lossless documents. Unsupported syntax stays source-exact and visibly unsupported.
 
 Passing synthetic fixtures are evidence for those inputs, not a claim of complete Rockbox compatibility.
 
 ## Application migration remains screen-specific
 
 - **Example:** Importing a WPS through the current ZIP workflow and editing it on the canvas.
-- **Current behavior:** Import, viewport/text/image editing, compilation, ZIP screen export, and source previews use the lossless document. WPS renders from source-linked semantics; SBS/FMS still receive a derived legacy AST.
+- **Current behavior:** Import, viewport/text/image editing, compilation, ZIP screen export, and source previews use the lossless document. WPS/SBS/FMS render from one screen-aware source-linked semantic engine.
 - **Preservation status:** Exact for untouched source and the tested edit subset; visual interpretation remains approximate.
 - **Diagnostic:** Unsafe commands return an edit diagnostic and leave source unchanged.
-- **Planned phase:** Phase 3 migrates SBS/FMS semantics.
+- **Planned phase:** Expand per-screen coverage only with source and official evidence.
 
 ## Known-tag names are generated; meaning is still incremental
 
@@ -63,21 +63,21 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Missing package references are reported during import.
 - **Planned phase:** Wire broader CFG editing as the settings and source-editor workflows mature.
 
-## FMS visual derivation remains incomplete
+## FMS visual support remains a documented subset
 
 - **Example:** `fms: /.rockbox/wps/theme.fms` in a CFG.
-- **Current behavior:** The Phase 1C package model resolves and preserves FMS. The legacy visual-element derivation path still covers WPS and SBS only.
-- **Preservation status:** Package source is preserved; visual support is partial.
+- **Current behavior:** The package model resolves and preserves FMS. Phase 3 source-linked semantics project frequency, preset, signal, stereo, tuned/scan, and RDS state; other tags remain visible as unsupported source layers.
+- **Preservation status:** Package source and tested viewport edits are exact; visual support is partial.
 - **Diagnostic:** Missing FMS files are reported.
-- **Planned phase:** Phase 3 FMS editor.
+- **Planned phase:** Expand against real themes and the official simulator rather than guessing tuner behavior.
 
-## Browser font metrics are not Rockbox font metrics
+## Browser font glyphs are not Rockbox bitmap glyphs
 
 - **Example:** A custom `.fnt` file with glyph widths that differ from the browser's monospace font.
-- **Current behavior:** Phase 2 resolves `%Fl` font slots and uses the declared pixel size and bold weight with a browser sans-serif approximation. The canvas position and clipping are native-pixel, but text width and glyph shape can differ from the packaged Rockbox `.fnt` file.
+- **Current behavior:** Phase 3 validates imported RB12 `.fnt` files and reports their actual height, ascent, maximum width, character range, and glyph count. The canvas still rasterizes text with browser fonts, so glyph width and shape can differ from the packaged bitmap font.
 - **Preservation status:** Font references and binaries remain exact.
-- **Diagnostic:** The Phase 2 guide labels font rendering approximate; no pixel-parity claim is made.
-- **Planned phase:** Phase 3 font pipeline and Phase 4 simulator screenshot comparison.
+- **Diagnostic:** The Phase 3 guide distinguishes exact RB12 metrics and packaging from approximate browser glyph rendering; no pixel-parity claim is made.
+- **Planned phase:** Phase 4 simulator screenshot comparison will quantify the remaining pixel difference. Direct TTF/OTF browser conversion is separately blocked on a delivery/licensing decision.
 
 ## Invalid source intentionally makes the preview stale
 

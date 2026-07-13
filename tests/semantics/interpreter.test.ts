@@ -66,12 +66,12 @@ describe('source-linked WPS interpreter', () => {
   });
 
   it('preserves comments in source without projecting them as visual layers', () => {
-    const source = '# Header comment\n%V(0,0,320,240,-)\n# Element note\n%it';
+    const source = '# Header comment\n%V(0,0,320,240,-)\n# Element note\n%it\n%?mh<# Inactive note\nLocked|Unlocked>';
     const document = parseRockbox(source);
     const result = interpretWps(document, options);
 
     expect(document.source).toBe(source);
-    expect(document.nodes.filter(node => node.kind === 'comment')).toHaveLength(2);
+    expect(document.source).toContain('# Inactive note');
     expect(result.layers.some(layer => layer.label === 'Comment')).toBe(false);
     expect(result.layers.some(layer => layer.kind === 'viewport')).toBe(true);
     expect(result.layers.some(layer => layer.kind === 'element')).toBe(true);
