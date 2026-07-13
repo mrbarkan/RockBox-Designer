@@ -11,6 +11,7 @@ import { MainMenuModal } from './components/MainMenuModal';
 import { LoginModal } from './components/LoginModal';
 import { ProjectManagerModal } from './components/ProjectManagerModal';
 import { ColorPaletteModal } from './components/ColorPaletteModal';
+import { FontImportModal, type FontImportOptions, type FontImportResult } from './components/FontImportModal';
 import { generateZip } from './services/rockboxCompiler';
 import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
@@ -26,6 +27,7 @@ import { parseRockbox } from './rockbox/syntax';
 import { BranchOverrides, interpretSkin, SemanticResult, SkinScreen } from './rockbox/semantics';
 import { parseRb12Font } from './rockbox/fonts';
 import { createThemeAsset } from './rockbox/packages';
+import { convertFontWithCompanion } from './services/fontCompanion';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -58,6 +60,7 @@ export default function App() {
   const [showLibModal, setShowLibModal] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [showFontImport, setShowFontImport] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
   const [branchOverrides, setBranchOverrides] = useState<BranchOverrides>({});
@@ -69,6 +72,8 @@ export default function App() {
   const [promptText, setPromptText] = useState('');
   const deviceProfile = getDeviceProfile(project.settings.target);
   const latestValidSemantic = useRef<Record<string, SemanticResult>>({});
+  const currentProject = useRef(project);
+  currentProject.current = project;
   const activeDocument = useMemo(
     () => activeScreen === 'usb' ? undefined : getProjectSyntaxDocument(project, activeScreen),
     [activeScreen, project.wpsDocument, project.wpsAst, project.sbsDocument, project.sbsAst, project.fmsDocument, project.fmsAst]
@@ -149,7 +154,6 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadProjectInputRef = useRef<HTMLInputElement>(null);
   const importZipInputRef = useRef<HTMLInputElement>(null);
-  const globalFontInputRef = useRef<HTMLInputElement>(null);
 
   // -- Heartbeat for Animation & Timers --
   useEffect(() => {
@@ -315,36 +319,32 @@ export default function App() {
       alert(`${files.length} resources loaded.`);
   };
 
-  const handleGlobalFontUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      if (!file.name.toLowerCase().endsWith('.fnt')) { alert("Please upload a .fnt file"); return; }
-      try {
-          const bytes = new Uint8Array(await file.arrayBuffer());
-          const metrics = parseRb12Font(bytes);
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = () => reject(reader.error);
-              reader.readAsDataURL(file);
-          });
-          const archivePath = `.rockbox/fonts/${file.name}`;
-          const asset = await createThemeAsset(archivePath, bytes);
-          setProject({
-              ...project,
-              settings: { ...project.settings, uiFont: file.name, fontMetrics: metrics },
-              assets: { ...project.assets, [file.name]: dataUrl },
-              themePackage: project.themePackage ? {
-                  ...project.themePackage,
-                  assets: [...project.themePackage.assets.filter(candidate => candidate.archivePath !== archivePath), asset]
-              } : undefined
-          });
-          alert(`Font imported · ${metrics.height}px high · ${metrics.glyphCount} glyph slots · ascent ${metrics.ascent}px.\n\nOnly use fonts whose license allows redistribution.`);
-      } catch (error) {
-          alert(error instanceof Error ? error.message : 'The selected file is not a supported RB12 Rockbox font.');
-      } finally {
-          e.target.value = '';
-      }
+  const handleFontImport = async (file: File, options: FontImportOptions): Promise<FontImportResult> => {
+      const direct = file.name.toLowerCase().endsWith('.fnt');
+      const converted = direct ? null : await convertFontWithCompanion({ file, ...options });
+      const bytes = direct ? new Uint8Array(await file.arrayBuffer()) : converted!.bytes;
+      const filename = direct ? file.name : converted!.filename;
+      const metrics = parseRb12Font(bytes);
+      const blobBytes = new Uint8Array(bytes);
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error ?? new Error('Unable to retain the generated Rockbox font.'));
+          reader.readAsDataURL(new Blob([blobBytes.buffer], { type: 'application/octet-stream' }));
+      });
+      const archivePath = `.rockbox/fonts/${filename}`;
+      const asset = await createThemeAsset(archivePath, bytes);
+      const activeProject = currentProject.current;
+      setProject({
+          ...activeProject,
+          settings: { ...activeProject.settings, uiFont: filename, fontMetrics: metrics },
+          assets: { ...activeProject.assets, [filename]: dataUrl },
+          themePackage: activeProject.themePackage ? {
+              ...activeProject.themePackage,
+              assets: [...activeProject.themePackage.assets.filter(candidate => candidate.archivePath !== archivePath), asset]
+          } : undefined
+      });
+      return { filename, metrics, converted: !direct, upstreamCommit: converted?.upstreamCommit };
   };
 
   const handleTrackUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -497,7 +497,8 @@ export default function App() {
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
       {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => globalFontInputRef.current?.click()} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} />
+      <FontImportModal isOpen={showFontImport} onClose={() => setShowFontImport(false)} onImport={handleFontImport} />
       <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 
@@ -527,8 +528,8 @@ export default function App() {
           onOpenPrompt={() => setPromptOpen(true)}
           onSave={handleSaveProject}
           onExport={handleExport}
-          imageInputRef={fileInputRef} loadProjectInputRef={loadProjectInputRef} importZipInputRef={importZipInputRef} globalFontInputRef={globalFontInputRef}
-          onImageUpload={handleImageUpload} onLoadProject={handleLoadProject} onImportZip={handleImportZip} onGlobalFontUpload={handleGlobalFontUpload}
+          imageInputRef={fileInputRef} loadProjectInputRef={loadProjectInputRef} importZipInputRef={importZipInputRef}
+          onImageUpload={handleImageUpload} onLoadProject={handleLoadProject} onImportZip={handleImportZip}
       />
 
       {/* CENTER WORKSPACE */}

@@ -81,7 +81,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <MenuButton icon="💾" label="Save Project" onClick={onSave} onClose={onClose} subLabel="Download .json" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} onClose={onClose} subLabel="Load existing .zip theme" />
-                        <MenuButton icon="Aa" label="Import Font" onClick={onImportFont} onClose={onClose} subLabel="Load .fnt resource" />
+                        <MenuButton icon="Aa" label="Import Font" onClick={onImportFont} onClose={onClose} subLabel="Load .fnt or convert TTF/OTF" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="⬇" label="Export Theme" onClick={onExport} onClose={onClose} subLabel="Compile to .zip for iPod" />
                     </div>
