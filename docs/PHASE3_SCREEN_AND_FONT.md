@@ -16,7 +16,13 @@ The semantic subset is independently implemented from behavior verified at Rockb
 
 ## Font behavior
 
-The application can import an existing Rockbox `.fnt` file, validate its RB12 header, retain its exact bytes under `.rockbox/fonts/`, expose its actual height, ascent, maximum width, character range, and glyph count, and export the same binary unchanged.
+The application can import an existing Rockbox `.fnt` file, validate its RB12 header, retain its exact bytes under `.rockbox/fonts/`, expose its actual height, ascent, maximum width, character range, and glyph count, and export the same binary unchanged. The Font Workshop also converts TTF/OTF/TTC through the accepted local companion architecture:
+
+```bash
+npm run font:helper
+```
+
+The browser shows helper connectivity, the pinned upstream SHA, pixel-size controls, Basic Latin/Latin-1/broad Unicode/custom glyph ranges, the actual generated RB12 metrics, and a font-license warning. Existing `.fnt` import remains available when the helper is offline.
 
 The native development workflow builds `tools/convttf.c` from a separate Rockbox checkout at the pinned SHA, converts a user-supplied TTF/OTF/TTC file, validates the generated RB12 data, and can inject it into a theme ZIP:
 
@@ -42,11 +48,13 @@ npm run test:phase3-font
 
 The checked-in report records only the pinned upstream SHA, conversion parameters, output hash/metrics, package result, and simulator result. It does not contain the input font path or bytes, generated font bytes, Rockbox source, or a Rockbox executable.
 
-## Licensing and browser boundary
+## Licensing and local-companion boundary
 
 - Confirm that an input font's license permits conversion and redistribution before sharing its generated `.fnt` file.
-- Rockbox's `convttf` source is GPL-2.0-or-later. This repository builds and executes it only from a separate checkout and does not distribute its source or binary.
-- Direct TTF/OTF conversion inside the browser is not enabled. Doing so requires an explicit decision among a local companion helper, a conversion backend, or distributing a GPL-compatible WebAssembly build. Each option changes the product architecture, delivery surface, or licensing obligations and is therefore a Phase 3 stop condition rather than an implicit implementation choice.
+- Rockbox's `convttf` source is GPL-2.0-or-later. The accepted companion builds and executes it only from an exact separate checkout on the user's machine and does not distribute its source or binary through this repository or browser bundle.
+- The helper binds only to `127.0.0.1`, checks exact browser origins and a versioned protocol header, accepts no client paths, limits the request size, uses a private temporary directory, and removes conversion inputs and outputs after returning the validated bytes.
+- The helper can fetch the pinned official Rockbox checkout into a SHA-keyed user cache on first conversion. This is a local build of upstream GPL software rather than redistribution in Rockbox Designer.
+- ADR-0013 records the license, build system, memory model, filesystem interface, browser bundle impact, security boundary, and upstream update workflow. That decision resolves the Phase 3 stop condition.
 
 ## Verification
 
@@ -55,6 +63,7 @@ npm run test:visual
 npm run test:phase3-real
 ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox npm run test:phase3-official
 npm run phase3:font:report:verify
+npm run font:helper:report:verify
 npm run validate
 ```
 

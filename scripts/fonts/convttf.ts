@@ -17,6 +17,11 @@ const commandExists = (command: string) => {
   return result.status === 0;
 };
 
+export const readPinnedRockboxCommit = () => {
+  const registry = JSON.parse(readFileSync(resolve('rockbox/registry/generated/rockbox-tags.json'), 'utf8'));
+  return String(registry.upstream.commit);
+};
+
 const freetypeFlags = () => {
   const pkgConfig = process.env.PKG_CONFIG ?? (commandExists('pkg-config') ? 'pkg-config' : undefined);
   if (pkgConfig) return run(pkgConfig, ['--cflags', '--libs', 'freetype2']).trim().split(/\s+/).filter(Boolean);
@@ -38,9 +43,9 @@ export const buildConvttf = (sourceDirectory: string) => {
   const sourceDir = resolve(sourceDirectory);
   const source = resolve(sourceDir, 'tools/convttf.c');
   if (!existsSync(source)) throw new Error(`Rockbox convttf source is missing: ${source}`);
-  const registry = JSON.parse(readFileSync(resolve('rockbox/registry/generated/rockbox-tags.json'), 'utf8'));
   const commit = execFileSync('git', ['-C', sourceDir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  if (commit !== registry.upstream.commit) throw new Error(`Rockbox checkout SHA ${commit} does not match ${registry.upstream.commit}.`);
+  const pinnedCommit = readPinnedRockboxCommit();
+  if (commit !== pinnedCommit) throw new Error(`Rockbox checkout SHA ${commit} does not match ${pinnedCommit}.`);
   const outputDir = resolve(process.env.ROCKBOX_FONT_TOOL_DIR ?? join(tmpdir(), 'rockbox-designer-font-tools', commit));
   const binary = join(outputDir, 'convttf');
   const stamp = join(outputDir, '.rockbox-source-sha');

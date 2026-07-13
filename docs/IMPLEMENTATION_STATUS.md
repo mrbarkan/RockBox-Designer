@@ -4,11 +4,11 @@ Last updated: 2026-07-13
 
 ## Current phase
 
-- **Phase:** Phase 3 complete — architecture gate before Phase 4
-- **Branch:** `main`
+- **Phase:** Phase 3 local companion acceptance — Phase 4 next
+- **Branch:** `codex/phase-3-local-font-helper`
 - **Merged milestones:** Phase 0 through Phase 3; Phase 3 merged through [PR #17](https://github.com/mrbarkan/RockBox-Designer/pull/17) at `f53b309` after the Phase 2 dogfood hardening in [PR #16](https://github.com/mrbarkan/RockBox-Designer/pull/16).
-- **Status:** Phase 3 screen acceptance and the external native font acceptance pass and are merged. WPS, SBS, and FMS now share source-linked semantics, real Adwaitapod exercises all three states, and generated `.fnt` output loads in current Rockbox. The documented delivery/licensing architecture decision for no-code TTF/OTF conversion remains the stop condition before Phase 4.
-- **Scope boundary:** Menu/list and quick-screen contents are explicitly firmware-derived projections inside source-defined SBS viewports. USB stays stock/firmware controlled. Existing `.fnt` files are usable in-browser; TTF/OTF conversion currently runs only through the external native development workflow.
+- **Status:** The project owner selected the loopback local companion. ADR-0013 records its licensing, build, memory, filesystem, bundle, security, and update boundaries. The browser Font Workshop now converts TTF/OTF/TTC through the pinned native helper, validates the returned RB12 bytes, and adds them to the package. The architecture stop condition is resolved; the focused helper milestone must pass review and merge before Phase 4 starts.
+- **Scope boundary:** Menu/list and quick-screen contents are explicitly firmware-derived projections inside source-defined SBS viewports. USB stays stock/firmware controlled. Existing `.fnt` files remain browser-only exact imports; outline-font conversion requires the loopback helper and local native toolchain, while browser glyph drawing remains approximate.
 
 ## Current architecture
 
@@ -38,6 +38,8 @@ Last updated: 2026-07-13
 - The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Losslessly preserved comments stay in the source editor and are intentionally omitted from the visual layer projection.
 - `rockbox/fonts/` validates RB12 `.fnt` binaries and exposes actual height, ascent, width, range, and glyph metrics. Font assets are packaged byte-exact under `.rockbox/fonts/`.
 - `scripts/fonts/` builds the pinned upstream `tools/convttf.c` only from an external checkout, converts licensed TTF/OTF/TTC inputs, and can verify generated output in an external Rockbox simulator. No GPL source, binary, or third-party generated font is bundled.
+- The versioned local font helper binds to `127.0.0.1`, checks an exact origin allowlist and protocol header, accepts only in-memory font bytes/parameters, uses a private temporary directory, and returns validated RB12 bytes. The Font Workshop exposes connection, pixel-size, glyph-range, metrics, and licensing state without adding GPL code to the browser bundle.
+- The Font Workshop and protocol client add 9.25 KB minified / 2.86 KB gzip to the Phase 3 production bundle; no native or GPL artifact is present in that delta.
 
 ## Baseline findings
 
@@ -78,7 +80,7 @@ Latest passing validation on 2026-07-13:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 21 files, 132 tests
+npm test               passed — 22 files, 137 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -90,6 +92,7 @@ Phase 2 official       passed — edited exported Authored Full WPS accepted by 
 npm run test:phase3-real passed — Adwaitapod WPS/SBS/FMS exact import/edit/export/re-import
 Phase 3 official       passed — edited exported Authored Full WPS/SBS/FMS accepted by CheckWPS
 Phase 3 font           passed — generated RB12 package round-trip and current Rockbox simulator load
+Phase 3 local helper   passed — real Arial TTF converted through loopback protocol to validated 5,337-byte RB12
 ```
 
 Phase 1F evidence:
@@ -137,16 +140,18 @@ Phase 3 evidence:
 - The authored WPS, SBS, and FMS edited exports were each accepted by target-specific `checkwps.ipodvideo` built at the pinned upstream SHA. Deterministic SBS and FMS 320×240 goldens supplement the WPS golden.
 - The external native font workflow converted a licensed local TTF sample into a 5,337-byte RB12 file with 95 glyph slots, preserved those bytes through a theme package, and loaded it in a current Rockbox iPod Video simulator with matching 16-pixel height, first character, and glyph count.
 - Rockbox source, tools, binaries, generated font bytes, and private theme ZIPs remain outside the repository.
+- The accepted local companion converted a real TTF through the same loopback HTTP contract used by the browser and returned the expected `16-Arial.fnt` hash and RB12 metrics. Chrome then completed the Font Workshop flow and set the generated 16px/13px/95-glyph font as the project font.
+- Security tests prove an unapproved remote origin and an unknown loopback port are rejected before conversion; the custom protocol header, safe basename, bounded input, and Unicode-range checks are mandatory.
 
 ## Known blockers
 
-- The browser cannot execute native `convttf`. Completing the planned no-code TTF/OTF upload-and-convert workflow requires an explicit choice among a local companion helper, a backend conversion service, or distribution of a GPL-compatible WebAssembly build. The execution plan classifies backend, native-helper, and GPL distribution choices as stop conditions.
+- The current helper is a Node-based macOS/Linux prototype and needs Git, a C compiler, and FreeType. A signed standalone installer is future delivery polish; the accepted architecture and conversion workflow are functional now.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Choose and record the no-code TTF/OTF delivery/licensing architecture. Do not begin Phase 4 or implement browser conversion until that documented stop condition is resolved.
+Complete review and merge of the local companion milestone, then begin Phase 4 official-engine render comparison from updated `main`.
 
 ## Compatibility summary
 
-Phase 3 is ready for targeted WPS/SBS/FMS dogfooding: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, move supported viewports, edit known properties or source, import and package a valid RB12 `.fnt`, and export without losing unsupported syntax/assets. Browser TTF/OTF conversion, bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.
+Phase 3 is ready for targeted WPS/SBS/FMS dogfooding: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, move supported viewports, edit known properties or source, import an exact RB12 `.fnt` or convert TTF/OTF/TTC through the local helper, and export without losing unsupported syntax/assets. Bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.

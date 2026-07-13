@@ -21,20 +21,18 @@ interface EditorToolbarProps {
     imageInputRef: React.RefObject<HTMLInputElement | null>;
     loadProjectInputRef: React.RefObject<HTMLInputElement | null>;
     importZipInputRef: React.RefObject<HTMLInputElement | null>;
-    globalFontInputRef: React.RefObject<HTMLInputElement | null>;
     
     // Handlers for inputs
     onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onLoadProject: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onImportZip: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onGlobalFontUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     onShowMainMenu, onShowLibModal, onDuplicate, onToggleLock, onMoveLayer, onShowPalette,
     undo, redo, canUndo, canRedo, onOpenPrompt, onSave, onExport,
-    imageInputRef, loadProjectInputRef, importZipInputRef, globalFontInputRef,
-    onImageUpload, onLoadProject, onImportZip, onGlobalFontUpload
+    imageInputRef, loadProjectInputRef, importZipInputRef,
+    onImageUpload, onLoadProject, onImportZip
 }) => {
     return (
         <div className="w-24 pinstripe border-r border-black flex flex-col items-center py-6 gap-5 z-20">
@@ -70,7 +68,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={onImageUpload} />
             <input type="file" ref={loadProjectInputRef} className="hidden" accept=".json" onChange={onLoadProject} />
             <input type="file" ref={importZipInputRef} className="hidden" accept=".zip" onChange={onImportZip} />
-            <input type="file" ref={globalFontInputRef} className="hidden" accept=".fnt" onChange={onGlobalFontUpload} />
         </div>
     );
 };

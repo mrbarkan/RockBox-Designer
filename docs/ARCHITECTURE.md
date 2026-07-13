@@ -178,4 +178,18 @@ Comments are a syntax concern only. They remain exact in the source document and
 
 Development conversion uses the pinned upstream `tools/convttf.c` from a separate checkout. `scripts/fonts/` builds its executable into a temporary directory, converts a licensed TTF/OTF/TTC input, validates the generated RB12 file, preserves it through package export/re-import, and can confirm that current Rockbox loads it in an external simulator. The repository distributes none of the GPL source, executable, input font, or generated font.
 
-Direct browser TTF/OTF conversion is deliberately paused. A local companion, backend service, or GPL-compatible WebAssembly distribution would each change the product architecture or licensing obligations and requires an explicit decision before implementation.
+The accepted delivery architecture is a loopback-only local companion:
+
+```text
+Browser Font Workshop
+  -> origin + protocol-checked request to 127.0.0.1
+  -> bounded in-memory TTF/OTF/TTC bytes + size/range
+  -> private temporary directory
+  -> pinned external Rockbox convttf executable
+  -> validated RB12 bytes + hashes + metrics
+  -> browser re-validates RB12 -> exact .rockbox/fonts package asset
+```
+
+`scripts/fonts/local-helper.ts` never accepts browser file paths, binds no public interface, and accepts only known local app origins unless an origin is explicitly configured. It uses a matching external `ROCKBOX_SOURCE_DIR` or obtains the exact pinned upstream source into a SHA-keyed user cache and builds there. Conversion files are removed after each request. `services/fontCompanion.ts` implements the versioned browser client, and the Font Workshop keeps existing `.fnt` imports independent of helper availability.
+
+The browser bundle contains no GPL source or executable and gains only the protocol client and UI. Input font licensing remains the user's responsibility; generated `.fnt` files should be shared only when the source license permits conversion and redistribution.

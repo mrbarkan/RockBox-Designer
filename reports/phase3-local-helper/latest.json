@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-07-13T19:52:21.106Z",
+  "protocolVersion": 1,
+  "upstreamCommit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+  "security": {
+    "bindAddress": "127.0.0.1",
+    "approvedOriginRequired": true,
+    "protocolHeaderRequired": true,
+    "inputRetainedAfterRequest": false
+  },
+  "conversion": {
+    "inputExtension": "ttf",
+    "pixelSize": 16,
+    "startCharacter": 32,
+    "limitCharacter": 126,
+    "outputFilename": "16-Arial.fnt",
+    "outputSha256": "d6f0fc1cec20526108aaa64432d0fef516ab87ccd40474fb2609bd5837be99fb",
+    "metrics": {
+      "format": "RB12",
+      "maxWidth": 13,
+      "height": 16,
+      "ascent": 13,
+      "depth": 1,
+      "firstCharacter": 32,
+      "defaultCharacter": 32,
+      "glyphCount": 95,
+      "bitmapBytes": 5016,
+      "offsetCount": 95,
+      "widthCount": 95,
+      "fileBytes": 5337
+    }
+  },
+  "package": {
+    "archivePath": ".rockbox/fonts/16-Arial.fnt",
+    "exactBytes": true,
+    "cfgReferencesFont": true
+  }
+}
