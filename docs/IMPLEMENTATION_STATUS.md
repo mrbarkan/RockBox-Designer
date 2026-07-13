@@ -4,10 +4,10 @@ Last updated: 2026-07-13
 
 ## Current phase
 
-- **Phase:** Phase 3 — SBS/FMS screen editor and font pipeline
-- **Branch:** `codex/phase-3-screen-editor`
-- **Merged milestones:** Phase 0 through Phase 2; the final Phase 2 dogfood hardening merged through [PR #16](https://github.com/mrbarkan/RockBox-Designer/pull/16) at `9b62470`.
-- **Status:** Phase 3 screen acceptance and the external native font acceptance pass locally. WPS, SBS, and FMS now share source-linked semantics, real Adwaitapod exercises all three states, and generated `.fnt` output loads in current Rockbox. The remaining Phase 3 stop condition is selecting a delivery/licensing architecture for no-code TTF/OTF conversion inside the browser.
+- **Phase:** Phase 3 complete — architecture gate before Phase 4
+- **Branch:** `main`
+- **Merged milestones:** Phase 0 through Phase 3; Phase 3 merged through [PR #17](https://github.com/mrbarkan/RockBox-Designer/pull/17) at `f53b309` after the Phase 2 dogfood hardening in [PR #16](https://github.com/mrbarkan/RockBox-Designer/pull/16).
+- **Status:** Phase 3 screen acceptance and the external native font acceptance pass and are merged. WPS, SBS, and FMS now share source-linked semantics, real Adwaitapod exercises all three states, and generated `.fnt` output loads in current Rockbox. The documented delivery/licensing architecture decision for no-code TTF/OTF conversion remains the stop condition before Phase 4.
 - **Scope boundary:** Menu/list and quick-screen contents are explicitly firmware-derived projections inside source-defined SBS viewports. USB stays stock/firmware controlled. Existing `.fnt` files are usable in-browser; TTF/OTF conversion currently runs only through the external native development workflow.
 
 ## Current architecture
@@ -145,7 +145,7 @@ Phase 3 evidence:
 
 ## Next task
 
-Complete the Phase 3 review and draft pull request. Do not begin Phase 4 or implement browser TTF/OTF conversion until the project owner chooses the delivery/licensing architecture at the documented stop condition.
+Choose and record the no-code TTF/OTF delivery/licensing architecture. Do not begin Phase 4 or implement browser conversion until that documented stop condition is resolved.
 
 ## Compatibility summary
 
