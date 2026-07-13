@@ -65,6 +65,18 @@ describe('source-linked WPS interpreter', () => {
     expect(result.layers.some(layer => layer.kind === 'unsupported' && layer.label.includes('zzFuture'))).toBe(true);
   });
 
+  it('preserves comments in source without projecting them as visual layers', () => {
+    const source = '# Header comment\n%V(0,0,320,240,-)\n# Element note\n%it';
+    const document = parseRockbox(source);
+    const result = interpretWps(document, options);
+
+    expect(document.source).toBe(source);
+    expect(document.nodes.filter(node => node.kind === 'comment')).toHaveLength(2);
+    expect(result.layers.some(layer => layer.label === 'Comment')).toBe(false);
+    expect(result.layers.some(layer => layer.kind === 'viewport')).toBe(true);
+    expect(result.layers.some(layer => layer.kind === 'element')).toBe(true);
+  });
+
   it('reports invalid syntax without discarding the partial semantic model', () => {
     const result = interpretWps(parseRockbox('%V(0,0,320,240,-)\n%?mp<Play|Pause'), options);
     expect(result.valid).toBe(false);

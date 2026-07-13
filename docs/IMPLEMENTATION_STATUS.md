@@ -1,13 +1,13 @@
 # Implementation Status
 
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ## Current phase
 
-- **Phase:** Phase 2 — Accurate WPS visual editor
-- **Branch:** `main`
+- **Phase:** Phase 2 dogfood hardening — Accurate WPS visual editor
+- **Branch:** `codex/phase-2-dogfood-hardening`
 - **Merged milestones:** Phase 0 through Phase 2; Phase 2 merged through [PR #13](https://github.com/mrbarkan/RockBox-Designer/pull/13) at `e4ac184`, with the Adwaitapod dogfood correction in [PR #15](https://github.com/mrbarkan/RockBox-Designer/pull/15).
-- **Status:** Phase 2 and its dogfood-discovered Adwaitapod rendering correction are complete, verified, and merged. The supported WPS subset is ready for targeted dogfooding.
+- **Status:** Phase 2 acceptance was reopened for two dogfood regressions. Comments now remain source-only without appearing as visual elements, and the file-menu highlight no longer remounts on every simulation timer tick. The full Phase 2 acceptance run passes and the focused hardening change is ready to merge.
 - **Scope boundary:** The source-linked semantic editor covers a documented WPS subset. SBS/FMS semantics, Rockbox font metrics, lists/menus, and the broader simulator remain later phases.
 
 ## Current architecture
@@ -35,7 +35,7 @@ Last updated: 2026-07-12
 - `scripts/themes/` generates public fixtures, prepares ignored private real-theme fixtures, and reports preservation, package, support, and optional CheckWPS evidence separately.
 - `rockbox/semantics/` interprets the supported WPS subset without mutating source and retains a CST source link on every render operation.
 - `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for the 320×240 golden screenshot.
-- The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only nodes, and unsupported preserved nodes.
+- The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Losslessly preserved comments stay in the source editor and are intentionally omitted from the visual layer projection.
 
 ## Baseline findings
 
@@ -72,11 +72,11 @@ Before Phase 0 changes:
 
 ## Validation
 
-Latest passing validation on 2026-07-12:
+Latest passing validation on 2026-07-13:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 17 files, 119 tests
+npm test               passed — 17 files, 120 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -119,14 +119,20 @@ Adwaitapod dogfood correction evidence:
 - A side-by-side local browser render against the supplied 320×240 reference verified album-art geometry, title/secondary rows, time labels, counter, sprites, transparent bitmap edges, and the image/backdrop/slider progress composition.
 - Interaction overlays remain available for editing but no longer stack translucent fills or labels over the theme when they are neither selected nor in debug mode.
 
+Phase 2 dogfood-hardening evidence:
+
+- A semantic regression fixture proves comments remain present in the lossless document while producing no visual layer rows.
+- Menu operation rows now have stable component identity outside the timer-driven application render, preventing hover state from being discarded every 100 ms.
+- A local browser smoke held the menu open while the simulation subline timer advanced and confirmed the menu rows remained mounted and available.
+
 ## Known blockers
 
-- No Phase 2 acceptance blocker is currently known.
-- This is ready for targeted WPS dogfooding, not a claim that every real-theme construct or Rockbox font renders exactly.
+- No Phase 2 dogfood-hardening blocker is currently known; the full acceptance run passes on the active branch.
+- This remains targeted WPS dogfood support, not a claim that every real-theme construct or Rockbox font renders exactly.
 
 ## Next task
 
-Dogfood the supported WPS workflow and record any real-theme gaps by preservation, interpretation, rendering, and editing category. Phase 3 is the next planned implementation phase but has not started.
+Complete and merge the Phase 2 dogfood-hardening gate, then begin Phase 3 from updated `main`. Phase 3 must add SBS/FMS/menu semantics rather than routing those screens through the legacy preview adapter.
 
 ## Compatibility summary
 

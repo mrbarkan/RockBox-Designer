@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 
 interface MainMenuModalProps {
   isOpen: boolean;
@@ -12,27 +12,36 @@ interface MainMenuModalProps {
   onImportFont: () => void;
 }
 
-export const MainMenuModal: React.FC<MainMenuModalProps> = ({ 
+type MenuButtonProps = {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  onClose: () => void;
+  subLabel?: string;
+};
+
+const MenuButton = memo(({ icon, label, onClick, onClose, subLabel }: MenuButtonProps) => (
+  <button
+      onClick={() => { onClick(); onClose(); }}
+      className="w-full text-left flex items-center gap-5 p-5 hover:bg-orange-600 hover:text-white border-b border-gray-300 group transition-colors bg-white/50"
+  >
+      <div className="w-10 h-10 bg-gray-200 border border-gray-400 flex items-center justify-center font-mono text-2xl group-hover:bg-white group-hover:text-black shadow-sm">
+          {icon}
+      </div>
+      <div>
+          <div className="font-bold uppercase text-base tracking-wide">{label}</div>
+          {subLabel && <div className="text-xs opacity-60 font-mono group-hover:text-white">{subLabel}</div>}
+      </div>
+  </button>
+));
+MenuButton.displayName = 'MenuButton';
+
+export const MainMenuModal: React.FC<MainMenuModalProps> = ({
     isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onImportFont 
 }) => {
   const [activeTab, setActiveTab] = useState<'menu' | 'about'>('menu');
 
   if (!isOpen) return null;
-
-  const MenuButton = ({ icon, label, onClick, subLabel }: any) => (
-    <button 
-        onClick={() => { onClick(); onClose(); }}
-        className="w-full text-left flex items-center gap-5 p-5 hover:bg-orange-600 hover:text-white border-b border-gray-300 group transition-colors bg-white/50"
-    >
-        <div className="w-10 h-10 bg-gray-200 border border-gray-400 flex items-center justify-center font-mono text-2xl group-hover:bg-white group-hover:text-black shadow-sm">
-            {icon}
-        </div>
-        <div>
-            <div className="font-bold uppercase text-base tracking-wide">{label}</div>
-            {subLabel && <div className="text-xs opacity-60 font-mono group-hover:text-white">{subLabel}</div>}
-        </div>
-    </button>
-  );
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -67,14 +76,14 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
             <div className="flex-1 bg-[#f2f2f2] overflow-y-auto shadow-inner">
                 {activeTab === 'menu' && (
                     <div className="flex flex-col">
-                        <MenuButton icon="📄" label="New Project" onClick={onNew} subLabel="Clear workspace" />
-                        <MenuButton icon="📂" label="Open Project" onClick={onOpen} subLabel=".json files" />
-                        <MenuButton icon="💾" label="Save Project" onClick={onSave} subLabel="Download .json" />
+                        <MenuButton icon="📄" label="New Project" onClick={onNew} onClose={onClose} subLabel="Clear workspace" />
+                        <MenuButton icon="📂" label="Open Project" onClick={onOpen} onClose={onClose} subLabel=".json files" />
+                        <MenuButton icon="💾" label="Save Project" onClick={onSave} onClose={onClose} subLabel="Download .json" />
                         <div className="h-1 bg-gray-300 my-2" />
-                        <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} subLabel="Load existing .zip theme" />
-                        <MenuButton icon="Aa" label="Import Font" onClick={onImportFont} subLabel="Load .fnt resource" />
+                        <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} onClose={onClose} subLabel="Load existing .zip theme" />
+                        <MenuButton icon="Aa" label="Import Font" onClick={onImportFont} onClose={onClose} subLabel="Load .fnt resource" />
                         <div className="h-1 bg-gray-300 my-2" />
-                        <MenuButton icon="⬇" label="Export Theme" onClick={onExport} subLabel="Compile to .zip for iPod" />
+                        <MenuButton icon="⬇" label="Export Theme" onClick={onExport} onClose={onClose} subLabel="Compile to .zip for iPod" />
                     </div>
                 )}
 
