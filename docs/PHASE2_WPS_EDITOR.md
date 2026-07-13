@@ -6,7 +6,7 @@ Phase 2 is the first targeted dogfood milestone. The lossless WPS document is st
 
 1. Import a theme ZIP.
 2. Keep `SOURCE_RENDER` enabled on the WPS tab.
-3. Use the right panel to inspect global preloads, viewports, elements, conditionals, branches, source-only nodes, and unsupported preserved nodes.
+3. Use the right panel to inspect global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Comments remain byte-exact in source and are not presented as visual elements.
 4. Select a supported viewport or element. Drag/resize viewport overlays or edit the safe fields in the source-linked inspector.
 5. For a conditional, choose `AUTO` to follow simulation state or select a numbered branch to preview it explicitly.
 6. Open `SOURCE_EDITOR`, edit WPS text, and apply it. Valid source updates the preview. Invalid source remains in the document, shows line/column diagnostics, and leaves the last valid preview visible with a stale badge.
@@ -51,6 +51,8 @@ npm run validate
 - A separately supplied wrapped Adwaitapod 3.3 ZIP imported WPS/SBS/FMS with zero package diagnostics and was visually compared beside its 320×240 WPS reference. The comparison verified the active Player/info/playtime viewport set, album-art geometry, text rows, state sprites, image-backed progress bar, and transparent bitmap key. The private ZIP and screenshots are not committed.
 - Authored Full completed the same package workflow and its edited exported WPS was accepted by the pinned `checkwps.ipodvideo`.
 - Reports contain hashes and outcomes but no private theme source or files.
+- The dogfood-hardening browser smoke kept the file menu open while the 100 ms simulation timer advanced and verified that operation rows retained stable identity instead of blinking their hover highlight.
+- A semantic regression test verifies that WPS comments survive in the lossless source document but do not enter the visual layer list.
 
 ## Dogfood boundary
 

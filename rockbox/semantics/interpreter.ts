@@ -445,8 +445,13 @@ export const interpretWps = (document: RockboxDocument, options: InterpreterOpti
 
   const walk = (nodes: RockboxNode[], current: Context, depth: number, parentId?: string) => {
     for (const node of nodes) {
-      if (node.kind === 'comment' || node.kind === 'escape') {
-        addLayer(node, depth, 'source-only', node.kind === 'comment' ? 'Comment' : 'Escaped source', true, parentId, [], current.active);
+      if (node.kind === 'comment') {
+        // Comments belong to the lossless source document, not the visual layer
+        // projection. They remain byte-for-byte available in the source editor.
+        continue;
+      }
+      if (node.kind === 'escape') {
+        addLayer(node, depth, 'source-only', 'Escaped source', true, parentId, [], current.active);
         continue;
       }
       if (node.kind === 'invalid') {
