@@ -1,11 +1,13 @@
 
 import JSZip from 'jszip';
-import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement, RockboxAstDocument } from '../types';
-import { RockboxDocument } from '../rockbox/syntax';
+import { ProjectState, ElementType, WpsElement, ScreenType, ImageElement, TextElement, RectElement, ProgressBarElement } from '../types';
+import { serializeRockbox } from '../rockbox/syntax';
 import { importThemePackage } from '../rockbox/packages';
 import { DEFAULT_PROJECT } from '../constants';
 import { parseRockboxForLegacyConsumer } from './rockboxSyntaxAdapter';
 import { getDeviceProfile } from '../rockbox/devices';
+import { parseRb12Font } from '../rockbox/fonts';
+import { settingsFromRockboxCfg } from './rockboxProjectSettings';
 
 interface ParserContext {
     screen: ScreenType;
@@ -27,7 +29,6 @@ interface ParserContext {
 
 const genId = () => Math.random().toString(36).substr(2, 9);
 const toCssHex = (hex: string) => hex ? '#' + hex.replace(/^0x/, '').replace(/[^0-9A-Fa-f]/g, '') : '#000000';
-
 const USB_ICON_SVG = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="35" y="20" width="30" height="40" fill="#ffffff" /><path d="M35 20 L50 5 L65 20 Z" fill="#ffffff" /><circle cx="42" cy="35" r="4" fill="#000000"/><circle cx="50" cy="50" r="4" fill="#000000"/><rect x="54" y="31" width="8" height="8" fill="#000000"/><rect x="48" y="60" width="4" height="30" fill="#ffffff"/><circle cx="50" cy="92" r="4" fill="#ffffff"/><path d="M30 65 L40 65 L35 75 Z" fill="#ffffff"/><path d="M60 65 L70 65 L65 75 Z" fill="#ffffff"/></svg>`)}`;
 
 export const parseZipTheme = async (file: File): Promise<ProjectState | null> => {
@@ -37,6 +38,7 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             importThemePackage(file)
         ]);
         const assets: Record<string, string> = {};
+        const fontMetrics = new Map<string, ReturnType<typeof parseRb12Font>>();
         const warnings: string[] = themePackage.diagnostics.map(diagnostic => diagnostic.message);
         const elements: WpsElement[] = [];
 
@@ -52,11 +54,15 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
 
         for (const f of imageFiles) {
             const blob = await (f as any).async('blob');
+            const bytes = new Uint8Array(await blob.arrayBuffer());
             const dataUrl = await blobToDataURL(blob);
             const name = (f as any).name;
             const baseName = assetBaseName(name);
             if (baseName) {
                 assets[baseName] = dataUrl;
+                if (baseName.toLowerCase().endsWith('.fnt')) {
+                    try { fontMetrics.set(baseName.toLowerCase(), parseRb12Font(bytes)); } catch { /* Preserve unsupported font bytes without claiming metrics. */ }
+                }
             }
         }
 
@@ -77,11 +83,12 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
         const cfgContent = await (cfgFile as any).async('string');
         
         const cfgBaseName = assetBaseName((cfgFile as any).name).replace(/\.cfg$/i, '');
-        const settings = { ...DEFAULT_PROJECT.settings, name: cfgBaseName };
+        const settings = settingsFromRockboxCfg(cfgContent, DEFAULT_PROJECT.settings, cfgBaseName);
+        settings.fontMetrics = fontMetrics.get(settings.uiFont.toLowerCase());
         const deviceProfile = getDeviceProfile(settings.target);
         const screenWidth = deviceProfile.mainScreen.width;
         const screenHeight = deviceProfile.mainScreen.height;
-        let wpsPath = '', sbsPath = '';
+        let wpsPath = '', sbsPath = '', fmsPath = '';
 
         cfgContent.split('\n').forEach(line => {
             const [key, ...valParts] = line.split('#')[0].split(':');
@@ -90,11 +97,7 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             const v = valParts.join(':').trim();
             if (k === 'wps') wpsPath = v;
             if (k === 'sbs') sbsPath = v;
-            if (k === 'backdrop') settings.backdrop = assetBaseName(v);
-            if (k === 'background color') settings.backgroundColor = toCssHex(v);
-            if (k === 'foreground color') settings.foregroundColor = toCssHex(v);
-            if (k === 'statusbar') settings.statusBarTop = v === 'top';
-            if (k === 'font') settings.uiFont = assetBaseName(v) || '14-Nimbus.fnt';
+            if (k === 'fms') fmsPath = v;
         });
 
         // --- 3. Parser ---
@@ -396,27 +399,23 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             return f ? await f.async('string') : '';
         };
 
-        let wpsAst: RockboxAstDocument | undefined;
-        let sbsAst: RockboxAstDocument | undefined;
-        let fmsAst: RockboxAstDocument | undefined;
-        let wpsDocument: RockboxDocument | undefined;
-        let sbsDocument: RockboxDocument | undefined;
-        let fmsDocument: RockboxDocument | undefined;
+        const loadScreen = async (screen: 'wps' | 'sbs' | 'fms', configuredPath: string) => {
+            const packageDocument = themePackage.screens[screen];
+            const source = packageDocument ? serializeRockbox(packageDocument) : await loadContent(configuredPath);
+            if (!source) return undefined;
+            parseScreen(source, screen);
+            const parsed = parseRockboxForLegacyConsumer(source);
+            return {
+                sourceDocument: packageDocument ?? parsed.sourceDocument,
+                legacyDocument: parsed.legacyDocument
+            };
+        };
 
-        if (wpsPath) {
-            const wpsContent = await loadContent(wpsPath);
-            parseScreen(wpsContent, 'wps');
-            const parsed = parseRockboxForLegacyConsumer(wpsContent);
-            wpsDocument = parsed.sourceDocument;
-            wpsAst = parsed.legacyDocument;
-        }
-        if (sbsPath) {
-            const sbsContent = await loadContent(sbsPath);
-            parseScreen(sbsContent, 'sbs');
-            const parsed = parseRockboxForLegacyConsumer(sbsContent);
-            sbsDocument = parsed.sourceDocument;
-            sbsAst = parsed.legacyDocument;
-        }
+        const [wps, sbs, fms] = await Promise.all([
+            loadScreen('wps', wpsPath),
+            loadScreen('sbs', sbsPath),
+            loadScreen('fms', fmsPath)
+        ]);
 
         return {
             settings,
@@ -424,12 +423,12 @@ export const parseZipTheme = async (file: File): Promise<ProjectState | null> =>
             assets,
             selectedElementIds: [],
             validationReport: warnings,
-            wpsAst,
-            sbsAst,
-            fmsAst,
-            wpsDocument,
-            sbsDocument,
-            fmsDocument,
+            wpsAst: wps?.legacyDocument,
+            sbsAst: sbs?.legacyDocument,
+            fmsAst: fms?.legacyDocument,
+            wpsDocument: wps?.sourceDocument,
+            sbsDocument: sbs?.sourceDocument,
+            fmsDocument: fms?.sourceDocument,
             themePackage
         };
 

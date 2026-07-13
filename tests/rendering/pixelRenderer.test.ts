@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildPhase2Golden } from '../fixtures/phase2/golden';
+import { buildPhase3FmsGolden, buildPhase3SbsGolden } from '../fixtures/phase3/golden';
 
 describe('deterministic native-pixel rendering', () => {
   it('matches the checked-in 320x240 WPS golden screenshot', () => {
@@ -11,5 +12,13 @@ describe('deterministic native-pixel rendering', () => {
     const ppm = buildPhase2Golden();
     const header = new TextEncoder().encode('P6\n320 240\n255\n');
     expect(ppm.length).toBe(header.length + 320 * 240 * 3);
+  });
+
+  it('matches the checked-in 320x240 SBS menu golden screenshot', () => {
+    expect(buildPhase3SbsGolden()).toEqual(new Uint8Array(readFileSync('tests/golden/phase3-sbs.ppm')));
+  });
+
+  it('matches the checked-in 320x240 FMS state golden screenshot', () => {
+    expect(buildPhase3FmsGolden()).toEqual(new Uint8Array(readFileSync('tests/golden/phase3-fms.ppm')));
   });
 });

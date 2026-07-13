@@ -99,3 +99,23 @@
 **Decision:** Interpret a documented WPS subset directly from the CST into device-independent render operations. Link every operation and layer to its source node, render at native device pixels with explicit clipping, and make DOM handles derived overlays. Preserve unsupported nodes as source-only/unsupported layers. When applied source is invalid, retain the last valid render and show the current diagnostics.
 
 **Consequences:** Visual and source edits converge on the same document, conditionals retain logic context, and deterministic pixel goldens become possible. Browser fonts and the documented semantic subset remain approximations; support claims must continue to be tracked per construct rather than inferred from preservation.
+
+## ADR-0011 — Project firmware-owned screen state through the shared semantic engine
+
+**Status:** Accepted
+
+**Context:** SBS and FMS source were preserved but still routed through the legacy flat-element adapter. Rockbox menus, quick screens, tuner state, and USB behavior also include firmware-owned content that a theme positions or styles without defining as ordinary source elements.
+
+**Decision:** Interpret WPS, SBS, and FMS from their authoritative CST documents through one screen-aware semantic engine. Represent menu/list rows, quick-screen controls, and tuner state as clearly labeled derived firmware projections inside source-defined UI viewports. Use source-verified activity and icon IDs. Keep USB as a stock/firmware behavior boundary and do not invent unsupported theme files.
+
+**Consequences:** Imported SBS/FMS files share source-linked rendering, editing, stale-preview, and export behavior with WPS. Firmware-owned rows are previewable but do not become authored source nodes. Support remains a documented tag/state subset, and no preview claims to reproduce the complete firmware simulator.
+
+## ADR-0012 — Keep Rockbox font conversion external until a delivery architecture is chosen
+
+**Status:** Accepted
+
+**Context:** Existing `.fnt` files can be preserved in a browser package, but generating one from TTF/OTF requires Rockbox's GPL `tools/convttf.c` or an independently implemented equivalent. Bundling, linking, translating, or remotely hosting that conversion introduces licensing or backend decisions outside the current browser-only architecture.
+
+**Decision:** Parse and package RB12 `.fnt` binaries independently in the application. For development validation, build and execute the pinned upstream `convttf` from a separate checkout and verify the result in an external Rockbox simulator. Do not commit or distribute Rockbox source/binaries or generated third-party fonts. Pause browser TTF/OTF conversion until the project explicitly chooses a local companion, backend service, or GPL-compatible WebAssembly delivery model.
+
+**Consequences:** Existing `.fnt` import/export and actual Rockbox metrics are usable now, and the native conversion path is reproducible and simulator-verified. A no-code browser conversion workflow remains unavailable by design; starting it is an architecture and licensing stop condition.

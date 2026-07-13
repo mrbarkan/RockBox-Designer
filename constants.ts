@@ -179,12 +179,33 @@ export const DEFAULT_SIMULATION: SimulationState = {
   isUsb: false,
   playStatus: 'play',
   currentTime: "12:45",
+  clock12Hour: false,
   shuffle: false,
   repeat: 'off',
   externalPower: false,
   volumeLastChanged: 0,
   diskActivity: false,
-  sublineCycle: 0
+  sublineCycle: 0,
+  currentActivity: 1,
+  menuTitle: 'Rockbox',
+  menuItems: ['Files', 'Database', 'Now Playing', 'Settings', 'Recording', 'Playlist Catalogue', 'Plugins', 'System', 'Shortcuts'],
+  // apps/gui/icon.h at the pinned Rockbox commit. These are firmware menu
+  // icon IDs, not positions in the visible menu.
+  menuIconIds: [29, 0, 25, 20, 21, 2, 9, 24, 10],
+  menuTitleIconId: 31,
+  menuSelectedIndex: 2,
+  fmAvailable: true,
+  fmFrequency: 101.7,
+  fmPresetName: 'FM Radio',
+  fmPresetIndex: 1,
+  fmPresetCount: 8,
+  fmSignalStrength: 72,
+  fmStereo: true,
+  fmTuned: true,
+  fmScanMode: false,
+  fmRdsAvailable: true,
+  fmRdsName: 'ROCK FM',
+  fmRdsText: 'Rockbox Designer preview'
 };
 
 // "Modern Dark" Theme (Adwaitapod Inspired)

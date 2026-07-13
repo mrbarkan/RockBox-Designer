@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-13T19:25:13.149Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
+  },
+  "harness": {
+    "tool": "tools/checkwps",
+    "target": "ipodvideo",
+    "binaryBundled": false
+  },
+  "workflow": {
+    "fixture": "Authored Full",
+    "imported": true,
+    "edits": [
+      {
+        "screen": "wps",
+        "nodeId": "tag:0:17",
+        "x": {
+          "before": 0,
+          "after": 8
+        },
+        "width": {
+          "before": 320,
+          "after": 312
+        }
+      },
+      {
+        "screen": "sbs",
+        "nodeId": "tag:0:17",
+        "x": {
+          "before": 0,
+          "after": 8
+        },
+        "width": {
+          "before": 320,
+          "after": 312
+        }
+      },
+      {
+        "screen": "fms",
+        "nodeId": "tag:0:17",
+        "x": {
+          "before": 0,
+          "after": 8
+        },
+        "width": {
+          "before": 320,
+          "after": 312
+        }
+      }
+    ],
+    "exported": true,
+    "reimported": true,
+    "exactAfterExport": true,
+    "manifestMatches": true,
+    "sourceSha256": "aaa07c4e573a115c67534c89e444e7babc2ac6abb3c620a7e3e57eb2aa63d221"
+  },
+  "official": [
+    {
+      "screen": "wps",
+      "executed": true,
+      "accepted": true,
+      "exitCode": 0,
+      "output": "Checking <screen-file>...\nWPS parsed OK"
+    },
+    {
+      "screen": "sbs",
+      "executed": true,
+      "accepted": true,
+      "exitCode": 0,
+      "output": "Checking <screen-file>...\nWPS parsed OK"
+    },
+    {
+      "screen": "fms",
+      "executed": true,
+      "accepted": true,
+      "exitCode": 0,
+      "output": "Checking <screen-file>...\nWPS parsed OK"
+    }
+  ]
+}

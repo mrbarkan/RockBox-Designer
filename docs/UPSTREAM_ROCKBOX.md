@@ -25,6 +25,9 @@ apps/gui/skin_engine/skin_parser.c
 apps/gui/skin_engine/skin_tokens.c
 apps/gui/skin_engine/skin_render.c
 apps/gui/skin_engine/skin_display.c
+apps/misc.h
+apps/root_menu.c
+apps/gui/icon.h
 apps/gui/statusbar-skinned.c
 apps/radio/radio_skin.c
 apps/gui/usb_screen.c
@@ -76,6 +79,12 @@ Phase 1F builds and runs upstream `tools/checkwps` from a separately checked-out
 ## Phase 2 semantic reference
 
 Phase 2 inspected `apps/gui/skin_engine/skin_tokens.c`, `skin_render.c`, and `skin_display.c` at the recorded SHA for playback status numbering, battery/volume conditional values, album-art presence, charging/USB truth values, viewport clipping, progress bars, and bitmap display behavior. The browser implementation is an independently written documented subset; no upstream implementation code is copied or linked. The edited Authored Full export was accepted by the external CheckWPS harness at this SHA.
+
+## Phase 3 screen and font reference
+
+Phase 3 re-inspected `lib/skin_parser/tag_table.c` and `apps/gui/skin_engine/skin_tokens.c` for SBS/FMS tag identity and current-screen behavior. It inspected `apps/misc.h`, `apps/root_menu.c`, and `apps/gui/icon.h` for activity values, root-menu ordering, and firmware icon IDs; `apps/gui/quickscreen.c` for the firmware-owned quick-screen layout; `apps/gui/usb_screen.c` for the stock USB boundary; and `apps/radio/radio_skin.c` for FMS state.
+
+The font workflow inspected `tools/convttf.c`, `firmware/font.c`, and `firmware/export/font.h`. The application independently parses the factual RB12 header and metrics. Development tooling builds and executes the unmodified converter from the separate pinned checkout, writes its executable outside the repository, and verifies generated output in an external Rockbox simulator. No upstream source, object, executable, or generated third-party font is committed or distributed.
 
 ## Licensing note
 

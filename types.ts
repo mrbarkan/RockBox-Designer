@@ -91,6 +91,7 @@ export interface ProjectSettings {
   selectorColor: string;       
   selectorTextColor: string;   
   uiFont: string;             
+  fontMetrics?: RockboxFontMetrics;
 
   iconset?: string;          
   viewersIconset?: string;   
@@ -116,6 +117,21 @@ export interface ProjectSettings {
   qsRight?: string;
 
   palette: string[];
+}
+
+export interface RockboxFontMetrics {
+  format: 'RB12';
+  maxWidth: number;
+  height: number;
+  ascent: number;
+  depth: number;
+  firstCharacter: number;
+  defaultCharacter: number;
+  glyphCount: number;
+  bitmapBytes: number;
+  offsetCount: number;
+  widthCount: number;
+  fileBytes: number;
 }
 
 export interface ProjectState {
@@ -211,10 +227,33 @@ export interface SimulationState {
   shuffle: boolean; 
   repeat: 'off' | 'all' | 'one'; 
   
-  currentTime: string; 
+  currentTime: string;
+  clock12Hour: boolean;
   volumeLastChanged: number; 
   diskActivity: boolean; 
   sublineCycle: number; 
+
+  // Phase 3 screen-state projection. ACTIVITY_* values are sourced from
+  // Rockbox apps/misc.h at the pinned upstream commit.
+  currentActivity: number;
+  menuTitle: string;
+  menuItems: string[];
+  menuIconIds: number[];
+  menuTitleIconId: number;
+  menuSelectedIndex: number;
+
+  fmAvailable: boolean;
+  fmFrequency: number;
+  fmPresetName: string;
+  fmPresetIndex: number;
+  fmPresetCount: number;
+  fmSignalStrength: number;
+  fmStereo: boolean;
+  fmTuned: boolean;
+  fmScanMode: boolean;
+  fmRdsAvailable: boolean;
+  fmRdsName: string;
+  fmRdsText: string;
 }
 
 // Graphics Pipeline Types

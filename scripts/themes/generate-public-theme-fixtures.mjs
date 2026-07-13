@@ -26,8 +26,8 @@ const fixtures = [
     files: {
       '.rockbox/themes/authored-full.cfg': '# WPS + SBS + FMS\nwps: /.rockbox/wps/authored-full.wps\nsbs: /.rockbox/wps/authored-full.sbs\nfms: /.rockbox/wps/authored-full.fms\nfont: /.rockbox/fonts/authored.fnt\n',
       '.rockbox/wps/authored-full.wps': '%V(0,0,320,240,-)\n%xl(A,strip.bmp,0,0,2)\n%xd(A,1)\n',
-      '.rockbox/wps/authored-full.sbs': '%?ps<Shuffle|Normal>\n',
-      '.rockbox/wps/authored-full.fms': '%?tp<%tf|No radio>\n',
+      '.rockbox/wps/authored-full.sbs': '%V(0,0,320,240,-)\n%?ps<Shuffle|Normal>\n',
+      '.rockbox/wps/authored-full.fms': '%V(0,0,320,240,-)\n%?tp<%tf|No radio>\n',
       '.rockbox/wps/authored-full/strip.bmp': new Uint8Array([0x42, 0x4d, 0x05, 0x06]),
       '.rockbox/fonts/authored.fnt': new Uint8Array([0x52, 0x42, 0x31, 0x32]),
       '.rockbox/icons/authored.icons': new Uint8Array([1, 2, 3, 4])
