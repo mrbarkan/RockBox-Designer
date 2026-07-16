@@ -6,13 +6,12 @@ import { EditorCanvas } from './components/EditorCanvas';
 import { ScenarioStrip } from './components/ScenarioStrip';
 import { SourceEditor } from './components/SourceEditor';
 import { RemixModal } from './components/RemixModal';
-import { ElementLibraryModal } from './components/ElementLibraryModal';
 import { MainMenuModal } from './components/MainMenuModal';
 import { LoginModal } from './components/LoginModal';
 import { ProjectManagerModal } from './components/ProjectManagerModal';
 import { ColorPaletteModal } from './components/ColorPaletteModal';
 import { FontImportModal, type FontImportOptions, type FontImportResult } from './components/FontImportModal';
-import { generateZip } from './services/rockboxCompiler';
+import { compileScreen, generateZip } from './services/rockboxCompiler';
 import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
 import { applyThemeToProject } from './services/layoutEngine';
@@ -55,6 +54,11 @@ const CompatibilityDashboardModal = React.lazy(async () => {
 const PlayMode = React.lazy(async () => {
   const module = await import('./components/PlayMode');
   return { default: module.PlayMode };
+});
+
+const ElementLibraryModal = React.lazy(async () => {
+  const module = await import('./components/ElementLibraryModal');
+  return { default: module.ElementLibraryModal };
 });
 
 export default function App() {
@@ -350,23 +354,29 @@ export default function App() {
     setProject(newState);
   };
 
-  const handleAddPreset = (preset: Partial<WpsElement>) => {
-      const newEl = {
-          id: Math.random().toString(36).substr(2, 9),
-          screen: activeScreen,
-          x: 10, y: 10, visible: true, locked: false,
-          fontId: '14-Nimbus.fnt',
-          ...preset
-      } as WpsElement;
-      const nextAssets = { ...project.assets };
-      if ('filename' in newEl && (newEl as any).filename && (newEl as any).src) {
-          const { filename, src } = newEl as any;
-          if (!nextAssets[filename]) {
-              nextAssets[filename] = src;
-          }
-      }
+  const handleInsertComponent = async (
+    definitionId: string,
+    properties: Record<string, string | number>
+  ) => {
+    const { insertRockboxComponent } = await import('./rockbox/components');
+    const activeProject = currentProject.current;
+    const result = await insertRockboxComponent({
+      project: activeProject,
+      definitionId,
+      screen: activeScreen,
+      profile: getDeviceProfile(activeProject.settings.target),
+      fallbackSource: compileScreen(activeProject, activeScreen),
+      properties
+    });
+    if (result.ok) setProject(result.project);
+    return result;
+  };
 
-      setProject({ ...project, assets: nextAssets, elements: [...project.elements, newEl], selectedElementIds: [newEl.id] });
+  const handleRemoveComponent = async (instanceId: string) => {
+    const { removeRockboxComponent } = await import('./rockbox/components');
+    const result = removeRockboxComponent(currentProject.current, instanceId);
+    if (result.ok) setProject(result.project);
+    return result;
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -604,7 +614,19 @@ export default function App() {
           />
         </React.Suspense>
       ) : null}
-      <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
+      {showLibModal ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Components…</div>}>
+          <ElementLibraryModal
+            isOpen
+            onClose={() => setShowLibModal(false)}
+            project={project}
+            activeScreen={activeScreen}
+            deviceProfile={deviceProfile}
+            onInsert={handleInsertComponent}
+            onRemove={handleRemoveComponent}
+          />
+        </React.Suspense>
+      ) : null}
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 
       {/* AI Prompt Modal */}
@@ -675,6 +697,7 @@ export default function App() {
           activeScenario={activeScenario}
           onApplyScenario={handleApplyScenario}
           onOpenPlay={() => setShowPlay(true)}
+          onOpenComponents={() => setShowLibModal(true)}
         />
       </div>
 

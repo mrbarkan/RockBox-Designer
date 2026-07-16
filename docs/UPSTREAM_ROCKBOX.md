@@ -117,6 +117,12 @@ This confirmed:
 
 The application expresses those facts through independent TypeScript state transitions and target profiles. It does not copy or execute the upstream implementation.
 
+## Phase 6 component reference
+
+Phase 6 re-inspected `lib/skin_parser/tag_table.c` for the current `%xl`, `%xd`, `%Vl`, `%Vd`, `%Vi`, album-art, touch, FM, state, and metadata parameter contracts. It inspected `apps/gui/skin_engine/skin_parser.c` to confirm that duplicate image labels are invalid and that image-display references must resolve an existing preload. `apps/gui/skin_engine/skin_render.c` and `apps/gui/skin_engine/wps_internals.h` confirmed tag-driven subimage selection and one-based values.
+
+The component engine independently allocates unique labels and viewport names and writes its own authored 24-bit BMP. The external Phase 6 runner then passed all 53 available component/profile/screen fixtures to `checkwps.ipodvideo` or `checkwps.ipod6g` at this exact SHA. No upstream source, object, or executable is bundled. The touch definition is not run against an invented target: both current profiles report no touchscreen, and the checked report records that target gate explicitly.
+
 ## Licensing note
 
 Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox parser implementation has been copied into Rockbox Designer. The generated factual registry is explicitly flagged for human licensing review. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.

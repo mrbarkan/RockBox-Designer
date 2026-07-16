@@ -4,12 +4,12 @@ Last updated: 2026-07-16
 
 ## Current phase
 
-- **Phase:** Phase 5 device-state simulator
-- **Branch:** `codex/phase-5-device-state-simulator`
-- **Merged milestones:** Phase 0 through Phase 4; official render validation and the Compatibility Lab merged in [PR #20](https://github.com/mrbarkan/RockBox-Designer/pull/20) at `73d87ad`.
-- **Status:** ADR-0015 adds a deterministic simulation domain and a lazy-loaded, first-class Level A Play mode. Named scenarios drive the shared source-linked semantic renderer, share through stable query links, and reset from a canonical baseline. Device profiles prevent unsupported FM, touch, remote, RTC, or album-art state from becoming an implied target feature.
-- **Scope boundary:** Play simulates design state, not the complete firmware. USB stays firmware controlled; click-wheel/touch inputs change only documented browser state; current profiles expose neither touch nor remote LCD; RTL is a browser preview rather than a native bidi parity claim.
-- **UX direction updated:** The first focused Pulp migration is delivered through prominent Play access and a compact Screens scenario strip. Canva-style direct manipulation remains concentrated in Screens mode; Source remains authoritative; Rockbox constraints remain explicit. Remaining studio modes stay isolated to later pull requests.
+- **Phase:** Phase 6 preset and component ecosystem
+- **Branch:** `codex/phase-6-component-ecosystem`
+- **Merged milestones:** Phase 0 through Phase 5; deterministic Play merged in [PR #21](https://github.com/mrbarkan/RockBox-Designer/pull/21) at `0dfd761`.
+- **Status:** ADR-0016 replaces the legacy flat Add Element palette with 19 versioned, source-aware components. Insertions allocate deterministic IDs, safe image handles and viewport names, exact binary assets, stable CST boundaries, and one-step undo. Safe removal retains every asset still used by another instance or handwritten source.
+- **Scope boundary:** Components generate documented WPS/SBS/FMS source; USB remains firmware controlled. Imported source is never heuristically converted into a component. Touch stays visible but unavailable on both current non-touch profiles. Personal/public sharing is deferred until the format has more evidence.
+- **UX direction updated:** Components is the second focused Pulp workspace after Play. It is lazy-loaded, exposes the full source/asset/target contract, and remains quickly reachable from Screens without overloading the canvas.
 
 ## Current architecture
 
@@ -47,6 +47,9 @@ Last updated: 2026-07-16
 - `rockbox/simulator/` owns deterministic scenarios, pure state transitions, capability enforcement, and stable scenario links. `timelineMs` replaces wall-clock reads for playback, seek, RTC, scrolling, `%mv`, and `%Tl`.
 - Play is a first-class, lazy-loaded Level A workflow. `DeviceShell` maps physical or verified touch input around the existing renderer without owning screen pixels. The old four-column simulation panel is removed; Screens retains a compact scenario strip.
 - The Phase 5 main chunk is 584.83 KB / 172.99 KB gzip and the Play chunk is 15.63 KB / 4.10 KB gzip. The checked compatibility catalog now records 101 interpreted/rendered tags and still only 12 source-aware edit surfaces.
+- `rockbox/components/` owns the versioned catalog, target/screen gates, deterministic identity allocation, source transactions, binary component assets, conflict reporting, and conservative shared-asset removal.
+- Component instance metadata records exact root CST nodes, definition/version, resolved properties, allocated handle/viewport names, and asset identities. Imported package assets remain separate and cannot be deleted by component removal.
+- Components is a focused lazy-loaded mode. The main chunk is 582.02 KB / 172.23 KB gzip; the Components UI is 9.31 KB / 2.75 KB gzip and its shared component-domain chunk is 14.25 KB / 5.15 KB gzip.
 
 ## Baseline findings
 
@@ -88,8 +91,8 @@ Latest passing validation on 2026-07-16:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 26 files, 150 tests
-npm run build          passed — Vite production build; Play code-split
+npm test               passed — 28 files, 161 tests
+npm run build          passed — Vite production build; Play and Components code-split
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
@@ -104,6 +107,8 @@ Phase 3 local helper   passed — real Arial TTF converted through loopback prot
 Phase 4 render report passed — 2 reproducible simulator captures, 6,315 classified differences, 0 unclassified
 Phase 4 compatibility passed — 386 tag/device rows across iPod Video and iPod Classic
 npm run test:phase5    passed — deterministic scenarios, transitions, conditionals, capability gates, and Play UI
+npm run test:phase6    passed — 11 component contract, collision, target, property, asset, persistence, package, and focused-UI tests
+Phase 6 official       passed — 53/53 available component/target/screen fixtures accepted by CheckWPS
 ```
 
 Phase 1F evidence:
@@ -172,15 +177,25 @@ Phase 5 evidence:
 - The device shell and screen renderer are separate components. Play reuses the same semantic result and native-pixel canvas as Screens rather than implementing a second renderer.
 - Server-rendered UI tests verify Level A labeling, named scenario selection, complete state controls, and progressive capability explanations.
 
+Phase 6 evidence:
+
+- The 19-definition catalog covers every planned category and records source, assets, target/screen support, capabilities, editable properties, complexity, and validation.
+- Existing CRLF source remains exact around inserted nodes. Stable node prefixes make component boundaries reversible without flattening imported documents.
+- Repeated battery-strip insertion reuses one 2,934-byte 24-bit BMP while allocating different handles. Removing the first instance keeps the shared bytes; removing the last deletes them unless any remaining source still references the path.
+- A conflicting imported asset path is retained byte-exact and the generated asset receives a safe numeric suffix.
+- iPod Classic refuses FMS and FM components, both current profiles refuse touch components, and unavailable definitions remain visible with reasons.
+- The official report covers both current targets and every available WPS/SBS/FMS combination: 53 accepted, zero rejected. The touch-only definition is explicitly target-gated rather than tested against a fictional device.
+- Components is separate from Screens but has a quick insertion entry. The old random-ID, placeholder-data-URL Add Element workflow is removed.
+
 ## Known blockers
 
-- No Phase 5 acceptance blocker is open. The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
+- No Phase 6 acceptance blocker is open. The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Complete Phase 5 review and merge, then begin Phase 6's target-aware preset/component ecosystem from updated `main`. Continue the Pulp-inspired studio migration only through the focused milestones defined in `ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md`.
+Complete Phase 6 review and merge, then begin the Phase 7 full Rockbox simulator feasibility research. Stop before implementing a browser port if the required GPL, build, memory, filesystem, bundle, or upstream-maintenance decisions are unresolved.
 
 ## Compatibility summary
 
-Phase 5 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, open first-class Play, share deterministic scenarios, exercise documented playback/power/device/RTC/FM state, edit supported geometry or source, inspect per-tag/per-device support, and export without losing unsupported syntax/assets. Full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.
+Phase 6 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, insert and customize source-aware components, undo or safely remove exact instances, switch among source-linked screen states, open first-class Play, share deterministic scenarios, inspect per-tag/per-device support, and export without losing unsupported syntax or shared assets. Full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.

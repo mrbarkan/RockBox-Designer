@@ -214,6 +214,32 @@ Play is a first-class, lazy-loaded Level A workflow. The editor header and compa
 
 The semantic interpreter now treats `%cS`, `%cc`, `%Sr`, `%Tp`, and `%Tl` as explicit state/capability projections. This raises the checked-in support catalog to 101 interpreted/rendered tags without changing the 12 source-aware edit surfaces or claiming new official pixel parity.
 
+## Phase 6 source-aware component transactions
+
+`rockbox/components/` owns a versioned definition catalog and immutable insertion/removal engine:
+
+```text
+component definition + property values + DeviceProfile
+  -> capability/screen/source validation
+  -> deterministic instance ID + collision-free handle/viewport
+  -> binary asset hash/path allocation
+  -> source template
+  -> stable prefixed CST nodes + instance metadata
+  -> one ProjectState history update
+
+component removal
+  -> verify exact recorded root boundary
+  -> remove only those CST nodes
+  -> retain assets referenced by another instance or any remaining source
+  -> never delete imported ThemePackage assets
+```
+
+For synthetic projects, the existing compiled screen becomes the initial authoritative document before insertion. For imported themes, insertion adds nodes around the existing lossless document without normalizing it. Marker comments remain source-only and never enter the visual layer projection.
+
+Generated binary assets are stored in `ProjectState.componentAssets`; imported bytes remain in `ThemePackage.assets`. Export combines the two by exact archive path and does not replace an imported path. A different generated bitmap receives a safe suffixed path. The initial battery strip is a deterministic 24-bit BMP rather than the legacy SVG data-URL placeholder.
+
+Components is a lazy-loaded focused workspace with a compact Screens entry. The UI displays the complete contract and explicit target restrictions. `scripts/phase6/` exercises every available definition/target/screen combination through the external pinned CheckWPS tools and binds the checked report to hashes of the catalog, engine, and contract.
+
 The accepted delivery architecture is a loopback-only local companion:
 
 ```text

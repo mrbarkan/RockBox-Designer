@@ -260,7 +260,12 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
         }
     });
 
-    const existingAssets = project.themePackage?.assets ?? [];
+    const existingAssetMap = new Map<string, ThemeAsset>();
+    for (const asset of project.themePackage?.assets ?? []) existingAssetMap.set(asset.archivePath, asset);
+    for (const asset of project.componentAssets ?? []) {
+        if (!existingAssetMap.has(asset.archivePath)) existingAssetMap.set(asset.archivePath, asset);
+    }
+    const existingAssets = [...existingAssetMap.values()];
     const existingBasenames = new Set(existingAssets.map(asset => asset.basename));
     const addedAssets: ThemeAsset[] = [];
     for (const [filename, dataUri] of Object.entries(assetsToInclude)) {

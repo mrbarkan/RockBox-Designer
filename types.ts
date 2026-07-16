@@ -1,5 +1,7 @@
 import type { RockboxDocument } from './rockbox/syntax';
 import type { ThemePackage } from './rockbox/packages';
+import type { ThemeAsset } from './rockbox/packages';
+import type { RockboxComponentInstance } from './rockbox/components';
 import type { DeviceProfileId } from './rockbox/devices';
 import type { DEFAULT_DEVICE_PROFILE_ID } from './rockbox/devices';
 
@@ -147,6 +149,8 @@ export interface ProjectState {
   sbsDocument?: RockboxDocument;
   fmsDocument?: RockboxDocument;
   themePackage?: ThemePackage;
+  componentAssets?: ThemeAsset[];
+  componentInstances?: RockboxComponentInstance[];
 }
 
 export type RockboxAstNode = RockboxTextNode | RockboxTagNode | RockboxConditionalNode;
