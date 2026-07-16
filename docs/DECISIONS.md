@@ -152,3 +152,17 @@ The companion and browser exchange base64 inside a bounded JSON request. Native 
 The canonical render harness launches the unmodified simulator with dummy audio/video drivers, triggers Rockbox's own `sim_trigger_screendump()` path, normalizes its firmware framebuffer BMP, and compares it with the deterministic browser pixel renderer. It performs two clean captures and refuses a report if the official pixels differ between runs or if any differing pixel is unclassified.
 
 **Consequences:** Phase 4 gains official parser and pixel evidence without crossing the existing GPL distribution boundary or adding a large client dependency. Validation that regenerates official evidence requires a matching Rockbox checkout, target toolchain, simulator build, and currently LLDB on macOS; ordinary project validation verifies the checked-in report offline. Official parser acceptance and pixel comparison remain evidence for the tested target/fixture only, not a blanket compatibility claim. A future WebAssembly port remains possible only after a separate ADR resolves licensing, build, memory, filesystem, bundle, and update obligations.
+
+## ADR-0015 — Use a deterministic browser state engine behind first-class Play mode
+
+**Status:** Accepted
+
+**Context:** Phase 5 requires playback, power, device, clock, FM, touch, and remote scenarios that drive real skin conditionals. The previous bottom panel mixed simulation controls into the visual editor and used `Date.now()` for momentary tags, so the same nominal state could render differently later and could not be shared as a stable scenario. The Pulp UX direction also requires Play to be a distinct, prominent workflow rather than another overloaded editor panel.
+
+**Decision:** `rockbox/simulator/` owns canonical scenario definitions, pure state transitions, target-capability enforcement, and stable `?play=<scenario-id>` links. A scenario always resets from the same simulation/song baseline. Runtime time is a monotonic `timelineMs` field: playback progress, seeking, RTC advancement, scrolling, `%mv`, and `%Tl` use that clock rather than wall-clock time. Manual changes intentionally mark the session as custom; preset links share only named deterministic scenarios.
+
+Play is a lazy-loaded Level A browser simulator. It uses the existing source-linked renderer inside a separate `DeviceShell` component. The shell may map click-wheel or verified touch input to simulation actions, but it never draws or owns theme pixels. The old duplicated simulation panel is removed; Screens retains a compact scenario strip and a prominent Play entry. Target profiles gate FMS, touch, album-art, RTC, and remote behavior before a state reaches the semantic interpreter. USB remains a labeled stock-firmware boundary.
+
+Rockbox status numbering, charger/USB truth values, RTC presence, RTL-language state, tuner/RDS state, and touch timeout behavior were rechecked at upstream commit `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`. The browser implementation remains independent and does not include upstream code.
+
+**Consequences:** Named scenarios are repeatable, URL-shareable, and immediately exercise source conditionals. iPod Classic cannot enter FM scenarios, and neither current profile pretends to support touch or remote LCD. The RTL state is a browser bidi preview, not a new official pixel-parity claim. The main production chunk is 584.83 KB / 172.99 KB gzip; Play is progressively disclosed in a separate 15.63 KB / 4.10 KB gzip chunk.

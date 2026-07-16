@@ -101,6 +101,22 @@ The canonical capture path was source-verified through:
 
 The development harness invokes that existing path on an unmodified external iPod Video simulator. Two clean captures at this SHA produced identical normalized pixel hashes. The repository checks in only the comparison report; the simulator, temporary disk, BMP, normalized screenshots, and diff images remain outside version control.
 
+## Phase 5 simulator-state reference
+
+Phase 5 re-inspected `apps/status.h`, `apps/status.c`, `apps/gui/skin_engine/skin_tokens.c`, `apps/gui/skin_engine/skin_parser.c`, `apps/gui/skin_engine/wps_internals.h`, and `lib/skin_parser/tag_table.c` at the recorded SHA.
+
+This confirmed:
+
+- `%mp` branch order for stop, play, pause, fast-forward, and fast-backward.
+- Separate charger-connected `%bp`, charging `%bc`, and USB-inserted `%bu` truth values.
+- RTC feature `%cc` and clock refresh tags.
+- Tick-relative momentary volume `%mv`.
+- `%Sr` as the current language's RTL state.
+- Target-gated `%Tp` and tick-relative `%Tl`, including its default ten-second timeout.
+- Tuner availability plus tuned/scan/stereo/signal/preset/RDS state.
+
+The application expresses those facts through independent TypeScript state transitions and target profiles. It does not copy or execute the upstream implementation.
+
 ## Licensing note
 
 Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox parser implementation has been copied into Rockbox Designer. The generated factual registry is explicitly flagged for human licensing review. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.

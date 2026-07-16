@@ -215,6 +215,9 @@ export interface SongMetadata {
 }
 
 export interface SimulationState {
+  // Monotonic browser-simulator time. Momentary Rockbox tags and scenario
+  // playback use this clock instead of wall-clock time so snapshots repeat.
+  timelineMs: number;
   batteryLevel: number; 
   isCharging: boolean; 
   externalPower: boolean; 
@@ -232,6 +235,11 @@ export interface SimulationState {
   volumeLastChanged: number; 
   diskActivity: boolean; 
   sublineCycle: number; 
+  textDirection: 'ltr' | 'rtl';
+  touchActive: boolean;
+  touchX: number;
+  touchY: number;
+  lastTouchAt: number;
 
   // Phase 3 screen-state projection. ACTIVITY_* values are sourced from
   // Rockbox apps/misc.h at the pinned upstream commit.

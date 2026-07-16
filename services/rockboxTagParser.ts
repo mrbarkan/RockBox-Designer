@@ -20,7 +20,7 @@ export const checkCondition = (condition: string | undefined, sim: SimulationSta
             const match = tagRaw.match(/mv\(([\d.]+)\)/);
             if (match) {
                 const durationSec = parseFloat(match[1]);
-                const elapsed = (Date.now() - sim.volumeLastChanged) / 1000;
+                const elapsed = (sim.timelineMs - sim.volumeLastChanged) / 1000;
                 // Branch 0 is "Active"
                 const isActive = elapsed < durationSec;
                 if (targetIndex === 0 && !isActive) return false;
