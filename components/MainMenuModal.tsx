@@ -10,6 +10,7 @@ interface MainMenuModalProps {
   onExport: () => void;
   onImportZip: () => void;
   onImportFont: () => void;
+  onShowCompatibility: () => void;
 }
 
 type MenuButtonProps = {
@@ -37,7 +38,7 @@ const MenuButton = memo(({ icon, label, onClick, onClose, subLabel }: MenuButton
 MenuButton.displayName = 'MenuButton';
 
 export const MainMenuModal: React.FC<MainMenuModalProps> = ({
-    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onImportFont 
+    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onImportFont, onShowCompatibility
 }) => {
   const [activeTab, setActiveTab] = useState<'menu' | 'about'>('menu');
 
@@ -82,6 +83,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} onClose={onClose} subLabel="Load existing .zip theme" />
                         <MenuButton icon="Aa" label="Import Font" onClick={onImportFont} onClose={onClose} subLabel="Load .fnt or convert TTF/OTF" />
+                        <MenuButton icon="▦" label="Compatibility Lab" onClick={onShowCompatibility} onClose={onClose} subLabel="Official parser and pixel evidence" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="⬇" label="Export Theme" onClick={onExport} onClose={onClose} subLabel="Compile to .zip for iPod" />
                     </div>

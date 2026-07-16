@@ -66,6 +66,32 @@ const SUPPORTED_CONDITIONAL_TAGS = new Set([
   'cf', 'Lc', 'tp', 'tt', 'tm', 'ts', 'tx'
 ]);
 
+const DIRECTLY_INTERPRETED_TAGS = new Set([
+  'V', 'Vl', 'Vi', 'Vd', 'VI', 'Vf', 'Vb', 'al', 'ac', 'ar', 'Fl', 'Fn', 's',
+  'xl', 'x', 'xd', 'Cl', 'Cd', 'pb', 'pv', 'tr', 'dr', 'T', 'LI', 'Li', 'LB'
+]);
+
+/**
+ * Phase 4 compatibility evidence reads this catalog instead of inferring
+ * support from the generated upstream name registry. A known name is not a
+ * claim that the browser understands or draws it.
+ */
+export const semanticTagSupport = {
+  interpreted: new Set([
+    ...DIRECTLY_INTERPRETED_TAGS,
+    ...SUPPORTED_TEXT_TAGS,
+    ...SUPPORTED_CONDITIONAL_TAGS
+  ]),
+  rendered: new Set([
+    ...DIRECTLY_INTERPRETED_TAGS,
+    ...SUPPORTED_TEXT_TAGS,
+    ...SUPPORTED_CONDITIONAL_TAGS
+  ]),
+  // These tags have both a visible property surface and a source-aware edit
+  // schema. Tags that merely have a low-level serializer helper are excluded.
+  editable: new Set(['V', 'Vl', 'Vi', 'Vf', 'Vb', 'x', 'xl', 'xd', 'pb', 'pv', 'Cl', 'T'])
+} as const;
+
 const numberValue = (value: string | undefined, fallback: number) => {
   if (value === '-' || value === '') return fallback;
   const parsed = Number.parseInt(value ?? '', 10);

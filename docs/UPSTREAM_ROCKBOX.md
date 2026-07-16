@@ -20,6 +20,8 @@ lib/skin_parser/skin_parser.c
 lib/skin_parser/skin_scan.c
 firmware/export/config/ipodvideo.h
 firmware/export/config/ipod6g.h
+firmware/screendump.c
+firmware/target/hosted/sdl/button-sdl.c
 tools/configure
 apps/gui/skin_engine/skin_parser.c
 apps/gui/skin_engine/skin_tokens.c
@@ -34,6 +36,7 @@ apps/gui/usb_screen.c
 apps/gui/quickscreen.c
 tools/convttf.c
 uisimulator/
+uisimulator/common/sim_tasks.c
 utils/themeeditor/
 docs/COPYING
 ```
@@ -85,6 +88,18 @@ Phase 2 inspected `apps/gui/skin_engine/skin_tokens.c`, `skin_render.c`, and `sk
 Phase 3 re-inspected `lib/skin_parser/tag_table.c` and `apps/gui/skin_engine/skin_tokens.c` for SBS/FMS tag identity and current-screen behavior. It inspected `apps/misc.h`, `apps/root_menu.c`, and `apps/gui/icon.h` for activity values, root-menu ordering, and firmware icon IDs; `apps/gui/quickscreen.c` for the firmware-owned quick-screen layout; `apps/gui/usb_screen.c` for the stock USB boundary; and `apps/radio/radio_skin.c` for FMS state.
 
 The font workflow inspected `tools/convttf.c`, `firmware/font.c`, and `firmware/export/font.h`. The application independently parses the factual RB12 header and metrics. Development tooling builds and executes the unmodified converter from the separate pinned checkout, writes its executable outside the repository, and verifies generated output in an external Rockbox simulator. No upstream source, object, executable, or generated third-party font is committed or distributed.
+
+## Phase 4 official render reference
+
+Phase 4 assessed the official parser and skin engine as a possible WebAssembly dependency, then retained them as external oracles under ADR-0014. The assessment inspected the GPL license boundary, target-generated build inputs, native/global memory model, Rockbox path conventions, browser-bundle implications, and SHA-pinned update process.
+
+The canonical capture path was source-verified through:
+
+- `firmware/target/hosted/sdl/button-sdl.c`, where simulator F5/keypad-0 input calls `sim_trigger_screendump()`.
+- `uisimulator/common/sim_tasks.c`, where the simulator task dispatches the screen-dump request.
+- `firmware/screendump.c`, which writes the target framebuffer as BMP.
+
+The development harness invokes that existing path on an unmodified external iPod Video simulator. Two clean captures at this SHA produced identical normalized pixel hashes. The repository checks in only the comparison report; the simulator, temporary disk, BMP, normalized screenshots, and diff images remain outside version control.
 
 ## Licensing note
 

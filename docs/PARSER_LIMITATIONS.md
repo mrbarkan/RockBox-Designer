@@ -77,7 +77,8 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** Phase 3 validates imported RB12 `.fnt` files and reports their actual height, ascent, maximum width, character range, and glyph count. The canvas still rasterizes text with browser fonts, so glyph width and shape can differ from the packaged bitmap font.
 - **Preservation status:** Font references and binaries remain exact.
 - **Diagnostic:** The Phase 3 guide distinguishes exact RB12 metrics and packaging from approximate browser glyph rendering; no pixel-parity claim is made.
-- **Planned phase:** Phase 4 simulator screenshot comparison will quantify the remaining pixel difference. Direct TTF/OTF browser conversion is separately blocked on a delivery/licensing decision.
+- **Current evidence:** Phase 4 repeats a clean official simulator capture twice and compares it with the deterministic browser render. The authored SBS reference differs at 6,315 of 76,800 pixels, all classified as native text/row layout or selector approximation; the surrounding background is identical.
+- **Planned phase:** Render actual RB12 glyph bitmaps and expand official fixture coverage before making broader pixel-parity claims.
 
 ## Invalid source intentionally makes the preview stale
 
@@ -101,4 +102,5 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** The Phase 1G runner measures exact source serialization, package manifests, asset hashes, browser diagnostics, support inventories, and optional CheckWPS results. Local third-party ZIPs stay ignored.
 - **Preservation status:** Both named real themes round-trip exactly with complete manifests. Adwaitapod passes CheckWPS; AMusicPod's original WPS has a documented official rejection while remaining byte-exact.
 - **Diagnostic:** `reports/themes/latest.json` records complete evidence and `reports/themes/latest.md` provides a readable summary.
-- **Planned phase:** Continue expanding per-construct evidence without weakening preservation; Phase 4 adds official render comparison.
+- **Current evidence:** Phase 4 adds per-tag/per-device CheckWPS evidence and a reproducible iPod Video framebuffer comparison. Untested constructs remain explicitly separate from officially validated rows.
+- **Planned phase:** Continue expanding per-construct and per-device evidence without weakening preservation.
