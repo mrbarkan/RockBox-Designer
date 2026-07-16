@@ -4,12 +4,12 @@ Last updated: 2026-07-16
 
 ## Current phase
 
-- **Phase:** Phase 6 preset and component ecosystem
-- **Branch:** `codex/phase-6-component-ecosystem`
-- **Merged milestones:** Phase 0 through Phase 5; deterministic Play merged in [PR #21](https://github.com/mrbarkan/RockBox-Designer/pull/21) at `0dfd761`.
-- **Status:** ADR-0016 replaces the legacy flat Add Element palette with 19 versioned, source-aware components. Insertions allocate deterministic IDs, safe image handles and viewport names, exact binary assets, stable CST boundaries, and one-step undo. Safe removal retains every asset still used by another instance or handwritten source.
-- **Scope boundary:** Components generate documented WPS/SBS/FMS source; USB remains firmware controlled. Imported source is never heuristically converted into a component. Touch stays visible but unavailable on both current non-touch profiles. Personal/public sharing is deferred until the format has more evidence.
-- **UX direction updated:** Components is the second focused Pulp workspace after Play. It is lazy-loaded, exposes the full source/asset/target contract, and remains quickly reachable from Screens without overloading the canvas.
+- **Phase:** Phase 7 full Rockbox simulator feasibility
+- **Branch:** `codex/phase-7-full-simulator-feasibility`
+- **Merged milestones:** Phase 0 through Phase 6; the source-aware component ecosystem merged in [PR #22](https://github.com/mrbarkan/RockBox-Designer/pull/22) at `9773386`.
+- **Status:** Phase 7 acceptance passes through the documented-blocker path. One pinned external iPod Video core builds and launch-smokes, the prepared official harness loads an authored theme and emits two reproducible framebuffers, and the checked report covers every required feasibility area.
+- **Scope boundary:** Level C WebAssembly was not started. ADR-0017 requires an explicit GPL distribution and browser-runtime decision before implementation. The browser client and editor remain independent with zero Phase 7 bundle bytes.
+- **UX direction preserved:** Play remains accurately labeled Level A, external official validation remains Level B, and Level C remains visibly unshipped rather than being represented by a partial native port.
 
 ## Current architecture
 
@@ -50,6 +50,9 @@ Last updated: 2026-07-16
 - `rockbox/components/` owns the versioned catalog, target/screen gates, deterministic identity allocation, source transactions, binary component assets, conflict reporting, and conservative shared-asset removal.
 - Component instance metadata records exact root CST nodes, definition/version, resolved properties, allocated handle/viewport names, and asset identities. Imported package assets remain separate and cannot be deleted by component removal.
 - Components is a focused lazy-loaded mode. The main chunk is 582.02 KB / 172.23 KB gzip; the Components UI is 9.31 KB / 2.75 KB gzip and its shared component-domain chunk is 14.25 KB / 5.15 KB gzip.
+- `scripts/phase7/` builds and launch-smokes one pinned native simulator core outside the repository, inspects the complete upstream SDL/build/runtime boundary, and writes a derived feasibility report without local paths or GPL artifacts.
+- ADR-0017 keeps actual Rockbox runtime delivery outside the browser until GPL source delivery, hosted isolation, build, thread/main-loop, dynamic-code, persistence, audio, performance, target, and maintenance choices are approved.
+- The measured canonical external simulator is a 1,581,480-byte iPod Video core with a 2,058,415-byte/129-file prepared minimum runtime. It excludes codecs/plugins and is development evidence, not a distributed application asset.
 
 ## Baseline findings
 
@@ -91,7 +94,7 @@ Latest passing validation on 2026-07-16:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 28 files, 161 tests
+npm test               passed — 29 files, 164 tests
 npm run build          passed — Vite production build; Play and Components code-split
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -109,6 +112,10 @@ Phase 4 compatibility passed — 386 tag/device rows across iPod Video and iPod 
 npm run test:phase5    passed — deterministic scenarios, transitions, conditionals, capability gates, and Play UI
 npm run test:phase6    passed — 11 component contract, collision, target, property, asset, persistence, package, and focused-UI tests
 Phase 6 official       passed — 53/53 available component/target/screen fixtures accepted by CheckWPS
+npm run test:phase7    passed — 3 feasibility boundary, stage, and independence tests
+Phase 7 native         passed — external iPod Video core built and launch-smoked with dummy SDL drivers
+Phase 7 feasibility    passed — native/theme/capture stages evidenced; 7 browser-port constraint groups documented
+Phase 7 report         passed — offline report verification, no local paths or bundled simulator artifacts
 ```
 
 Phase 1F evidence:
@@ -187,15 +194,27 @@ Phase 6 evidence:
 - The official report covers both current targets and every available WPS/SBS/FMS combination: 53 accepted, zero rejected. The touch-only definition is explicitly target-gated rather than tested against a fictional device.
 - Components is separate from Screens but has a quick insertion entry. The old random-ID, placeholder-data-URL Add Element workflow is removed.
 
+Phase 7 evidence:
+
+- The pinned iPod Video simulator core builds outside the repository after current Rockbox target generation, a generated-Makefile-only Apple Clang feasibility override, `make bin`, and minimum runtime installation.
+- The builder launch-smokes the result with dummy SDL video/audio. Codecs and plugins are excluded; the default full build reaches GCC-only codec code and is not represented as supported by Apple Clang.
+- The prepared minimum-runtime official harness loads an authored SBS and deterministic settings. Two clean firmware framebuffer dumps have the same normalized SHA-256.
+- A fresh stock runtime also launches and captures but uses stock configuration in that harness; the report keeps this limitation visible and does not substitute those pixels for the canonical evidence.
+- Source inspection covers SDL display/input, task threads and timing, audio, filesystem root, target generation, dynamic codec/plugin loading, GPL distribution, Emscripten, persistence, asset mounting, build size, performance, and upstream maintenance at the exact registry SHA.
+- The report records seven explicit browser-port constraint groups. Prototype stages 4 and 5 remain blocked by the Level C distribution/runtime decision, and target switching remains deferred.
+- No browser code changed. No Rockbox source, object, executable, runtime asset, screenshot, or WebAssembly module is committed.
+
 ## Known blockers
 
-- No Phase 6 acceptance blocker is open. The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
+- No Phase 7 acceptance blocker is open; the execution plan explicitly accepts a documented feasibility report that explains the blockers while the editor remains independent.
+- Level C implementation is blocked on the owner's GPL distribution and browser-runtime architecture decision recorded in ADR-0017. This is not permission to start a partial WebAssembly port.
+- The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Complete Phase 6 review and merge, then begin the Phase 7 full Rockbox simulator feasibility research. Stop before implementing a browser port if the required GPL, build, memory, filesystem, bundle, or upstream-maintenance decisions are unresolved.
+Review and merge the Phase 7 evidence. Before any Level C WebAssembly implementation, obtain the ADR-0017 owner decision covering GPL source delivery, hosted isolation, browser support, target scope, codec/plugin packaging, persistence, audio, performance budgets, and upstream maintenance. Phase 8 has not started.
 
 ## Compatibility summary
 
-Phase 6 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, insert and customize source-aware components, undo or safely remove exact instances, switch among source-linked screen states, open first-class Play, share deterministic scenarios, inspect per-tag/per-device support, and export without losing unsupported syntax or shared assets. Full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.
+Phase 7 preserves the Phase 6 dogfood-ready browser editor and adds an honest boundary for the actual Rockbox runtime. Levels A and B remain available without native dependencies; one external native target, authored-theme load, and reproducible screenshot path are evidenced. Level C, full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.

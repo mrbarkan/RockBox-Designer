@@ -240,6 +240,27 @@ Generated binary assets are stored in `ProjectState.componentAssets`; imported b
 
 Components is a lazy-loaded focused workspace with a compact Screens entry. The UI displays the complete contract and explicit target restrictions. `scripts/phase6/` exercises every available definition/target/screen combination through the external pinned CheckWPS tools and binds the checked report to hashes of the catalog, engine, and contract.
 
+## Phase 7 full simulator feasibility boundary
+
+The actual Rockbox UI simulator remains an external development runtime:
+
+```text
+Rockbox Designer browser
+  -> Level A independent state + source-linked renderer
+  -> no Rockbox runtime dependency
+
+Phase 7 development evidence
+  -> pinned external Rockbox checkout
+  -> external target-generated iPod Video simulator core
+  -> private minimum simulator disk
+  -> authored-theme load + firmware framebuffer dump
+  -> derived checked report only
+```
+
+`scripts/phase7/build-native-ipodvideo.ts` generates and builds the native core outside the repository, installs the minimum theme runtime, and launch-smokes it with dummy SDL drivers. `scripts/phase7/run-simulator-feasibility.ts` checks the exact upstream SHA, inspects the simulator's build/thread/input/display/audio/filesystem/dynamic-loader paths, binds the result to the existing reproducible Phase 4 capture, and writes no local paths or simulator bytes.
+
+ADR-0017 keeps Level C separate. A browser port would require a GPL distribution product plus a maintained Emscripten host build, pthread/main-loop architecture, virtual and persistent simulator disk, codec/plugin strategy, audio behavior, performance budgets, and an upstream refresh process. Until approved, the browser bundle has zero Phase 7 runtime bytes and Play remains accurately labeled Level A.
+
 The accepted delivery architecture is a loopback-only local companion:
 
 ```text
