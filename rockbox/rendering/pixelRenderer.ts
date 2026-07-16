@@ -60,13 +60,16 @@ export const renderToPixelImage = (
       fill(image, { ...operation.rect, width: operation.rect.width * operation.value }, color(operation.foreground));
     }
     if (operation.type === 'drawText') {
-      const estimatedWidth = operation.text.length * 4;
+      const text = operation.direction === 'rtl'
+        ? Array.from(operation.text).reverse().join('')
+        : operation.text;
+      const estimatedWidth = text.length * 4;
       const x = operation.align === 'center'
         ? operation.rect.x + Math.max(0, (operation.rect.width - estimatedWidth) / 2)
         : operation.align === 'right'
           ? operation.rect.x + Math.max(0, operation.rect.width - estimatedWidth)
           : operation.rect.x;
-      drawDeterministicText(image, operation.text, Math.round(x), Math.round(operation.rect.y), color(operation.color), operation.rect.width);
+      drawDeterministicText(image, text, Math.round(x), Math.round(operation.rect.y), color(operation.color), operation.rect.width);
     }
     if (operation.type === 'drawAlbumArt') {
       fill(image, operation.rect, [24, 24, 24]);

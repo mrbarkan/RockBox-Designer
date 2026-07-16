@@ -18,6 +18,7 @@
     "test:font-helper": "tsx scripts/fonts/run-local-helper-validation.ts",
     "test:phase4-render": "tsx scripts/phase4/run-official-render-comparison.ts",
     "test:phase4-compatibility": "tsx scripts/phase4/run-compatibility-dashboard.ts",
+    "test:phase5": "vitest run tests/simulator",
     "test:themes": "npm run themes:fixtures:verify && tsx scripts/themes/run-theme-compatibility.ts",
     "test:visual": "vitest run tests/rendering/pixelRenderer.test.ts",
     "test:watch": "vitest",

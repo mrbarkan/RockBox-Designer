@@ -1,4 +1,5 @@
 import type { SimulationState, SongMetadata } from '../../types';
+import type { DeviceCapabilities } from '../devices';
 import { splitRawArguments } from '../editing/knownTags';
 import {
   parseRockbox,
@@ -29,6 +30,7 @@ export type InterpreterOptions = {
   settings?: Record<string, string | number | boolean | undefined>;
   branchOverrides?: BranchOverrides;
   screen?: SkinScreen;
+  capabilities?: Partial<DeviceCapabilities>;
 };
 
 type Preload = { path: string; x: number; y: number; count: number };
@@ -54,7 +56,7 @@ type Context = {
 const SUPPORTED_TEXT_TAGS = new Set([
   'it', 'ia', 'id', 'iA', 'ig', 'iy', 'in', 'ik', 'ic', 'fn',
   'pc', 'pr', 'pt', 'pp', 'pe', 'fc', 'fb', 'bl', 'pv', 'mp',
-  'mm', 'ps', 'cH', 'cM', 'cl', 'cP', 'cp', 'Sx', 'cs',
+  'mm', 'ps', 'cH', 'cM', 'cS', 'cl', 'cP', 'cp', 'Sx', 'cs',
   'Lt', 'LT', 'LN', 'LR', 'LC',
   'tf', 'ta', 'tb', 'tr', 'tl', 'th', 'Tn', 'Tf', 'Ti', 'Tc', 'ty', 'tz',
   'QT', 'QB', 'QL', 'QR', 'Qt', 'Qb', 'Ql', 'Qr'
@@ -63,7 +65,7 @@ const SOURCE_ONLY_TAGS = new Set(['wd', 'we', 'Fl', 'VI', 's', 't', 'VB', 'Lb', 
 const SUPPORTED_CONDITIONAL_TAGS = new Set([
   'if', 'and', 'or', 'mp', 'mm', 'bl', 'pv', 'ps', 'mh', 'bc', 'bp', 'bu',
   'lh', 'C', 'mv', 'it', 'ia', 'id', 'pe', 'pt', 'fc', 'ss', 'cs',
-  'cf', 'Lc', 'tp', 'tt', 'tm', 'ts', 'tx'
+  'cf', 'cc', 'Lc', 'Sr', 'Tp', 'Tl', 'tp', 'tt', 'tm', 'ts', 'tx'
 ]);
 
 const DIRECTLY_INTERPRETED_TAGS = new Set([
@@ -147,7 +149,7 @@ const relativeRect = (context: Context, values: string[], fallback: Rect): Rect 
 const textForTag = (tag: TagNode, options: InterpreterOptions) => {
   const { song, sim } = options;
   const elapsed = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-  const [clockHour = '0', clockMinute = '00'] = sim.currentTime.split(':');
+  const [clockHour = '0', clockMinute = '00', clockSecond = '00'] = sim.currentTime.split(':');
   const hour = Number.parseInt(clockHour, 10) || 0;
   const values: Record<string, string> = {
     it: song.title || 'No title', ia: song.artist || 'No artist', id: song.album || 'No album',
@@ -157,6 +159,7 @@ const textForTag = (tag: TagNode, options: InterpreterOptions) => {
     pe: String(song.totalTracks), fc: song.format, fb: String(song.kbps), bl: String(sim.batteryLevel),
     pv: `${sim.volume} dB`, mp: sim.playStatus, mm: sim.repeat, ps: sim.shuffle ? 'Shuffle' : '',
     cH: String(hour).padStart(2, '0'), cM: clockMinute.slice(0, 2).padStart(2, '0'),
+    cS: clockSecond.slice(0, 2).padStart(2, '0'),
     cl: String(hour % 12 || 12),
     cP: hour >= 12 ? 'PM' : 'AM',
     cp: hour >= 12 ? 'pm' : 'am',
@@ -248,23 +251,36 @@ function tagValue(tag: TagNode, options: InterpreterOptions): string | number | 
   if (tag.name === 'bu') return sim.isUsb;
   if (tag.name === 'lh') return sim.diskActivity;
   if (tag.name === 'C') return Boolean(song.albumArt);
-  if (tag.name === 'mv') return Date.now() - sim.volumeLastChanged < Number.parseFloat(values[0] ?? '1') * 1000;
+  if (tag.name === 'mv') {
+    const elapsed = sim.timelineMs - sim.volumeLastChanged;
+    return elapsed >= 0 && elapsed < Number.parseFloat(values[0] ?? '1') * 1000;
+  }
   if (tag.name === 'it') return song.title;
   if (tag.name === 'ia') return song.artist;
   if (tag.name === 'id') return song.album;
   if (tag.name === 'fc') return song.format;
   if (tag.name === 'cs') return sim.currentActivity;
   if (tag.name === 'cf') return sim.clock12Hour ? 2 : 1;
+  if (tag.name === 'cc') return options.capabilities?.rtc ?? true;
+  if (tag.name === 'Sr') return sim.textDirection === 'rtl';
+  if (tag.name === 'Tp') return options.capabilities?.touchscreen ?? false;
+  if (tag.name === 'Tl') {
+    const timeout = [...values].reverse()
+      .map(value => Number.parseFloat(value))
+      .find(Number.isFinite) ?? 10;
+    const elapsed = sim.timelineMs - sim.lastTouchAt;
+    return (options.capabilities?.touchscreen ?? false) && sim.touchActive && elapsed >= 0 && elapsed < timeout * 1000;
+  }
   if (tag.name === 'Lt') return sim.menuTitle;
   if (tag.name === 'LT') return sim.menuItems[sim.menuSelectedIndex] ?? '';
   if (tag.name === 'LN') return sim.menuSelectedIndex + 1;
   if (tag.name === 'LR') return sim.menuSelectedIndex;
   if (tag.name === 'Lc') return true;
-  if (tag.name === 'tp') return sim.fmAvailable;
-  if (tag.name === 'tt') return sim.fmTuned;
-  if (tag.name === 'tm') return sim.fmScanMode;
-  if (tag.name === 'ts') return sim.fmStereo;
-  if (tag.name === 'tx') return sim.fmRdsAvailable;
+  if (tag.name === 'tp') return (options.capabilities?.fmRadio ?? true) && sim.fmAvailable;
+  if (tag.name === 'tt') return (options.capabilities?.fmRadio ?? true) && sim.fmTuned;
+  if (tag.name === 'tm') return (options.capabilities?.fmRadio ?? true) && sim.fmScanMode;
+  if (tag.name === 'ts') return (options.capabilities?.fmRadio ?? true) && sim.fmStereo;
+  if (tag.name === 'tx') return (options.capabilities?.fmRadio ?? true) && sim.fmRdsAvailable;
   if (tag.name === 'tf' || tag.name === 'Tf') return sim.fmFrequency;
   if (tag.name === 'tr') return sim.fmSignalStrength;
   if (tag.name === 'Ti') return sim.fmPresetIndex;
@@ -456,7 +472,7 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
     } else {
       const operation: Extract<RenderOperation, { type: 'drawText' }> = {
         type: 'drawText', rect, text, color: current.foreground, fontSize: current.fontSize,
-        fontWeight: current.fontWeight, align: current.align, scroll: current.scrollNext,
+        fontWeight: current.fontWeight, align: current.align, direction: options.sim.textDirection, scroll: current.scrollNext,
         scrollOffset: options.sim.sublineCycle * 20, source: sourceLink(node)
       };
       operations.push(operation);
@@ -531,6 +547,7 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
         fontSize: size,
         fontWeight: weight,
         align: 'left',
+        direction: options.sim.textDirection,
         scroll: isSelected,
         scrollOffset: options.sim.sublineCycle * 20,
         source: link
@@ -581,6 +598,7 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
       fontSize: size,
       fontWeight: 'normal',
       align: 'center',
+      direction: options.sim.textDirection,
       scroll: false,
       scrollOffset: 0,
       source: link

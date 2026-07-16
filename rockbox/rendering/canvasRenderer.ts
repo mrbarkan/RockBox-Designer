@@ -114,6 +114,7 @@ export const renderSemanticToCanvas = (
       ctx.font = `${operation.fontWeight} ${Math.max(6, Math.round(operation.fontSize))}px "Cantarell", "Noto Sans", sans-serif`;
       ctx.fillStyle = operation.color;
       ctx.textAlign = operation.align;
+      ctx.direction = operation.direction;
       const anchor = operation.align === 'left' ? rect.x : operation.align === 'center' ? rect.x + rect.width / 2 : rect.x + rect.width;
       const measured = ctx.measureText(operation.text).width;
       let x = anchor;

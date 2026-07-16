@@ -36,6 +36,7 @@ interface EditorCanvasProps {
   onUpdateAstText?: (nodeId: string, value: string) => void;
   onUpdateAstImage?: (nodeId: string, filename: string) => void;
   semanticResult?: SemanticResult | null;
+  readOnly?: boolean;
 }
 
 export const EditorCanvas: React.FC<EditorCanvasProps> = ({
@@ -53,7 +54,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   onUpdateAstViewport,
   onUpdateAstText,
   onUpdateAstImage,
-  semanticResult
+  semanticResult,
+  readOnly = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -128,7 +130,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           const renderList = sourcePreviewActive
               ? evaluateAstTheme(project, activeScreen, sim, song)
               : evaluateTheme(project, activeScreen, sim, song);
-          renderToCanvas(ctx, renderList, imageCache);
+          renderToCanvas(ctx, renderList, imageCache, sim.textDirection);
       }
 
   }, [project, activeScreen, sim, song, imageCache, screenWidth, screenHeight, sourcePreviewActive, semanticResult]);
@@ -167,6 +169,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (readOnly) return;
     if ((!draggingId && !resizingId && !astDragging) || !containerRef.current) return;
     const deltaX = (e.clientX - dragStart.x) / scale;
     const deltaY = (e.clientY - dragStart.y) / scale;
@@ -203,8 +206,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   };
 
   // Only render interaction boxes for visible elements on current screen
-  const interactionElements = project.elements.filter(el => el.screen === activeScreen);
-  const astViewports = sourcePreviewActive
+  const interactionElements = readOnly ? [] : project.elements.filter(el => el.screen === activeScreen);
+  const astViewports = !readOnly && sourcePreviewActive
       ? semanticResult
           ? semanticResult.operations.filter(operation => operation.type === 'setViewport').map(operation => ({
               id: operation.source.nodeId,
@@ -215,7 +218,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }))
           : listSyntaxViewports(syntaxDocument)
       : [];
-  const astTextNodes = sourcePreviewActive
+  const astTextNodes = !readOnly && sourcePreviewActive
       ? semanticResult
           ? semanticResult.operations.filter(operation => operation.type === 'drawText').map(operation => ({
               id: operation.source.nodeId,
@@ -227,7 +230,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }))
           : listSyntaxTextNodes(syntaxDocument, project.settings.uiFont)
       : [];
-  const astImageNodes = sourcePreviewActive
+  const astImageNodes = !readOnly && sourcePreviewActive
       ? semanticResult
           ? semanticResult.operations.filter(operation => operation.type === 'drawBitmap').map(operation => ({
               id: operation.source.nodeId,
@@ -239,7 +242,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           }))
           : listSyntaxImageNodes(syntaxDocument, project.settings.uiFont)
       : [];
-  const semanticElements = sourcePreviewActive && semanticResult
+  const semanticElements = !readOnly && sourcePreviewActive && semanticResult
       ? semanticResult.operations.filter(operation =>
           ['drawProgress', 'drawAlbumArt', 'drawRect', 'debugOverlay'].includes(operation.type)
         )

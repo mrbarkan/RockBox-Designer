@@ -42,7 +42,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 ## Conditional expression evaluation is intentionally bounded
 
 - **Example:** `%?if(%pv, =, -90)<Muted|Audible>` or nested `%?and`/`%?or` expressions.
-- **Current behavior:** Common direct state tests plus nested `%if`, `%and`, `%or`, `%St`, and `%ss` operands used by the Adwaitapod WPS select branches automatically. False one-branch conditionals select no branch, and `%Vl` definitions remain hidden until an active `%Vd` enables their label. Every conditional and branch still appears in the logic panel and can be previewed manually.
+- **Current behavior:** Common direct state tests plus nested `%if`, `%and`, `%or`, `%St`, and `%ss` operands used by the Adwaitapod WPS select branches automatically. Phase 5 adds deterministic RTC/RTL/touch capability state for `%cc`, `%Sr`, `%Tp`, and `%Tl`; target profiles gate FM and touch before evaluation. False one-branch conditionals select no branch, and `%Vl` definitions remain hidden until an active `%Vd` enables their label. Every conditional and branch still appears in the logic panel and can be previewed manually.
 - **Preservation status:** Exact; inactive and unsupported branch source remains present.
 - **Diagnostic:** Expression tags outside the supported evaluator remain preserved and are marked unsupported rather than being silently treated as true.
 - **Planned phase:** Expand operands only alongside simulator state and official behavior evidence.
@@ -87,6 +87,22 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Preservation status:** The invalid text is preserved exactly.
 - **Diagnostic:** Line/column parser diagnostics appear in the source editor and source-linked panel.
 - **Planned phase:** Keep this safety contract as semantic coverage expands.
+
+## Level A simulation is not full firmware behavior
+
+- **Example:** Selecting USB connected, pressing the click wheel, or opening the remote-display scenario.
+- **Current behavior:** Named Phase 5 scenarios deterministically drive the documented semantic state and real condition branches. The device shell maps controls to browser actions but remains separate from the screen renderer. USB is still a stock firmware boundary, and unsupported touch/remote scenarios stay disabled.
+- **Preservation status:** Simulation never rewrites source.
+- **Diagnostic:** Play labels itself Level A and explains unavailable target capabilities.
+- **Planned phase:** A full simulator remains separate feasibility work; do not infer firmware behavior from Level A state controls.
+
+## RTL preview is not native bidi parity
+
+- **Example:** The right-to-left scenario with Arabic metadata and `%?Sr`.
+- **Current behavior:** `%Sr` selects the RTL-language branch and browser canvas text uses RTL direction.
+- **Preservation status:** Metadata and source remain unchanged unless the user explicitly edits them.
+- **Diagnostic:** Phase 5 documentation and Play identify this as a browser preview.
+- **Planned phase:** Compare native font shaping and bidi pixels with official target output before claiming parity.
 
 ## Newly uploaded assets still enter through a compatibility bridge
 

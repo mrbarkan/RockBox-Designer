@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ProjectState, ElementType, WpsElement, ImageElement, SongMetadata, SimulationState, ThemeConfig, LayoutStyle, ThemeFont, ScreenType, User } from './types';
-import { DEFAULT_PROJECT, DEFAULT_SONG, DEFAULT_SIMULATION } from './constants';
+import { DEFAULT_PROJECT } from './constants';
 import { EditorCanvas } from './components/EditorCanvas';
-import { SimulationPanel } from './components/SimulationPanel';
+import { ScenarioStrip } from './components/ScenarioStrip';
 import { SourceEditor } from './components/SourceEditor';
 import { RemixModal } from './components/RemixModal';
 import { ElementLibraryModal } from './components/ElementLibraryModal';
@@ -28,6 +28,19 @@ import { BranchOverrides, interpretSkin, SemanticResult, SkinScreen } from './ro
 import { parseRb12Font } from './rockbox/fonts';
 import { createThemeAsset } from './rockbox/packages';
 import { convertFontWithCompanion } from './services/fontCompanion';
+import {
+  createScenarioSession,
+  enforceTargetCapabilities,
+  getSimulatorScenario,
+  scenarioAvailability,
+  scenarioFromSearch,
+  transitionSimulator,
+  type ActiveSimulatorScenario,
+  type SimulatorAction,
+  type SimulatorScenarioId,
+  type SimulatorSession,
+  type SimulatorSurface
+} from './rockbox/simulator';
 
 // Refactored Sub-Components
 import { EditorToolbar } from './components/EditorToolbar';
@@ -39,6 +52,11 @@ const CompatibilityDashboardModal = React.lazy(async () => {
   return { default: module.CompatibilityDashboardModal };
 });
 
+const PlayMode = React.lazy(async () => {
+  const module = await import('./components/PlayMode');
+  return { default: module.PlayMode };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -47,16 +65,14 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showCloudProjects, setShowCloudProjects] = useState(false);
 
-  const [song, setSong] = useState<SongMetadata>(DEFAULT_SONG);
-  const [sim, setSim] = useState<SimulationState>({
-      ...DEFAULT_SIMULATION,
-      externalPower: false,
-      volumeLastChanged: 0,
-      diskActivity: false,
-      sublineCycle: 0
-  });
+  const initialSimulatorSession = useRef(createScenarioSession('normal-playback')).current;
+  const [song, setSong] = useState<SongMetadata>(initialSimulatorSession.song);
+  const [sim, setSim] = useState<SimulationState>(initialSimulatorSession.simulation);
   
-  const [activeScreen, setActiveScreen] = useState<ScreenType>('wps');
+  const [activeScreen, setActiveScreen] = useState<ScreenType>(initialSimulatorSession.activeScreen);
+  const [simulatorSurface, setSimulatorSurface] = useState<SimulatorSurface>(initialSimulatorSession.surface);
+  const [activeScenario, setActiveScenario] = useState<ActiveSimulatorScenario>('normal-playback');
+  const [showPlay, setShowPlay] = useState(false);
   const [rightPanelMode, setRightPanelMode] = useState<'inspector' | 'files' | 'settings'>('inspector');
   const [showGrid, setShowGrid] = useState(true);
   const [showGuides, setShowGuides] = useState(true);
@@ -111,7 +127,8 @@ export default function App() {
       'qs right': project.settings.qsRight
     },
     branchOverrides,
-    screen: activeScreen as SkinScreen
+    screen: activeScreen as SkinScreen,
+    capabilities: deviceProfile.capabilities
   }) : null, [
     activeDocument,
     activeScreen,
@@ -155,6 +172,36 @@ export default function App() {
         }
       : { ...interpretedSkin, stale: true };
   }, [interpretedSkin, project.settings.name, activeScreen]);
+  const simulatorSession: SimulatorSession = {
+    simulation: sim,
+    song,
+    activeScreen,
+    surface: simulatorSurface
+  };
+  const simulatorSessionRef = useRef(simulatorSession);
+  simulatorSessionRef.current = simulatorSession;
+
+  const applySimulatorSession = (session: SimulatorSession) => {
+    simulatorSessionRef.current = session;
+    setSim(session.simulation);
+    setSong(session.song);
+    setActiveScreen(session.activeScreen);
+    setSimulatorSurface(session.surface);
+  };
+
+  const handleApplyScenario = (scenarioId: SimulatorScenarioId) => {
+    const scenario = createScenarioSession(scenarioId);
+    const availability = scenarioAvailability(getSimulatorScenario(scenarioId), deviceProfile);
+    if (!availability.available) return;
+    applySimulatorSession(enforceTargetCapabilities(scenario, deviceProfile));
+    setActiveScenario(scenarioId);
+  };
+
+  const handleSimulatorAction = (action: SimulatorAction) => {
+    const next = transitionSimulator(simulatorSessionRef.current, action, deviceProfile);
+    applySimulatorSession(next);
+    if (action.type !== 'advance') setActiveScenario('custom');
+  };
 
   // Refs for Toolbar Inputs
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,15 +211,14 @@ export default function App() {
   // -- Heartbeat for Animation & Timers --
   useEffect(() => {
       const interval = setInterval(() => {
-          setSim(prev => ({
-              ...prev,
-              sublineCycle: prev.sublineCycle + 0.1, // Increment 0.1s every 100ms
-              // Also auto-increment song progress if playing
-              currentTime: `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
-          }));
+          const previous = simulatorSessionRef.current;
+          const next = transitionSimulator(previous, { type: 'advance', milliseconds: 100 }, deviceProfile);
+          simulatorSessionRef.current = next;
+          setSim(next.simulation);
+          if (next.song.currentSec !== previous.song.currentSec) setSong(next.song);
       }, 100);
       return () => clearInterval(interval);
-  }, []);
+  }, [deviceProfile.id]);
 
   useEffect(() => {
       const session = storageService.getSession();
@@ -180,7 +226,37 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const linkedScenario = scenarioFromSearch(window.location.search);
+    if (!linkedScenario) return;
+    const availability = scenarioAvailability(getSimulatorScenario(linkedScenario), deviceProfile);
+    if (!availability.available) return;
+    applySimulatorSession(enforceTargetCapabilities(createScenarioSession(linkedScenario), deviceProfile));
+    setActiveScenario(linkedScenario);
+    setShowPlay(true);
+  }, []);
+
+  useEffect(() => {
+    if (activeScenario !== 'custom') {
+      const availability = scenarioAvailability(getSimulatorScenario(activeScenario), deviceProfile);
+      if (!availability.available) {
+        handleApplyScenario('normal-playback');
+        return;
+      }
+    }
+    applySimulatorSession(enforceTargetCapabilities(simulatorSessionRef.current, deviceProfile));
+  }, [deviceProfile.id]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+            e.preventDefault();
+            setShowPlay(true);
+            return;
+        }
+        if (e.key === 'Escape' && showPlay) {
+            setShowPlay(false);
+            return;
+        }
         if (['Delete', 'Backspace'].includes(e.key)) {
             const activeTag = document.activeElement?.tagName.toLowerCase();
             if (activeTag === 'input' || activeTag === 'textarea') return;
@@ -191,7 +267,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [project.selectedElementIds, project.elements]);
+  }, [project.selectedElementIds, project.elements, showPlay]);
 
   useEffect(() => {
       if (project.validationReport && project.validationReport.length > 0) {
@@ -358,8 +434,12 @@ export default function App() {
     if (!file) return;
     try {
         const metadata = await parseAudioFile(file);
-        setSong(metadata);
-        setSim(prev => ({ ...prev, playStatus: 'play' }));
+        applySimulatorSession(transitionSimulator(
+          { ...simulatorSessionRef.current, song: metadata },
+          { type: 'playback', status: 'play' },
+          deviceProfile
+        ));
+        setActiveScenario('custom');
     } catch (error) { alert("Failed to load audio file."); }
     e.target.value = '';
   };
@@ -510,6 +590,20 @@ export default function App() {
           <CompatibilityDashboardModal isOpen onClose={() => setShowCompatibility(false)} initialDeviceId={deviceProfile.id} />
         </React.Suspense>
       ) : null}
+      {showPlay ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Play mode…</div>}>
+          <PlayMode
+            project={project}
+            profile={deviceProfile}
+            session={simulatorSession}
+            activeScenario={activeScenario}
+            semanticResult={semanticResult}
+            onClose={() => setShowPlay(false)}
+            onApplyScenario={handleApplyScenario}
+            onAction={handleSimulatorAction}
+          />
+        </React.Suspense>
+      ) : null}
       <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 
@@ -547,12 +641,16 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 bg-[#2a2a2a]">
         <EditorHeader 
             project={project} user={user} onLogout={handleLogout}
-            activeScreen={activeScreen} setActiveScreen={setActiveScreen}
+            activeScreen={activeScreen} setActiveScreen={screen => {
+              setActiveScreen(screen);
+              setActiveScenario('custom');
+            }}
             selectedElement={selectedElement} rightPanelMode={rightPanelMode}
             onAlign={alignElement} showSource={showSource} setShowSource={setShowSource}
             showGrid={showGrid} setShowGrid={setShowGrid} zoom={zoom} setZoom={setZoom}
             debugMode={debugMode} setDebugMode={setDebugMode}
             useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
+            onOpenPlay={() => setShowPlay(true)}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
             <EditorCanvas 
@@ -573,7 +671,11 @@ export default function App() {
               semanticResult={semanticResult}
             />
         </div>
-        <SimulationPanel sim={sim} meta={song} activeScreen={activeScreen} onUpdateSim={(updates) => setSim(prev => ({ ...prev, ...updates }))} onUpdateMeta={(updates) => setSong(prev => ({ ...prev, ...updates }))} onLoadTrack={handleTrackUpload} />
+        <ScenarioStrip
+          activeScenario={activeScenario}
+          onApplyScenario={handleApplyScenario}
+          onOpenPlay={() => setShowPlay(true)}
+        />
       </div>
 
       {/* RIGHT SIDEBAR */}

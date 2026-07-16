@@ -4,12 +4,12 @@ Last updated: 2026-07-16
 
 ## Current phase
 
-- **Phase:** Phase 4 official engine validation and render comparison
-- **Branch:** `codex/phase-4-official-render-comparison`
-- **Merged milestones:** Phase 0 through Phase 3; the accepted local font companion merged in [PR #19](https://github.com/mrbarkan/RockBox-Designer/pull/19) at `c20cd40`.
-- **Status:** ADR-0014 completes the official-parser WebAssembly feasibility gate and keeps Rockbox GPL code outside the browser bundle. The canonical iPod Video SBS comparison now captures the real simulator framebuffer twice, requires reproducible pixels, generates a browser/official/diff artifact set locally, and classifies every difference. The Compatibility Lab exposes 386 evidence-backed tag/device rows without collapsing them into a percentage.
-- **Scope boundary:** Official parser acceptance and pixel evidence apply only to the recorded targets and fixtures. Menu/list content remains a clearly labeled firmware projection, USB stays firmware controlled, and native Rockbox bitmap glyphs still differ from the browser approximation.
-- **UX direction updated:** Pulp-inspired specialized studio modes; Canva-style direct manipulation concentrated in Screens mode; Play elevated to a first-class workflow; Source remains authoritative; Rockbox constraints remain explicit. The full studio migration is intentionally deferred to focused follow-up pull requests after this validation foundation.
+- **Phase:** Phase 5 device-state simulator
+- **Branch:** `codex/phase-5-device-state-simulator`
+- **Merged milestones:** Phase 0 through Phase 4; official render validation and the Compatibility Lab merged in [PR #20](https://github.com/mrbarkan/RockBox-Designer/pull/20) at `73d87ad`.
+- **Status:** ADR-0015 adds a deterministic simulation domain and a lazy-loaded, first-class Level A Play mode. Named scenarios drive the shared source-linked semantic renderer, share through stable query links, and reset from a canonical baseline. Device profiles prevent unsupported FM, touch, remote, RTC, or album-art state from becoming an implied target feature.
+- **Scope boundary:** Play simulates design state, not the complete firmware. USB stays firmware controlled; click-wheel/touch inputs change only documented browser state; current profiles expose neither touch nor remote LCD; RTL is a browser preview rather than a native bidi parity claim.
+- **UX direction updated:** The first focused Pulp migration is delivered through prominent Play access and a compact Screens scenario strip. Canva-style direct manipulation remains concentrated in Screens mode; Source remains authoritative; Rockbox constraints remain explicit. Remaining studio modes stay isolated to later pull requests.
 
 ## Current architecture
 
@@ -43,7 +43,10 @@ Last updated: 2026-07-16
 - The Font Workshop and protocol client add 9.25 KB minified / 2.86 KB gzip to the Phase 3 production bundle; no native or GPL artifact is present in that delta.
 - `scripts/phase4/` builds no browser dependency. It runs pinned external CheckWPS targets and an external simulator, normalizes screenshots, computes a classified pixel diff, and writes offline-verifiable evidence reports.
 - `rockbox/semantics/` exports an explicit support catalog so the Compatibility Lab does not confuse 193 known tag names with the smaller interpreted/rendered subset.
-- The Compatibility Lab is an advanced, code-split evidence modal in the existing UI. The main chunk grows only 1.94 KB minified / 0.73 KB gzip; the 129.33 KB / 8.88 KB gzip evidence chunk loads on demand. The new Pulp UX guideline is checked in, but the full mode-based studio shell is not started on this Phase 4 branch.
+- The Compatibility Lab remains an advanced code-split evidence modal. The checked-in Pulp guideline now informs the first focused migration—Play—without widening Phase 5 into the remaining Theme/Components/Assets/Logic studio modes.
+- `rockbox/simulator/` owns deterministic scenarios, pure state transitions, capability enforcement, and stable scenario links. `timelineMs` replaces wall-clock reads for playback, seek, RTC, scrolling, `%mv`, and `%Tl`.
+- Play is a first-class, lazy-loaded Level A workflow. `DeviceShell` maps physical or verified touch input around the existing renderer without owning screen pixels. The old four-column simulation panel is removed; Screens retains a compact scenario strip.
+- The Phase 5 main chunk is 584.83 KB / 172.99 KB gzip and the Play chunk is 15.63 KB / 4.10 KB gzip. The checked compatibility catalog now records 101 interpreted/rendered tags and still only 12 source-aware edit surfaces.
 
 ## Baseline findings
 
@@ -61,7 +64,7 @@ Before Phase 0 changes:
 - Visual editing for WPS, SBS, FMS, and USB workspace modes.
 - Canvas-based preview, selection, dragging, resizing, layer ordering, and project history.
 - AST preview and narrow viewport, text, and image edits.
-- Playback, battery, volume, hold, USB, repeat, shuffle, and metadata simulation controls.
+- Deterministic playback, seek, track, metadata, album-art, volume, power, hold, USB, repeat, shuffle, RTC, disk, FM/RDS, touch-capability, and remote-capability state controls.
 - Theme ZIP import/export, project JSON save/load, font and image upload, and browser storage workflows.
 - Preset component generation and optional Gemini-assisted layout generation.
 
@@ -77,6 +80,7 @@ Before Phase 0 changes:
 - FMS is supported by the package model and screen-aware semantics for frequency, presets, signal, stereo, tuned/scan, and RDS state. Tags outside that subset remain preserved and visibly unsupported.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
 - Imported RB12 font metrics are exact and the binary packages exactly, but browser glyph rasterization still uses browser text rather than the Rockbox bitmap glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
+- Level A Play state is deterministic and shareable by named scenario, but it is not a full firmware simulator. Custom state is intentionally not encoded into scenario URLs.
 
 ## Validation
 
@@ -84,8 +88,8 @@ Latest passing validation on 2026-07-16:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 24 files, 142 tests
-npm run build          passed — Vite production build
+npm test               passed — 26 files, 150 tests
+npm run build          passed — Vite production build; Play code-split
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
@@ -99,6 +103,7 @@ Phase 3 font           passed — generated RB12 package round-trip and current 
 Phase 3 local helper   passed — real Arial TTF converted through loopback protocol to validated 5,337-byte RB12
 Phase 4 render report passed — 2 reproducible simulator captures, 6,315 classified differences, 0 unclassified
 Phase 4 compatibility passed — 386 tag/device rows across iPod Video and iPod Classic
+npm run test:phase5    passed — deterministic scenarios, transitions, conditionals, capability gates, and Play UI
 ```
 
 Phase 1F evidence:
@@ -154,19 +159,28 @@ Phase 4 evidence:
 - ADR-0014 covers the required official-parser WebAssembly license, build, memory, filesystem, bundle, and upstream-update questions. No official parser or renderer code is shipped.
 - The authored iPod Video SBS is rendered by an unmodified Rockbox simulator through the upstream framebuffer-dump path. Two clean runs produce the same normalized official hash.
 - The browser and official 320×240 images differ at 6,315 of 76,800 pixels. All differences are classified; native font/text layout and selector approximation are non-zero, while the background outside the UI viewport matches.
-- The compatibility report contains 193 tags × 2 device profiles. Preservation and parsing stay separate from 96 interpreted/rendered tags, 12 user-facing source-aware edit surfaces, 13 officially evidenced Video tags, 11 officially evidenced Classic tags, and one currently known visual-difference tag.
+- The compatibility report contains 193 tags × 2 device profiles. Preservation and parsing stay separate from 101 interpreted/rendered tags, 12 user-facing source-aware edit surfaces, 13 officially evidenced Video tags, 11 officially evidenced Classic tags, and one currently known visual-difference tag.
 - iPod Classic radio tags are preserved and parsed but visibly unavailable because the verified target profile has no FM screen. Touch-only tags are also marked unavailable on both non-touch iPod profiles.
 - Browser, official, and diff images are generated locally and ignored. Checked-in reports retain only hashes, metrics, evidence IDs, and classifications.
 
+Phase 5 evidence:
+
+- Every named scenario is deterministic under repeated creation and round-trips through a stable `?play=<scenario-id>` URL.
+- Pure actions cover play, pause, stop, five-times seek motion, elapsed time, next/previous track, RTC, click-wheel input, touch coordinates, and momentary volume/recent-touch state.
+- Scenario tests select real `%mp`, `%bc`, `%bp`, `%bu`, `%mh`, `%C`, `%Sr`, `%cc`, `%tp`, `%Tp`, `%Tl`, and `%mv` branches in the source-linked semantic interpreter.
+- iPod Classic cannot enter FM/FMS scenarios. Neither current profile can enter touch or remote-display scenarios, and the Play UI explains those restrictions without hiding preserved source.
+- The device shell and screen renderer are separate components. Play reuses the same semantic result and native-pixel canvas as Screens rather than implementing a second renderer.
+- Server-rendered UI tests verify Level A labeling, named scenario selection, complete state controls, and progressive capability explanations.
+
 ## Known blockers
 
-- No Phase 4 acceptance blocker is open. The current helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
+- No Phase 5 acceptance blocker is open. The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Complete Phase 4 review and merge, then begin Phase 5 device-state simulation from updated `main`. Start the Pulp-inspired studio migration only as the later focused milestones defined in `ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md`.
+Complete Phase 5 review and merge, then begin Phase 6's target-aware preset/component ecosystem from updated `main`. Continue the Pulp-inspired studio migration only through the focused milestones defined in `ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md`.
 
 ## Compatibility summary
 
-Phase 4 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, edit supported geometry or source, import or convert fonts through the local helper, inspect per-tag/per-device support in the Compatibility Lab, and export without losing unsupported syntax/assets. Bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations rather than hidden compatibility claims.
+Phase 5 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, open first-class Play, share deterministic scenarios, exercise documented playback/power/device/RTC/FM state, edit supported geometry or source, inspect per-tag/per-device support, and export without losing unsupported syntax/assets. Full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.

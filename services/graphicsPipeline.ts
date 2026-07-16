@@ -271,7 +271,8 @@ export const evaluateTheme = (
 export const renderToCanvas = (
     ctx: CanvasRenderingContext2D, 
     ops: RenderList, 
-    assets: Record<string, HTMLImageElement>
+    assets: Record<string, HTMLImageElement>,
+    direction: SimulationState['textDirection'] = 'ltr'
 ) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.textBaseline = 'top';
@@ -319,6 +320,7 @@ export const renderToCanvas = (
             case 'text':
                 ctx.font = op.font;
                 ctx.fillStyle = op.color;
+                ctx.direction = direction;
                 let tx = op.x;
                 if (op.align === 'center') tx = op.x + op.w / 2;
                 if (op.align === 'right') tx = op.x + op.w;

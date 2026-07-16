@@ -191,6 +191,29 @@ The official capture is repeated from clean temporary simulator disks. Its norma
 
 The Compatibility Lab reads the checked-in evidence report. It does not infer semantic support from the upstream name registry: 193 recognized names remain distinct from the smaller interpreted, rendered, editable, and officially exercised subsets.
 
+## Phase 5 deterministic simulator
+
+`rockbox/simulator/` separates deterministic scenario/state behavior from React and from screen drawing:
+
+```text
+named scenario or user input
+  -> pure SimulatorAction transition + DeviceProfile gates
+  -> SimulationState + SongMetadata + active screen/surface
+  -> source-linked semantic interpreter
+  -> native-pixel screen renderer
+
+DeviceShell
+  -> maps physical/touch controls to SimulatorAction
+  -> contains the rendered screen
+  -> never owns or generates theme pixels
+```
+
+The simulator uses a monotonic `timelineMs` value for playback progress, seek motion, RTC advancement, timed sublines, scrolling, `%mv`, and `%Tl`. Named scenarios always start from the same baseline and share through `?play=<scenario-id>`. Arbitrary manual state is labeled custom instead of being mistaken for the named preset.
+
+Play is a first-class, lazy-loaded Level A workflow. The editor header and compact Screens state strip open it; the former four-column simulation panel is removed. The same `SimulationState` drives the editor preview and Play, so conditional evaluation cannot diverge between modes. Device-profile enforcement happens both when a preset is selected and after every transition. Unsupported FM, touch, remote, RTC, or album-art state never becomes an implied target feature.
+
+The semantic interpreter now treats `%cS`, `%cc`, `%Sr`, `%Tp`, and `%Tl` as explicit state/capability projections. This raises the checked-in support catalog to 101 interpreted/rendered tags without changing the 12 source-aware edit surfaces or claiming new official pixel parity.
+
 The accepted delivery architecture is a loopback-only local companion:
 
 ```text
