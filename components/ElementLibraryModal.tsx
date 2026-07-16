@@ -1,105 +1,280 @@
-
-import React from 'react';
-import { ElementType, ScreenType, WpsElement } from '../types';
-import { GRAPHIC_ASSETS } from '../constants';
-import { canAuthorFm, canAuthorTouch, DeviceProfile } from '../rockbox/devices';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { ProjectState, ScreenType } from '../types';
+import type { DeviceProfile } from '../rockbox/devices';
+import {
+  getComponentAvailability,
+  getRockboxComponent,
+  ROCKBOX_COMPONENT_CATALOG,
+  type ComponentInsertResult,
+  type ComponentRemoveResult,
+  type RockboxComponentDefinition
+} from '../rockbox/components';
 
 interface ElementLibraryModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onAddElement: (element: Partial<WpsElement>) => void;
-    activeScreen: ScreenType;
-    deviceProfile: DeviceProfile;
+  isOpen: boolean;
+  onClose: () => void;
+  project: ProjectState;
+  activeScreen: ScreenType;
+  deviceProfile: DeviceProfile;
+  onInsert: (
+    definitionId: string,
+    properties: Record<string, string | number>
+  ) => Promise<ComponentInsertResult>;
+  onRemove: (instanceId: string) => Promise<ComponentRemoveResult>;
 }
 
-const PLACEHOLDER_ART = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAAE0lEQVR4nGP4wAAgkwB5mk0yBAAAOfEB4m25sAAAAABJRU5ErkJggg==";
+const categoryLabel = (category: RockboxComponentDefinition['category']) =>
+  category.replace('-', ' ');
 
-export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({ isOpen, onClose, onAddElement, activeScreen, deviceProfile }) => {
-    if (!isOpen) return null;
+const validationLabel = (component: RockboxComponentDefinition) =>
+  component.validationRules.some(rule => rule.level === 'official') ? 'Official + browser' : 'Browser';
 
-    const DEFAULT_BATT = GRAPHIC_ASSETS.BATTERY[0];
-    const DEFAULT_SHUFFLE = GRAPHIC_ASSETS.SHUFFLE[0];
-    const DEFAULT_REPEAT = GRAPHIC_ASSETS.REPEAT[0];
+const defaultProperties = (component: RockboxComponentDefinition) =>
+  Object.fromEntries(component.editableProperties.map(property => [property.key, property.defaultValue]));
 
-    const ELEMENTS = [
-        // ... (The same elements list as before, preserved)
-        { label: 'ID3 Text Box', icon: 'T', type: ElementType.TEXT, category: 'id3', content: '%s', name: 'ID3 Text', width: 280, height: 20 },
-        { label: 'Volume Text', icon: '🔊', type: ElementType.TEXT, category: 'volume_text', content: '%pv', name: 'Volume Level', width: 60, height: 20 },
-        { label: 'Next Track Info', icon: '⏭', type: ElementType.TEXT, category: 'next_track', content: '%It', name: 'Next Info', width: 280, height: 20 },
-        { label: 'Power Related Info', icon: '⚡', type: ElementType.TEXT, category: 'power', content: '%bl%%', name: 'Power Info', width: 60, height: 20 },
-        { label: 'Real Time Clock', icon: '🕒', type: ElementType.TEXT, category: 'rtc', content: '%cH:%cM', name: 'Clock', width: 80, height: 20 },
-        { label: 'Progress Bar', icon: '▬', type: ElementType.PROGRESS_BAR, category: 'default', content: '', name: 'Progress Bar', width: 300, height: 8, pbMode: 'track', pbStyle: 'flat', foreColor: '#3584e4', backColor: '#333333' },
-        { label: 'File Info', icon: '📄', type: ElementType.TEXT, category: 'file', content: '%fn', name: 'File Info', width: 280, height: 20 },
-        { label: 'Playlist/Song Info', icon: 'ℹ', type: ElementType.TEXT, category: 'playlist_info', content: '%pc', name: 'Track Time', width: 80, height: 20 },
-        { label: 'Playlist Viewer', icon: '☰', type: ElementType.VIEWPORT, category: 'viewport', name: 'Menu Viewport', width: deviceProfile.mainScreen.width, height: Math.max(20, deviceProfile.mainScreen.height - 40), x:0, y:20 },
-        { label: 'Runtime DB / RG', icon: '💿', type: ElementType.TEXT, category: 'database', content: '%rp', name: 'DB Info', width: 80, height: 20 },
-        { label: 'Hold Switches', icon: '🔒', type: ElementType.IMAGE, category: 'hold', name: 'Hold Icon', width: 16, height: 16, src: PLACEHOLDER_ART, filename: 'icon_hold.bmp', condition: '%?mh' },
-        { label: 'Virtual LED', icon: '🔴', type: ElementType.IMAGE, category: 'led', name: 'HDD LED', width: 10, height: 10, src: PLACEHOLDER_ART, filename: 'led_hdd.bmp', condition: '%?lh' },
-        { label: 'Repeat Mode', icon: '🔁', type: ElementType.IMAGE, category: 'repeat', name: 'Repeat Icon', width: DEFAULT_REPEAT.width, height: DEFAULT_REPEAT.height, src: DEFAULT_REPEAT.src, filename: DEFAULT_REPEAT.filename, imageType: 'repeat_icon', condition: '%?mm' },
-        { label: 'Playback Mode', icon: '▶', type: ElementType.TEXT, category: 'playback', content: '%?mp<Stop|Play|Pause>', name: 'Play Status', width: 80, height: 20 },
-        { label: 'Crossfade', icon: '⤮', type: ElementType.TEXT, category: 'crossfade', content: '%?cf<Off|On>', name: 'Crossfade', width: 80, height: 20 },
-        { label: 'Image', icon: 'IMG', type: ElementType.IMAGE, category: 'image', name: 'Static Image', width: 50, height: 50, src: PLACEHOLDER_ART, filename: 'image.bmp' },
-        { label: 'Bitmap Strips / Anim', icon: '🎞', type: ElementType.IMAGE, category: 'strip', name: 'Battery Strip', width: DEFAULT_BATT.width, height: DEFAULT_BATT.height, src: DEFAULT_BATT.src, filename: DEFAULT_BATT.filename, imageType: 'battery_strip', frameCount: 10 },
-        { label: 'Album Art', icon: '🖼', type: ElementType.IMAGE, category: 'art', name: 'Album Art', width: 120, height: 120, src: PLACEHOLDER_ART, filename: 'cover_placeholder.bmp', imageType: 'static' },
-        { label: 'FM Radio Tokens', icon: '📻', type: ElementType.TEXT, category: 'fm', content: '%tf', name: 'FM Freq', width: 80, height: 20 },
-        { label: 'Touch Region', icon: '⌁', type: ElementType.TOUCH_REGION, category: 'touch', name: 'Touch Region', width: 80, height: 40, touchAction: 'play' },
-    ].filter(item =>
-        (item.category !== 'fm' || canAuthorFm(deviceProfile)) &&
-        (item.category !== 'touch' || canAuthorTouch(deviceProfile))
-    );
+export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({
+  isOpen,
+  onClose,
+  project,
+  activeScreen,
+  deviceProfile,
+  onInsert,
+  onRemove
+}) => {
+  const [category, setCategory] = useState<'all' | RockboxComponentDefinition['category']>('all');
+  const [selectedId, setSelectedId] = useState(ROCKBOX_COMPONENT_CATALOG[0].id);
+  const [propertyValues, setPropertyValues] = useState<Record<string, string | number>>(
+    defaultProperties(ROCKBOX_COMPONENT_CATALOG[0])
+  );
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
 
-    return (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#e0e0e0] border-2 border-black shadow-[12px_12px_0px_rgba(0,0,0,1)] z-[60] w-[600px] max-h-[85vh] flex flex-col font-mono text-sm animate-bounce-in">
-             <div className="h-12 bg-gradient-to-b from-[#f2f2f2] to-[#d4d4d4] border-b border-black flex items-center justify-between px-4 cursor-move select-none">
-                <div className="flex items-center gap-3">
-                    <span className="text-orange-600 font-bold text-lg">⊕</span>
-                    <span className="font-bold uppercase tracking-widest text-gray-700">Add Element</span>
-                </div>
-                <button onClick={onClose} className="w-6 h-6 bg-red-500 rounded-full border border-black hover:bg-red-400 flex items-center justify-center text-sm font-bold leading-none shadow-sm">
-                    <span className="mt-[-2px]">×</span>
-                </button>
-            </div>
-            
-            <div className="overflow-y-auto p-6 flex-1 bg-[#dcdcdc] custom-scrollbar">
-                <div className="grid grid-cols-2 gap-4">
-                    {ELEMENTS.map((item, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => {
-                                const newElement: any = { 
-                                    ...item, 
-                                    screen: activeScreen,
-                                    visible: true,
-                                    locked: false
-                                };
-                                if (item.type === ElementType.TEXT) {
-                                    newElement.fontId = '14-Nimbus.fnt';
-                                    if (item.category === 'volume_text') {
-                                        newElement.volumeFormat = 'numeric'; // Default
-                                    }
-                                    newElement.align = 'left';
-                                    newElement.color = '#000000';
-                                }
-                                onAddElement(newElement);
-                                onClose();
-                            }}
-                            className="flex items-center gap-4 p-4 bg-white border border-gray-400 shadow-[2px_2px_0px_rgba(0,0,0,0.1)] hover:bg-orange-50 hover:border-orange-500 hover:shadow-[3px_3px_0px_rgba(255,88,0,0.3)] active:translate-y-[1px] active:shadow-none transition-all text-left group"
-                        >
-                            <span className="w-8 h-8 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-sm text-sm font-bold group-hover:bg-white group-hover:text-orange-600 overflow-hidden shrink-0">
-                                {item.icon}
-                            </span>
-                            <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-gray-800 text-sm truncate group-hover:text-black">{idx + 1}. {item.label}</span>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            </div>
-            
-            <div className="p-3 bg-[#d4d4d4] border-t border-black text-[10px] text-gray-600 text-center flex justify-between px-6">
-                <span>TARGET: <span className="font-bold text-black">{activeScreen.toUpperCase()}</span></span>
-                <span>SELECT TO INSERT</span>
-            </div>
+  const selected = getRockboxComponent(selectedId) ?? ROCKBOX_COMPONENT_CATALOG[0];
+  const availability = getComponentAvailability(selected, activeScreen, deviceProfile);
+  const categories = useMemo(
+    () => Array.from(new Set(ROCKBOX_COMPONENT_CATALOG.map(component => component.category))),
+    []
+  );
+  const visibleComponents = category === 'all'
+    ? ROCKBOX_COMPONENT_CATALOG
+    : ROCKBOX_COMPONENT_CATALOG.filter(component => component.category === category);
+
+  useEffect(() => {
+    setPropertyValues(defaultProperties(selected));
+    setMessage('');
+  }, [selected.id]);
+
+  if (!isOpen) return null;
+
+  const insert = async () => {
+    setBusy(true);
+    const result = await onInsert(selected.id, propertyValues);
+    setBusy(false);
+    setMessage(result.ok
+      ? `${selected.name} inserted into ${activeScreen.toUpperCase()}. Undo is available.`
+      : result.conflicts.join(' '));
+  };
+
+  const remove = async (instanceId: string) => {
+    setBusy(true);
+    const result = await onRemove(instanceId);
+    setBusy(false);
+    setMessage(result.ok ? 'Component removed. Shared assets were retained where still needed.' : result.conflicts.join(' '));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[95] flex flex-col bg-[#e9e7e1] font-mono text-[#161616]">
+      <header className="flex h-20 shrink-0 items-center justify-between border-b-2 border-black bg-[#242424] px-7 text-white">
+        <div className="flex items-center gap-5">
+          <div className="flex h-12 w-12 items-center justify-center border-2 border-white bg-orange-600 text-2xl font-black">⊕</div>
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.24em] text-[#b9bec8]">Rockbox-aware library</div>
+            <h2 className="text-2xl font-black uppercase tracking-tight">Components</h2>
+          </div>
+          <div className="ml-4 border-l border-[#666] pl-5 text-[10px] uppercase text-[#d3d5da]">
+            <div>{deviceProfile.model}</div>
+            <div className="font-black text-white">{activeScreen.toUpperCase()} source</div>
+          </div>
         </div>
-    );
+        <button
+          type="button"
+          onClick={onClose}
+          className="border-2 border-white px-5 py-3 text-xs font-black uppercase hover:bg-white hover:text-black"
+        >
+          Back to Screens ×
+        </button>
+      </header>
+
+      <div className="grid min-h-0 flex-1 grid-cols-[210px_minmax(0,1fr)_340px]">
+        <aside className="overflow-y-auto border-r-2 border-black bg-[#d7d5cf] p-4">
+          <div className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-[#5f6670]">Categories</div>
+          <button
+            type="button"
+            onClick={() => setCategory('all')}
+            className={`mb-2 w-full border-2 border-black px-3 py-2 text-left text-xs font-black uppercase ${category === 'all' ? 'bg-[#20bd8b]' : 'bg-white hover:bg-[#f7f4ec]'}`}
+          >
+            All components
+          </button>
+          {categories.map(item => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setCategory(item)}
+              className={`mb-2 w-full border border-black px-3 py-2 text-left text-[11px] font-black uppercase ${category === item ? 'bg-orange-600 text-white' : 'bg-[#efede8] hover:bg-white'}`}
+            >
+              {categoryLabel(item)}
+            </button>
+          ))}
+
+          <div className="mt-7 border-t-2 border-black pt-4">
+            <div className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-[#5f6670]">In this project</div>
+            {(project.componentInstances ?? []).length === 0 ? (
+              <div className="border border-dashed border-[#777] bg-[#efede8] p-3 text-[10px] leading-relaxed text-[#5d6065]">
+                Inserted components appear here as exact, reversible instances.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {(project.componentInstances ?? []).map(instance => (
+                  <div key={instance.id} className="border border-black bg-white p-2">
+                    <div className="truncate text-[10px] font-black uppercase">
+                      {getRockboxComponent(instance.definitionId)?.name ?? instance.definitionId}
+                    </div>
+                    <div className="mb-2 text-[9px] text-[#666]">{instance.screen.toUpperCase()} · {instance.id}</div>
+                    <button
+                      type="button"
+                      onClick={() => remove(instance.id)}
+                      className="w-full border border-black bg-[#efede8] px-2 py-1 text-[9px] font-black uppercase hover:bg-red-100"
+                    >
+                      Remove safely
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+
+        <main className="min-w-0 overflow-y-auto p-6">
+          <div className="mb-5 flex items-end justify-between border-b-2 border-black pb-4">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#666]">Source, assets, rules, target support</div>
+              <h3 className="text-xl font-black uppercase">{category === 'all' ? 'Complete library' : categoryLabel(category)}</h3>
+            </div>
+            <div className="border-2 border-black bg-white px-3 py-2 text-[10px] font-black uppercase">
+              {visibleComponents.length} definitions
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+            {visibleComponents.map(component => {
+              const support = getComponentAvailability(component, activeScreen, deviceProfile);
+              const active = component.id === selected.id;
+              return (
+                <button
+                  key={component.id}
+                  type="button"
+                  onClick={() => setSelectedId(component.id)}
+                  className={`min-h-64 border-2 p-0 text-left shadow-[4px_4px_0_#161616] transition-transform hover:-translate-y-0.5 ${
+                    active ? 'border-orange-600 bg-[#fff8ef]' : 'border-black bg-white'
+                  } ${support.available ? '' : 'opacity-60'}`}
+                >
+                  <div className="flex h-24 items-center justify-center border-b-2 border-black bg-[#292929] px-4 text-center text-lg font-black whitespace-pre-line text-white">
+                    {component.preview}
+                  </div>
+                  <div className="p-4">
+                    <div className="mb-1 text-[9px] font-black uppercase tracking-[0.16em] text-orange-700">
+                      {categoryLabel(component.category)}
+                    </div>
+                    <div className="mb-2 text-sm font-black uppercase leading-tight">{component.name}</div>
+                    <div className="min-h-10 text-[10px] leading-relaxed text-[#555]">{component.description}</div>
+                    <div className="mt-3 flex flex-wrap gap-1 text-[8px] font-black uppercase">
+                      <span className="border border-black bg-[#efede8] px-1.5 py-1">{component.sourceComplexity}</span>
+                      <span className="border border-black bg-[#efede8] px-1.5 py-1">{component.assets.length} assets</span>
+                      <span className={`border border-black px-1.5 py-1 ${support.available ? 'bg-[#20bd8b]' : 'bg-[#ffd0cb]'}`}>
+                        {support.available ? 'Available' : 'Restricted'}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </main>
+
+        <aside className="overflow-y-auto border-l-2 border-black bg-white p-5">
+          <div className="mb-4 border-b-2 border-black pb-4">
+            <div className="mb-1 text-[9px] font-black uppercase tracking-[0.2em] text-orange-700">Component details</div>
+            <h3 className="text-xl font-black uppercase leading-tight">{selected.name}</h3>
+            <p className="mt-2 text-[11px] leading-relaxed text-[#555]">{selected.description}</p>
+          </div>
+
+          <div className="space-y-3 text-[10px]">
+            <div className="grid grid-cols-[110px_1fr] border-b border-[#bbb] pb-2">
+              <span className="font-black uppercase text-[#666]">Screens</span>
+              <span className="font-black uppercase">{selected.supportedScreens.join(', ')}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] border-b border-[#bbb] pb-2">
+              <span className="font-black uppercase text-[#666]">Capabilities</span>
+              <span>{selected.requiredCapabilities.join(', ') || 'None'}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] border-b border-[#bbb] pb-2">
+              <span className="font-black uppercase text-[#666]">Rockbox tags</span>
+              <span>{selected.requiredTags.map(tag => `%${tag}`).join(' ')}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] border-b border-[#bbb] pb-2">
+              <span className="font-black uppercase text-[#666]">Assets</span>
+              <span>{selected.assets.map(asset => asset.filename).join(', ') || 'None'}</span>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] border-b border-[#bbb] pb-2">
+              <span className="font-black uppercase text-[#666]">Validation</span>
+              <span>{validationLabel(selected)}</span>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <div className="mb-2 text-[9px] font-black uppercase tracking-[0.2em] text-[#666]">Editable properties</div>
+            <div className="grid grid-cols-2 gap-2">
+              {selected.editableProperties.map(property => (
+                <label key={property.key} className="text-[9px] font-black uppercase">
+                  <span className="mb-1 block text-[#666]">{property.label}</span>
+                  <input
+                    type={property.type === 'number' ? 'number' : 'text'}
+                    value={propertyValues[property.key] ?? property.defaultValue}
+                    onChange={event => setPropertyValues(current => ({
+                      ...current,
+                      [property.key]: property.type === 'number' ? Number(event.target.value) : event.target.value
+                    }))}
+                    className="w-full border-2 border-black bg-[#f5f3ee] px-2 py-2 text-xs outline-none focus:border-orange-600"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {!availability.available ? (
+            <div className="mt-5 border-2 border-black bg-[#ffd0cb] p-3 text-[10px] font-bold leading-relaxed">
+              {availability.conflicts.join(' ')}
+            </div>
+          ) : null}
+          {message ? (
+            <div className="mt-5 border-2 border-black bg-[#d7f6eb] p-3 text-[10px] font-bold leading-relaxed">
+              {message}
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            disabled={!availability.available || busy}
+            onClick={insert}
+            className="mt-5 w-full border-2 border-black bg-orange-600 px-4 py-4 text-sm font-black uppercase text-white shadow-[4px_4px_0_#161616] hover:bg-orange-500 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:bg-[#aaa] disabled:text-[#555]"
+          >
+            {busy ? 'Preparing source…' : `Insert into ${activeScreen.toUpperCase()}`}
+          </button>
+          <p className="mt-3 text-[9px] leading-relaxed text-[#666]">
+            Insertion is one history step. Existing source remains byte-for-byte intact around the new component.
+          </p>
+        </aside>
+      </div>
+    </div>
+  );
 };

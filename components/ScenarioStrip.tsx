@@ -9,6 +9,7 @@ type ScenarioStripProps = {
   activeScenario: ActiveSimulatorScenario;
   onApplyScenario: (scenario: SimulatorScenarioId) => void;
   onOpenPlay: () => void;
+  onOpenComponents: () => void;
 };
 
 const quickScenarios: SimulatorScenarioId[] = [
@@ -21,7 +22,8 @@ const quickScenarios: SimulatorScenarioId[] = [
 export const ScenarioStrip: React.FC<ScenarioStripProps> = ({
   activeScenario,
   onApplyScenario,
-  onOpenPlay
+  onOpenPlay,
+  onOpenComponents
 }) => (
   <div className="flex h-16 shrink-0 items-center gap-3 border-t-2 border-black bg-[#ececec] px-4 font-mono">
     <div className="min-w-40 border-r border-[#aaa] pr-4">
@@ -44,6 +46,13 @@ export const ScenarioStrip: React.FC<ScenarioStripProps> = ({
         </button>
       ))}
     </div>
+    <button
+      type="button"
+      onClick={onOpenComponents}
+      className="border-2 border-black bg-white px-4 py-2 text-xs font-black uppercase shadow-[3px_3px_0_#111] hover:bg-[#fff4e8] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+    >
+      ⊕ Components
+    </button>
     <button
       type="button"
       onClick={onOpenPlay}

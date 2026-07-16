@@ -231,6 +231,23 @@ export const insertNode = (document: RockboxDocument, anchor: InsertAnchor, sour
   return success(result.document);
 };
 
+export const insertNodeWithPrefix = (
+  document: RockboxDocument,
+  anchor: InsertAnchor,
+  source: string,
+  prefix: string
+): EditResult => {
+  if (!prefix.trim()) return failure(document, 'edit-invalid-prefix', 'The insertion prefix cannot be empty.');
+  if (documentUsesPrefix(document, prefix)) {
+    return failure(document, 'edit-prefix-collision', `The insertion prefix ${prefix} is already in use.`);
+  }
+  const fragment = rekeyDocument(parseRockbox(source), prefix);
+  if (fragment.nodes.length === 0) return failure(document, 'edit-empty-insert', 'No source node was provided for insertion.');
+  const result = insertIntoDocument(document, anchor, fragment.nodes);
+  if (!result.found) return failure(document, 'edit-anchor-not-found', 'The insertion anchor was not found.');
+  return success(result.document);
+};
+
 const deleteFromDocument = (document: RockboxDocument, nodeId: string): Mutation => {
   let found = false;
   let changed = false;

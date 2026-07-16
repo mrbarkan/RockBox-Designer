@@ -166,3 +166,17 @@ Play is a lazy-loaded Level A browser simulator. It uses the existing source-lin
 Rockbox status numbering, charger/USB truth values, RTC presence, RTL-language state, tuner/RDS state, and touch timeout behavior were rechecked at upstream commit `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`. The browser implementation remains independent and does not include upstream code.
 
 **Consequences:** Named scenarios are repeatable, URL-shareable, and immediately exercise source conditionals. iPod Classic cannot enter FM scenarios, and neither current profile pretends to support touch or remote LCD. The RTL state is a browser bidi preview, not a new official pixel-parity claim. The main production chunk is 584.83 KB / 172.99 KB gzip; Play is progressively disclosed in a separate 15.63 KB / 4.10 KB gzip chunk.
+
+## ADR-0016 — Store components as reversible source transactions
+
+**Status:** Accepted
+
+**Context:** The legacy preset palette created flat canvas elements, used random IDs, and copied placeholder data URLs. That model could not preserve imported source ordering, allocate image/viewport identities safely, retain binary package assets, remove shared assets conservatively, or prove target validity. A component also cannot be treated as only an image because Rockbox behaviors commonly combine viewports, conditionals, preloads, tags, and target requirements.
+
+**Decision:** `rockbox/components/` defines a versioned, target-aware catalog and a source-transaction engine. Every definition declares its supported screens/targets, required device capabilities and tags, source template, binary assets, editable properties, insertion location, complexity, and validation rules. An inserted instance stores its definition/version, exact root source-node IDs, allocated handle/viewport name, asset identities/references, and resolved property values.
+
+Insertion refuses unsupported or invalid-source contexts, allocates deterministic collision-free names, hashes binary assets, avoids overwriting imported path conflicts, and inserts a source-only marker plus fragment under a stable CST node prefix. Existing source remains untouched around that fragment. Component assets live beside imported package assets in a separate project collection and merge by archive path only during export. Removal operates only on the recorded root boundary and retains an asset whenever another instance or any remaining source document references it; imported package assets are never deleted.
+
+The focused Components workspace is lazy-loaded. It shows unavailable definitions and their reasons instead of hiding target restrictions. The initial 19-definition catalog is validated through 53 accepted target/screen CheckWPS runs across `ipodvideo` and `ipod6g`; the touch definition is recorded as unavailable because neither current profile has a touchscreen. Rockbox source and validator binaries remain external at the pinned SHA.
+
+**Consequences:** Component insert/remove is exact, reversible, package-aware, and naturally covered by whole-project undo. Imported or manually written source is not heuristically converted into components. Editing source inside a recorded component boundary may make safe removal refuse until the user resolves the conflict. Personal/public component sharing remains deferred until the versioned format has further real-world evidence. The main production chunk is 582.02 KB / 172.23 KB gzip; Components loads as 9.31 KB / 2.75 KB gzip UI plus a shared 14.25 KB / 5.15 KB gzip component-domain chunk.
