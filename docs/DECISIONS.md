@@ -180,3 +180,26 @@ Insertion refuses unsupported or invalid-source contexts, allocates deterministi
 The focused Components workspace is lazy-loaded. It shows unavailable definitions and their reasons instead of hiding target restrictions. The initial 19-definition catalog is validated through 53 accepted target/screen CheckWPS runs across `ipodvideo` and `ipod6g`; the touch definition is recorded as unavailable because neither current profile has a touchscreen. Rockbox source and validator binaries remain external at the pinned SHA.
 
 **Consequences:** Component insert/remove is exact, reversible, package-aware, and naturally covered by whole-project undo. Imported or manually written source is not heuristically converted into components. Editing source inside a recorded component boundary may make safe removal refuse until the user resolves the conflict. Personal/public component sharing remains deferred until the versioned format has further real-world evidence. The main production chunk is 582.02 KB / 172.23 KB gzip; Components loads as 9.31 KB / 2.75 KB gzip UI plus a shared 14.25 KB / 5.15 KB gzip component-domain chunk.
+
+## ADR-0017 — Keep the full Rockbox simulator external until Level C distribution is approved
+
+**Status:** Accepted
+
+**Context:** Phase 7 asks whether the actual Rockbox UI simulator can run in a browser. A pinned iPod Video simulator core builds and runs outside this repository, and the existing official harness loads an authored theme and captures two reproducible firmware framebuffers. The full simulator is not only a display library: it combines GPL firmware UI code, target-generated configuration, SDL threads and blocking input, timing, audio callbacks, a synchronous mutable simulator disk, and dynamically loaded codecs/plugins.
+
+Emscripten can supply SDL, pthreads, virtual filesystems, persistence, dynamic modules, and `setjmp`/`longjmp` compatibility, but the combination needs explicit product architecture. Pthreads require cross-origin isolation, browser main-loop code must yield, persistent storage synchronizes asynchronously, dynamic linking with pthreads remains high-risk, and the measured native core excludes the codec/plugin bundle. Serving a WebAssembly derivative also requires a GPL source-delivery, notices, hosting, versioning, and upstream-update policy.
+
+**Decision:** Phase 7 passes through its documented-feasibility-report acceptance path. Do not start or distribute a Level C WebAssembly port until the owner approves:
+
+- a GPL-compatible distribution and corresponding-source delivery model;
+- hosted cross-origin isolation and supported-browser policy;
+- a maintained Emscripten target/build path;
+- pthread scheduler and asynchronous main-loop behavior;
+- static versus dynamic codec/plugin packaging;
+- simulator-disk mounting, persistence, quotas, reset, and editor synchronization;
+- audio, background timing, bundle, memory, startup, and performance budgets;
+- initial target scope and pinned-upstream update ownership.
+
+Keep the current levels explicit: Level A is the independent deterministic browser state simulator, Level B is external official validation, and Level C is not shipped. The external Phase 7 recipe may build the iPod Video core and minimum runtime from the exact registry SHA, apply a generated-Makefile-only Apple Clang override for local feasibility, and smoke-launch it with dummy SDL drivers. It must not write Rockbox source, objects, binaries, runtime assets, or screenshots into the repository.
+
+**Consequences:** Native target, generated-theme load, and screenshot stages are evidenced without changing the browser client or adding a GPL artifact. The checked report records every browser-port blocker, exact upstream paths, external binary/runtime metrics, and the zero-byte browser impact. The editor remains usable independently. Prototype stages 4 and 5 are intentionally blocked by the decision above, and target switching remains deferred until one browser target is stable.

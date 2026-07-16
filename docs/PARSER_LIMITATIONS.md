@@ -94,7 +94,8 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Current behavior:** Named Phase 5 scenarios deterministically drive the documented semantic state and real condition branches. The device shell maps controls to browser actions but remains separate from the screen renderer. USB is still a stock firmware boundary, and unsupported touch/remote scenarios stay disabled.
 - **Preservation status:** Simulation never rewrites source.
 - **Diagnostic:** Play labels itself Level A and explains unavailable target capabilities.
-- **Planned phase:** A full simulator remains separate feasibility work; do not infer firmware behavior from Level A state controls.
+- **Current evidence:** Phase 7 built and launch-smoked one external native iPod Video core, reused the authored-theme/two-frame official capture, and documented the GPL, build, thread/main-loop, dynamic-code, filesystem, audio, bundle, and maintenance blockers. Level C is not shipped.
+- **Planned phase:** Do not infer firmware behavior from Level A state controls. A full browser simulator requires the ADR-0017 distribution and runtime decision before WebAssembly work begins.
 
 ## RTL preview is not native bidi parity
 

@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-16T20:35:32.167Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+    "target": "ipodvideo",
+    "sourceBundled": false,
+    "binaryBundled": false,
+    "simulatorAssetsBundled": false
+  },
+  "nativePrototype": {
+    "status": "passed-external-development-only",
+    "target": "ipodvideo",
+    "version": "078a506dfd-260713",
+    "memoryMiB": 64,
+    "binary": {
+      "bytes": 1581480,
+      "sha256": "9e35f73d7e4659fe712c0c5e7267d53b794d6cbea2ae298fc5e47467bffc01d8"
+    },
+    "minimalSimulatorDisk": {
+      "bytes": 2058415,
+      "files": 129
+    },
+    "buildRecipe": "scripts/phase7/build-native-ipodvideo.ts",
+    "themeLoadHarness": "scripts/phase4/run-official-render-comparison.ts",
+    "coreBuildIncludesCodecsAndPlugins": false,
+    "upstreamSupportedMacToolchainUsed": false,
+    "notes": [
+      "The simulator core and minimum theme runtime build outside this repository.",
+      "The current macOS configure path selects GCC 16; the feasibility recipe uses a generated-Makefile Apple Clang override and excludes codec/plugin shared objects.",
+      "Rockbox selects its SDL thread fallback on this host. A newly installed stock simulator disk rendered stock configuration in the Phase 4 harness, while the prepared minimum runtime used by the checked evidence loaded the authored theme."
+    ]
+  },
+  "officialCaptureEvidence": {
+    "report": "reports/phase4-render/latest.json",
+    "target": "ipodvideo",
+    "generatedThemeFixture": "phase4-authored-sbs-menu",
+    "cleanCapturePasses": 2,
+    "reproducible": true,
+    "officialPixelSha256": "a1021a11e254131c128b5aece6aba38126d52421c634e3b05f9db1383e400a79",
+    "sourceSha256": "5ed11d378756e758c33da43c527ec853ffd5a6094d27f2d6e00823a682110888",
+    "screenshotPathCommitted": false
+  },
+  "toolAvailability": {
+    "emcc": false,
+    "emconfigure": false,
+    "emmake": false,
+    "wasmLd": false,
+    "sdl2Config": true
+  },
+  "upstreamArchitecture": {
+    "sourcePaths": {
+      "configure": "tools/configure",
+      "system": "firmware/target/hosted/sdl/system-sdl.c",
+      "threads": "firmware/target/hosted/sdl/thread-sdl.c",
+      "input": "firmware/target/hosted/sdl/button-sdl.c",
+      "display": "firmware/target/hosted/sdl/window-sdl.c",
+      "audio": "firmware/target/hosted/sdl/pcm-sdl.c",
+      "filesystem": "uisimulator/common/filesystem-sim.c",
+      "dynamicLoader": "firmware/target/hosted/sdl/load_code-sdl.c",
+      "codecLoader": "apps/codecs.c",
+      "pluginLoader": "apps/plugin.c",
+      "license": "docs/COPYING"
+    },
+    "evidenceCounts": {
+      "sdlThreadCreates": 2,
+      "threadJumpOperations": 5,
+      "blockingEventWaits": 2,
+      "displayTextureOperations": 3,
+      "sdlAudioOpenCalls": 2,
+      "simulatorRootReferences": 5,
+      "dynamicObjectOperations": 4
+    }
+  },
+  "prototypeStages": [
+    {
+      "stage": 1,
+      "name": "Build one native simulator target reproducibly",
+      "status": "passed-external-development-only",
+      "evidence": "Pinned iPod Video simulator core, minimum runtime, binary hash, and documented external recipe."
+    },
+    {
+      "stage": 2,
+      "name": "Automate loading a generated theme",
+      "status": "passed",
+      "evidence": "Phase 4 installs an authored SBS and deterministic settings into a private simulator disk."
+    },
+    {
+      "stage": 3,
+      "name": "Capture screenshots",
+      "status": "passed",
+      "evidence": "Two clean firmware framebuffer captures have the same normalized pixel hash."
+    },
+    {
+      "stage": 4,
+      "name": "Port the display and input loop to WebAssembly",
+      "status": "blocked-by-decision",
+      "evidence": "No GPL WebAssembly derivative was started before resolving distribution, runtime, and maintenance architecture."
+    },
+    {
+      "stage": 5,
+      "name": "Run a single target in browser",
+      "status": "blocked-by-stage-4",
+      "evidence": "A browser target cannot be claimed until the display/input port is implemented and validated."
+    },
+    {
+      "stage": 6,
+      "name": "Add target switching",
+      "status": "deferred",
+      "evidence": "The plan forbids target switching before one browser target is stable."
+    }
+  ],
+  "browserPortConstraints": [
+    {
+      "id": "license-distribution",
+      "status": "blocking-decision",
+      "finding": "The simulator, firmware UI, codecs, and plugins are GPL-2.0-or-later source. Serving a modified WebAssembly build needs an explicit source, notices, delivery, and update policy.",
+      "sourceEvidence": [
+        "docs/COPYING",
+        "firmware/target/hosted/sdl/system-sdl.c",
+        "firmware/target/hosted/sdl/thread-sdl.c"
+      ],
+      "resolution": "Approve a GPL-compatible distribution and source-delivery architecture before compiling browser artifacts."
+    },
+    {
+      "id": "target-build-generation",
+      "status": "blocking-engineering",
+      "finding": "Configure generates target headers and only handles named native host systems. Its Darwin path selects GCC 16, native SDL flags, dlopen, and Mach-O shared-library settings.",
+      "sourceEvidence": [
+        "tools/configure"
+      ],
+      "resolution": "Add and maintain an upstreamable Emscripten host/toolchain path rather than patching generated outputs for production."
+    },
+    {
+      "id": "threads-and-main-loop",
+      "status": "blocking-engineering",
+      "finding": "The simulator maps Rockbox tasks to SDL threads, mutexes and semaphores, uses setjmp/longjmp for exits, and blocks in SDL_WaitEvent. Browser code must yield to the event loop.",
+      "sourceEvidence": [
+        "firmware/target/hosted/sdl/system-sdl.c",
+        "firmware/target/hosted/sdl/thread-sdl.c",
+        "firmware/target/hosted/sdl/button-sdl.c"
+      ],
+      "resolution": "Choose pthreads with cross-origin isolation or redesign the scheduler/event loop, then measure responsiveness and shutdown behavior."
+    },
+    {
+      "id": "dynamic-code",
+      "status": "blocking-engineering",
+      "finding": "Playback codecs and plugins are separate objects loaded at runtime through SDL_LoadObject/SDL_LoadFunction.",
+      "sourceEvidence": [
+        "firmware/target/hosted/sdl/load_code-sdl.c",
+        "apps/codecs.c",
+        "apps/plugin.c"
+      ],
+      "resolution": "Choose and validate static linking or Emscripten main/side modules; dynamic linking plus pthreads remains a high-risk combination."
+    },
+    {
+      "id": "filesystem-and-persistence",
+      "status": "design-required",
+      "finding": "Rockbox expects a synchronous mutable simulator disk rooted at sim_root_dir, including themes, fonts, settings, databases, media, screenshots, codecs, and plugins.",
+      "sourceEvidence": [
+        "firmware/target/hosted/sdl/system-sdl.c",
+        "uisimulator/common/filesystem-sim.c"
+      ],
+      "resolution": "Define preloaded MEMFS assets, IDBFS synchronization, imports, quotas, reset semantics, and exact editor-to-simulator mounting."
+    },
+    {
+      "id": "audio-and-timing",
+      "status": "design-required",
+      "finding": "SDL audio callbacks participate in PCM completion while Rockbox timing reads SDL ticks across scheduled tasks.",
+      "sourceEvidence": [
+        "firmware/target/hosted/sdl/pcm-sdl.c",
+        "firmware/target/hosted/sdl/thread-sdl.c"
+      ],
+      "resolution": "Prototype user-gesture audio startup, callback scheduling, background throttling, and deterministic non-audio theme mode."
+    },
+    {
+      "id": "bundle-performance-maintenance",
+      "status": "measurement-required",
+      "finding": "The measured native core excludes codec/plugin objects; a useful Level C bundle also needs target runtime assets, browser glue, persistence, and an upstream refresh process.",
+      "sourceEvidence": [
+        "tools/configure",
+        "apps/codecs.c",
+        "apps/plugin.c"
+      ],
+      "resolution": "Set load-time, memory, bundle, browser-support, and upstream-update budgets before product integration."
+    }
+  ],
+  "externalReferences": [
+    {
+      "title": "Emscripten pthreads support",
+      "url": "https://emscripten.org/docs/porting/pthreads.html",
+      "relevance": "SharedArrayBuffer, COOP/COEP, worker pool, and separate threaded/non-threaded builds."
+    },
+    {
+      "title": "Emscripten runtime environment",
+      "url": "https://emscripten.org/docs/porting/emscripten-runtime-environment.html",
+      "relevance": "Browser main-loop yielding, virtual filesystems, MEMFS, and IDBFS."
+    },
+    {
+      "title": "Emscripten File System API",
+      "url": "https://emscripten.org/docs/api_reference/Filesystem-API.html",
+      "relevance": "Synchronous virtual filesystem and asynchronous persistent storage synchronization."
+    },
+    {
+      "title": "Emscripten dynamic linking",
+      "url": "https://emscripten.org/docs/compiling/Dynamic-Linking.html",
+      "relevance": "Main/side modules, runtime dlopen, code-size effects, and experimental pthread interaction."
+    },
+    {
+      "title": "Emscripten setjmp/longjmp support",
+      "url": "https://emscripten.org/docs/porting/setjmp-longjmp.html",
+      "relevance": "Compatibility modes and code-size/performance implications for simulator thread exits."
+    },
+    {
+      "title": "Emscripten audio guidance",
+      "url": "https://emscripten.org/docs/porting/Audio.html",
+      "relevance": "Event-loop yielding and browser user-gesture requirements for audio."
+    }
+  ],
+  "productBoundary": {
+    "phase7Acceptance": "passed-with-documented-blockers",
+    "levelA": "available-browser-state-simulator",
+    "levelB": "available-external-official-validation",
+    "levelC": "not-shipped",
+    "editorIndependent": true,
+    "browserClientChanged": false,
+    "browserBundleDeltaBytes": 0,
+    "nextDecision": "Choose whether Rockbox Designer will distribute and maintain a GPL Level C runtime; do not start the WebAssembly port before that choice."
+  }
+}

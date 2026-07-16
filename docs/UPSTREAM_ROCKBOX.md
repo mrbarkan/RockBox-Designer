@@ -123,6 +123,22 @@ Phase 6 re-inspected `lib/skin_parser/tag_table.c` for the current `%xl`, `%xd`,
 
 The component engine independently allocates unique labels and viewport names and writes its own authored 24-bit BMP. The external Phase 6 runner then passed all 53 available component/profile/screen fixtures to `checkwps.ipodvideo` or `checkwps.ipod6g` at this exact SHA. No upstream source, object, or executable is bundled. The touch definition is not run against an invented target: both current profiles report no touchscreen, and the checked report records that target gate explicitly.
 
+## Phase 7 full simulator reference
+
+Phase 7 inspected the complete native simulator boundary at the recorded SHA:
+
+- `tools/configure` for target generation, SDL discovery, native host selection, current Darwin GCC 16 choice, and SDL-thread fallback.
+- `uisimulator/common/filesystem-sim.c` and `firmware/target/hosted/sdl/system-sdl.c` for the mutable simulator root and process/event lifecycle.
+- `firmware/target/hosted/sdl/thread-sdl.c` and `kernel-sdl.c` for SDL threads, mutexes, semaphores, ticks, and `setjmp`/`longjmp` exits.
+- `firmware/target/hosted/sdl/button-sdl.c` and `window-sdl.c` for blocking input and SDL2 texture/window display.
+- `firmware/target/hosted/sdl/pcm-sdl.c` for audio-device callbacks and PCM completion.
+- `firmware/target/hosted/sdl/load_code-sdl.c`, `uisimulator/common/load_code-sim.c`, `apps/codecs.c`, and `apps/plugin.c` for runtime-loaded codec/plugin objects.
+- `docs/COPYING` and the source headers for GPL version 2 or later.
+
+An external iPod Video core was built and launch-smoked from this SHA. The prepared minimum runtime used by the Phase 4 harness loaded an authored SBS and produced two identical framebuffer hashes. A fresh stock simulator-disk installation launched and captured but rendered stock configuration in that harness, so it is retained as a documented limitation rather than being substituted for the canonical evidence.
+
+The feasibility report also records current official Emscripten requirements for pthread isolation, asynchronous browser main loops, virtual/persistent filesystems, dynamic modules, `setjmp`/`longjmp`, and audio startup. No Rockbox source, object, binary, runtime asset, screenshot, or WebAssembly module is committed.
+
 ## Licensing note
 
 Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox parser implementation has been copied into Rockbox Designer. The generated factual registry is explicitly flagged for human licensing review. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.
