@@ -1,14 +1,15 @@
 # Implementation Status
 
-Last updated: 2026-07-13
+Last updated: 2026-07-16
 
 ## Current phase
 
-- **Phase:** Phase 3 local companion acceptance — Phase 4 next
-- **Branch:** `codex/phase-3-local-font-helper`
-- **Merged milestones:** Phase 0 through Phase 3; Phase 3 merged through [PR #17](https://github.com/mrbarkan/RockBox-Designer/pull/17) at `f53b309` after the Phase 2 dogfood hardening in [PR #16](https://github.com/mrbarkan/RockBox-Designer/pull/16).
-- **Status:** The project owner selected the loopback local companion. ADR-0013 records its licensing, build, memory, filesystem, bundle, security, and update boundaries. The browser Font Workshop now converts TTF/OTF/TTC through the pinned native helper, validates the returned RB12 bytes, and adds them to the package. The architecture stop condition is resolved; the focused helper milestone must pass review and merge before Phase 4 starts.
-- **Scope boundary:** Menu/list and quick-screen contents are explicitly firmware-derived projections inside source-defined SBS viewports. USB stays stock/firmware controlled. Existing `.fnt` files remain browser-only exact imports; outline-font conversion requires the loopback helper and local native toolchain, while browser glyph drawing remains approximate.
+- **Phase:** Phase 4 official engine validation and render comparison
+- **Branch:** `codex/phase-4-official-render-comparison`
+- **Merged milestones:** Phase 0 through Phase 3; the accepted local font companion merged in [PR #19](https://github.com/mrbarkan/RockBox-Designer/pull/19) at `c20cd40`.
+- **Status:** ADR-0014 completes the official-parser WebAssembly feasibility gate and keeps Rockbox GPL code outside the browser bundle. The canonical iPod Video SBS comparison now captures the real simulator framebuffer twice, requires reproducible pixels, generates a browser/official/diff artifact set locally, and classifies every difference. The Compatibility Lab exposes 386 evidence-backed tag/device rows without collapsing them into a percentage.
+- **Scope boundary:** Official parser acceptance and pixel evidence apply only to the recorded targets and fixtures. Menu/list content remains a clearly labeled firmware projection, USB stays firmware controlled, and native Rockbox bitmap glyphs still differ from the browser approximation.
+- **UX direction updated:** Pulp-inspired specialized studio modes; Canva-style direct manipulation concentrated in Screens mode; Play elevated to a first-class workflow; Source remains authoritative; Rockbox constraints remain explicit. The full studio migration is intentionally deferred to focused follow-up pull requests after this validation foundation.
 
 ## Current architecture
 
@@ -40,6 +41,9 @@ Last updated: 2026-07-13
 - `scripts/fonts/` builds the pinned upstream `tools/convttf.c` only from an external checkout, converts licensed TTF/OTF/TTC inputs, and can verify generated output in an external Rockbox simulator. No GPL source, binary, or third-party generated font is bundled.
 - The versioned local font helper binds to `127.0.0.1`, checks an exact origin allowlist and protocol header, accepts only in-memory font bytes/parameters, uses a private temporary directory, and returns validated RB12 bytes. The Font Workshop exposes connection, pixel-size, glyph-range, metrics, and licensing state without adding GPL code to the browser bundle.
 - The Font Workshop and protocol client add 9.25 KB minified / 2.86 KB gzip to the Phase 3 production bundle; no native or GPL artifact is present in that delta.
+- `scripts/phase4/` builds no browser dependency. It runs pinned external CheckWPS targets and an external simulator, normalizes screenshots, computes a classified pixel diff, and writes offline-verifiable evidence reports.
+- `rockbox/semantics/` exports an explicit support catalog so the Compatibility Lab does not confuse 193 known tag names with the smaller interpreted/rendered subset.
+- The Compatibility Lab is an advanced, code-split evidence modal in the existing UI. The main chunk grows only 1.94 KB minified / 0.73 KB gzip; the 129.33 KB / 8.88 KB gzip evidence chunk loads on demand. The new Pulp UX guideline is checked in, but the full mode-based studio shell is not started on this Phase 4 branch.
 
 ## Baseline findings
 
@@ -76,11 +80,11 @@ Before Phase 0 changes:
 
 ## Validation
 
-Latest passing validation on 2026-07-13:
+Latest passing validation on 2026-07-16:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 22 files, 137 tests
+npm test               passed — 24 files, 142 tests
 npm run build          passed — Vite production build
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
@@ -93,6 +97,8 @@ npm run test:phase3-real passed — Adwaitapod WPS/SBS/FMS exact import/edit/exp
 Phase 3 official       passed — edited exported Authored Full WPS/SBS/FMS accepted by CheckWPS
 Phase 3 font           passed — generated RB12 package round-trip and current Rockbox simulator load
 Phase 3 local helper   passed — real Arial TTF converted through loopback protocol to validated 5,337-byte RB12
+Phase 4 render report passed — 2 reproducible simulator captures, 6,315 classified differences, 0 unclassified
+Phase 4 compatibility passed — 386 tag/device rows across iPod Video and iPod Classic
 ```
 
 Phase 1F evidence:
@@ -143,15 +149,24 @@ Phase 3 evidence:
 - The accepted local companion converted a real TTF through the same loopback HTTP contract used by the browser and returned the expected `16-Arial.fnt` hash and RB12 metrics. Chrome then completed the Font Workshop flow and set the generated 16px/13px/95-glyph font as the project font.
 - Security tests prove an unapproved remote origin and an unknown loopback port are rejected before conversion; the custom protocol header, safe basename, bounded input, and Unicode-range checks are mandatory.
 
+Phase 4 evidence:
+
+- ADR-0014 covers the required official-parser WebAssembly license, build, memory, filesystem, bundle, and upstream-update questions. No official parser or renderer code is shipped.
+- The authored iPod Video SBS is rendered by an unmodified Rockbox simulator through the upstream framebuffer-dump path. Two clean runs produce the same normalized official hash.
+- The browser and official 320×240 images differ at 6,315 of 76,800 pixels. All differences are classified; native font/text layout and selector approximation are non-zero, while the background outside the UI viewport matches.
+- The compatibility report contains 193 tags × 2 device profiles. Preservation and parsing stay separate from 96 interpreted/rendered tags, 12 user-facing source-aware edit surfaces, 13 officially evidenced Video tags, 11 officially evidenced Classic tags, and one currently known visual-difference tag.
+- iPod Classic radio tags are preserved and parsed but visibly unavailable because the verified target profile has no FM screen. Touch-only tags are also marked unavailable on both non-touch iPod profiles.
+- Browser, official, and diff images are generated locally and ignored. Checked-in reports retain only hashes, metrics, evidence IDs, and classifications.
+
 ## Known blockers
 
-- The current helper is a Node-based macOS/Linux prototype and needs Git, a C compiler, and FreeType. A signed standalone installer is future delivery polish; the accepted architecture and conversion workflow are functional now.
+- No Phase 4 acceptance blocker is open. The current helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Complete review and merge of the local companion milestone, then begin Phase 4 official-engine render comparison from updated `main`.
+Complete Phase 4 review and merge, then begin Phase 5 device-state simulation from updated `main`. Start the Pulp-inspired studio migration only as the later focused milestones defined in `ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md`.
 
 ## Compatibility summary
 
-Phase 3 is ready for targeted WPS/SBS/FMS dogfooding: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, move supported viewports, edit known properties or source, import an exact RB12 `.fnt` or convert TTF/OTF/TTC through the local helper, and export without losing unsupported syntax/assets. Bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations.
+Phase 4 is ready for targeted WPS/SBS/FMS dogfooding with inspectable evidence: a user can import wrapped or root-level real-theme ZIPs, switch among source-linked screen states, preview documented menu/quick-screen/tuner state, edit supported geometry or source, import or convert fonts through the local helper, inspect per-tag/per-device support in the Compatibility Lab, and export without losing unsupported syntax/assets. Bitmap-glyph parity, condition operands outside the evidenced subset, and broad tag rendering remain visible limitations rather than hidden compatibility claims.

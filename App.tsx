@@ -34,6 +34,11 @@ import { EditorToolbar } from './components/EditorToolbar';
 import { EditorHeader } from './components/EditorHeader';
 import { EditorSidebar } from './components/EditorSidebar';
 
+const CompatibilityDashboardModal = React.lazy(async () => {
+  const module = await import('./components/CompatibilityDashboardModal');
+  return { default: module.CompatibilityDashboardModal };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -61,6 +66,7 @@ export default function App() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [showFontImport, setShowFontImport] = useState(false);
+  const [showCompatibility, setShowCompatibility] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
   const [branchOverrides, setBranchOverrides] = useState<BranchOverrides>({});
@@ -497,8 +503,13 @@ export default function App() {
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
       {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} onShowCompatibility={() => setShowCompatibility(true)} />
       <FontImportModal isOpen={showFontImport} onClose={() => setShowFontImport(false)} onImport={handleFontImport} />
+      {showCompatibility ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[115] bg-black/70 flex items-center justify-center text-white font-mono text-sm">Loading compatibility evidence…</div>}>
+          <CompatibilityDashboardModal isOpen onClose={() => setShowCompatibility(false)} initialDeviceId={deviceProfile.id} />
+        </React.Suspense>
+      ) : null}
       <ElementLibraryModal isOpen={showLibModal} onClose={() => setShowLibModal(false)} onAddElement={handleAddPreset} activeScreen={activeScreen} deviceProfile={deviceProfile} />
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 

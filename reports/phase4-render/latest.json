@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-16T15:49:08.966Z",
+  "upstream": {
+    "repository": "https://github.com/Rockbox/rockbox.git",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
+  },
+  "harness": {
+    "tool": "Rockbox UI simulator firmware framebuffer dump",
+    "target": "ipodvideo",
+    "trigger": "uisimulator sim_trigger_screendump -> firmware/screendump.c",
+    "sourceBundled": false,
+    "binaryBundled": false,
+    "screenshotsCommitted": false,
+    "cleanCapturePasses": 2
+  },
+  "fixture": {
+    "id": "phase4-authored-sbs-menu",
+    "screen": "sbs",
+    "device": "apple-ipod-video-5g",
+    "width": 320,
+    "height": 240,
+    "sourceSha256": "5ed11d378756e758c33da43c527ec853ffd5a6094d27f2d6e00823a682110888",
+    "sourceTags": [
+      "V",
+      "Vf",
+      "Vb",
+      "VI",
+      "Vi"
+    ]
+  },
+  "captures": {
+    "reproducible": true,
+    "browser": {
+      "format": "ppm",
+      "sha256": "715fa95365e23b35550d2924a22fe64d02e28197bf3c0d0122fff17d93b359f1"
+    },
+    "official": {
+      "sourceFormat": "bmp",
+      "normalizedFormat": "ppm",
+      "sha256": "a1021a11e254131c128b5aece6aba38126d52421c634e3b05f9db1383e400a79"
+    },
+    "diff": {
+      "format": "ppm",
+      "sha256": "acf2beb5782f72b5e416e339c26de351837f287f659957cf24080b54c8092d20"
+    },
+    "artifactsDirectory": "reports/phase4-render/artifacts",
+    "artifactsCommitted": false
+  },
+  "comparison": {
+    "totalPixels": 76800,
+    "differingPixels": 6315,
+    "differingPixelRatio": 0.0822265625,
+    "meanAbsoluteChannelDelta": 6.650442708333333,
+    "maxChannelDelta": 255,
+    "boundingBox": {
+      "x": 4,
+      "y": 16,
+      "width": 312,
+      "height": 134
+    },
+    "classifications": [
+      {
+        "id": "native-font-and-text-layout",
+        "label": "Native font raster and text layout",
+        "pixels": 6003,
+        "tags": [
+          "Vi"
+        ]
+      },
+      {
+        "id": "selector-style",
+        "label": "Firmware selector and browser selector approximation",
+        "pixels": 312,
+        "tags": [
+          "Vi"
+        ]
+      },
+      {
+        "id": "firmware-list-spacing",
+        "label": "Firmware-owned list spacing and content projection",
+        "pixels": 0,
+        "tags": [
+          "VI",
+          "Vi"
+        ]
+      },
+      {
+        "id": "screen-background",
+        "label": "Screen background initialization outside the UI viewport",
+        "pixels": 0,
+        "tags": [
+          "V",
+          "Vf",
+          "Vb"
+        ]
+      }
+    ],
+    "classifiedPixels": 6315,
+    "unclassifiedPixels": 0
+  }
+}

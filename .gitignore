@@ -13,6 +13,10 @@ dist-ssr
 coverage
 *.local
 
+# Phase 4 generates simulator/browser/diff images locally. The checked-in
+# report records their hashes and classifications without redistributing them.
+reports/phase4-render/artifacts/
+
 # Legally obtained third-party Rockbox themes remain local.
 tests/private-themes/*
 !tests/private-themes/README.md

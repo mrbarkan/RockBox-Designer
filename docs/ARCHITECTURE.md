@@ -178,6 +178,19 @@ Comments are a syntax concern only. They remain exact in the source document and
 
 Development conversion uses the pinned upstream `tools/convttf.c` from a separate checkout. `scripts/fonts/` builds its executable into a temporary directory, converts a licensed TTF/OTF/TTC input, validates the generated RB12 file, preserves it through package export/re-import, and can confirm that current Rockbox loads it in an external simulator. The repository distributes none of the GPL source, executable, input font, or generated font.
 
+## Phase 4 official comparison boundary
+
+The official Rockbox parser and skin renderer remain out-of-process development oracles. ADR-0014 rejects a current WebAssembly distribution after assessing its GPL license, target-generated build, native/global memory model, `.rockbox` filesystem needs, client-bundle impact, and upstream-update workflow.
+
+`scripts/phase4/` uses the pinned external tools in two ways:
+
+- Target-specific CheckWPS runs attach accepted fixture IDs to individual tag/device evidence rows.
+- An unmodified iPod Video simulator renders an authored SBS and emits its own firmware framebuffer through Rockbox's screen-dump path.
+
+The official capture is repeated from clean temporary simulator disks. Its normalized pixel hash must be stable. The browser's deterministic RGB render, official framebuffer, and visual diff are generated locally; only hashes, metrics, classifications, and support rows are checked in. No browser code receives simulator filesystem paths or GPL artifacts.
+
+The Compatibility Lab reads the checked-in evidence report. It does not infer semantic support from the upstream name registry: 193 recognized names remain distinct from the smaller interpreted, rendered, editable, and officially exercised subsets.
+
 The accepted delivery architecture is a loopback-only local companion:
 
 ```text
