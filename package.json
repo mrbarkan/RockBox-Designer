@@ -36,6 +36,7 @@
     "phase3:real:report:verify": "node scripts/verify-phase3-real-theme-report.mjs",
     "phase3:font:report:verify": "node scripts/verify-phase3-font-report.mjs",
     "font:helper:report:verify": "node scripts/verify-phase3-local-helper-report.mjs",
+    "font:catalog:verify": "tsx scripts/fonts/verify-font-catalog.ts",
     "phase4:render:report:verify": "node scripts/verify-phase4-render-report.mjs",
     "phase4:compatibility:report:verify": "node scripts/verify-phase4-compatibility-report.mjs",
     "phase6:component:report:verify": "node scripts/verify-phase6-component-report.mjs",
@@ -51,7 +52,7 @@
     "visual:golden:generate": "tsx scripts/visual/generate-phase2-golden.ts && tsx scripts/visual/generate-phase3-goldens.ts",
     "registry:generate": "node scripts/generate-rockbox-tag-registry.mjs",
     "registry:verify": "node scripts/verify-rockbox-tag-registry.mjs",
-    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run phase2:official:report:verify && npm run phase2:real:report:verify && npm run phase3:official:report:verify && npm run phase3:real:report:verify && npm run phase3:font:report:verify && npm run font:helper:report:verify && npm run phase4:render:report:verify && npm run phase4:compatibility:report:verify && npm run phase6:component:report:verify && npm run phase7:simulator:report:verify && npm run phase8:firmware:report:verify && npm run theme:report:verify && npm run typecheck && npm test && npm run build"
+    "validate": "npm run registry:verify && npm run device:verify && npm run font:catalog:verify && npm run official:report:verify && npm run phase2:official:report:verify && npm run phase2:real:report:verify && npm run phase3:official:report:verify && npm run phase3:real:report:verify && npm run phase3:font:report:verify && npm run font:helper:report:verify && npm run phase4:render:report:verify && npm run phase4:compatibility:report:verify && npm run phase6:component:report:verify && npm run phase7:simulator:report:verify && npm run phase8:firmware:report:verify && npm run theme:report:verify && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

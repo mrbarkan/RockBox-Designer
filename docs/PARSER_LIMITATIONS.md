@@ -74,7 +74,8 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 ## Browser font glyphs are not Rockbox bitmap glyphs
 
 - **Example:** A custom `.fnt` file with glyph widths that differ from the browser's monospace font.
-- **Current behavior:** Phase 3 validates imported RB12 `.fnt` files and reports their actual height, ascent, maximum width, character range, and glyph count. The canvas still rasterizes text with browser fonts, so glyph width and shape can differ from the packaged bitmap font.
+- **Current behavior:** Fonts validates the full RB12 bitmap/offset/width layout, retains exact bytes, draws actual 1-bit or 4-bit glyph pixels, measures stored advances and line heights, and reports declared-range misses plus probable default-glyph aliases. Screen canvas text still uses browser rasterization, so the Font workspace preview is more exact than general WPS/SBS/FMS text drawing.
+- **Boundary:** RB12 has no explicit coverage bit for missing characters inside its continuous range; identical default-glyph offsets are reported as probable aliases. Combining-mark placement, bidirectional shaping, fallback-font chains, and full firmware UI text layout remain external Level C concerns.
 - **Preservation status:** Font references and binaries remain exact.
 - **Diagnostic:** The Phase 3 guide distinguishes exact RB12 metrics and packaging from approximate browser glyph rendering; no pixel-parity claim is made.
 - **Current evidence:** Phase 4 repeats a clean official simulator capture twice and compares it with the deterministic browser render. The authored SBS reference differs at 6,315 of 76,800 pixels, all classified as native text/row layout or selector approximation; the surrounding background is identical.

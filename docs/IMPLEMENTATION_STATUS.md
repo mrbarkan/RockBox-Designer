@@ -4,12 +4,12 @@ Last updated: 2026-07-17
 
 ## Current phase
 
-- **Phase:** Post-Phase 8 Pulp migration — source-safe Assets workspace
-- **Branch:** `codex/assets-workspace`
-- **Merged milestones:** Phase 0 through Phase 8 plus the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25) at `43ef474`.
-- **Status:** Ordinary theme assets now have a first-class package workspace over canonical bytes. It converts PNG/JPEG inputs to Rockbox BMP, builds vertical strips, previews exact `%xl` frames, shows known WPS/SBS/FMS/CFG usage, preserves duplicate basenames, and performs safe replace/rename/delete operations. Adwaitapod's 104-asset package passed a clean real-browser smoke across WPS/SBS/FMS/USB.
-- **Scope boundary:** Assets edits ordinary Theme ZIP bytes only. Firmware Assets remains a separate custom-firmware source-package workflow. Unsupported future path-bearing syntax is preserved but may require manual asset-reference review; external Level C remains the final rendering authority.
-- **UX direction preserved:** The compact Pulp-style Assets mode is lazy-loaded and does not flatten source. The editor header now keeps screen navigation and render/debug tools in separate scroll-safe rows so screen clicks cannot be intercepted at a 1280-pixel dogfood viewport.
+- **Phase:** Post-Phase 8 Pulp migration — canonical Font workspace
+- **Branch:** `codex/font-workspace`
+- **Merged milestones:** Phase 0 through Phase 8, the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25), and the source-safe Assets workspace in [PR #26](https://github.com/mrbarkan/RockBox-Designer/pull/26) at `509014b`.
+- **Status:** Fonts is now a first-class workspace over exact RB12 bytes. It draws real 1-bit and 4-bit glyphs, measures stored advances and line heights, checks declared ranges, compares package fonts, inventories resolved CFG/`%Fl` usage, converts outline fonts through the existing local helper, and safely selects/replaces/renames/deletes FNT assets. A pinned metadata-only catalog distinguishes all 88 names in the separately installed Rockbox fonts package from fonts actually bundled in the theme.
+- **Scope boundary:** Font bytes, header/table metrics, glyph pixels, ordinary advance widths, and range checks are exact. RB12 cannot explicitly identify every in-range converter fallback; combining marks, bidirectional shaping, fallback chains, general screen-text rasterization, and firmware UI remain external Level C concerns. No Rockbox collection font bytes or licenses are bundled.
+- **UX direction preserved:** The import-only modal is removed. The compact Pulp-style Font mode is lazy-loaded, keeps project bytes global, exposes Play, and labels an unbundled catalog selection as an external font-package dependency.
 - **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
@@ -43,10 +43,10 @@ Last updated: 2026-07-17
 - `rockbox/semantics/` interprets the supported WPS/SBS/FMS subsets without mutating source, retains a CST source link on every authored render operation, and labels firmware-derived menu, quick-screen, and tuner projections separately.
 - `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for 320×240 WPS, SBS, and FMS goldens.
 - The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Losslessly preserved comments stay in the source editor and are intentionally omitted from the visual layer projection.
-- `rockbox/fonts/` validates RB12 `.fnt` binaries and exposes actual height, ascent, width, range, and glyph metrics. Font assets are packaged byte-exact under `.rockbox/fonts/`.
+- `rockbox/fonts/` validates the complete RB12 bitmap/offset/width layout, decodes rotated 1-bit and packed 4-bit glyphs, measures stored advances, checks declared ranges/default aliases, inventories exact references, and exposes a pinned 88-name metadata catalog. Font assets are packaged byte-exact under `.rockbox/fonts/`.
 - `scripts/fonts/` builds the pinned upstream `tools/convttf.c` only from an external checkout, converts licensed TTF/OTF/TTC inputs, and can verify generated output in an external Rockbox simulator. No GPL source, binary, or third-party generated font is bundled.
-- The versioned local font helper binds to `127.0.0.1`, checks an exact origin allowlist and protocol header, accepts only in-memory font bytes/parameters, uses a private temporary directory, and returns validated RB12 bytes. The Font Workshop exposes connection, pixel-size, glyph-range, metrics, and licensing state without adding GPL code to the browser bundle.
-- The Font Workshop and protocol client add 9.25 KB minified / 2.86 KB gzip to the Phase 3 production bundle; no native or GPL artifact is present in that delta.
+- The versioned local font helper binds to `127.0.0.1`, checks an exact origin allowlist and protocol header, accepts only in-memory font bytes/parameters, uses a private temporary directory, and returns validated RB12 bytes. Fonts exposes helper state, pixel size, glyph range, exact metrics/pixels, source usage, comparison, package ownership, and licensing state without adding GPL code to the browser bundle.
+- The dedicated Font workspace is a 26.69 KB minified / 7.84 KB gzip lazy chunk. No native converter, GPL source, collection BDF/FNT, or third-party font license is present in the browser bundle.
 - `scripts/phase4/` builds no browser dependency. It runs pinned external CheckWPS targets and an external simulator, normalizes screenshots, computes a classified pixel diff, and writes offline-verifiable evidence reports.
 - `rockbox/semantics/` exports an explicit support catalog so the Compatibility Lab does not confuse 193 known tag names with the smaller interpreted/rendered subset.
 - The Compatibility Lab remains an advanced code-split evidence modal. The checked-in Pulp guideline now informs the first focused migration—Play—without widening Phase 5 into the remaining Theme/Components/Assets/Logic studio modes.
@@ -95,7 +95,7 @@ Before Phase 0 changes:
 - Imported, Assets-workspace, and component binary assets are canonical. Older synthetic-project upload controls still enter through the legacy data-URL compatibility path and are not the preferred package workflow.
 - FMS is supported by the package model and screen-aware semantics for frequency, presets, signal, stereo, tuned/scan, and RDS state. Tags outside that subset remain preserved and visibly unsupported.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
-- Imported RB12 font metrics are exact and the binary packages exactly, but browser glyph rasterization still uses browser text rather than the Rockbox bitmap glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
+- Imported RB12 font metrics and bytes are exact, and the dedicated Fonts workspace draws the stored Rockbox bitmap glyphs. General screen-preview text still uses the browser approximation rather than routing every semantic text operation through the RB12 rasterizer. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
 - Level A Play state is deterministic and shareable by named scenario, but it is not a full firmware simulator. Custom state is intentionally not encoded into scenario URLs.
 
 ## Validation
@@ -104,9 +104,10 @@ Latest passing validation on 2026-07-17:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 31 files, 189 tests
-npm run build          passed — Vite production build; 601.85 KB / 178.98 KB gzip main, 21.63 KB / 6.67 KB gzip Assets, 21.35 KB / 5.13 KB gzip Play, and 20.00 KB / 7.28 KB gzip Firmware Assets chunks
+npm test               passed — 32 files, 197 tests
+npm run build          passed — Vite production build; 599.17 KB / 177.98 KB gzip main, 26.69 KB / 7.84 KB gzip Fonts, 21.63 KB / 6.67 KB gzip Assets, 21.35 KB / 5.14 KB gzip Play, and 20.00 KB / 7.27 KB gzip Firmware Assets chunks
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
+npm run font:catalog:verify passed — 88 font-package names; exact match to pinned external `fonts/*.bdf`
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
 npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matches; pinned CheckWPS accepts Adwaitapod and Authored Full
@@ -239,9 +240,17 @@ Post-Phase 8 Assets evidence:
 - The private Adwaitapod ZIP is not committed. Browser acceptance found 104 assets, zero missing known references, three 12-frame battery-strip references, a loader-compatible 8-bit header, correct frame navigation, working WPS/SBS/FMS/USB tabs, and zero console errors.
 - The starter shelf is locally generated and license-clean. Adding a preset never inserts or rewrites source implicitly.
 
+Post-Phase 8 Font evidence:
+
+- Source inspection at the pinned SHA covered `firmware/export/font.h`, `firmware/font.c`, both `convbdf` rotation and `convttf` packing, diacritic-aware measurement, the collection README/licenses, the manual's separate font-package instructions, and all 88 BDF names.
+- Strict parsing validates RB12 signature, dimensions, depth, Unicode/default range, bitmap extent, 16-/32-bit offset padding/tables, width tables, and every glyph extent. Focused tests cover both pixel layouts, stored measurement/fallback, truncated tables, invalid asset admission, exact CFG/`%Fl` inventory, minimum-change UI-font selection, safe rename, the catalog, and the lazy UI.
+- The old import-only modal is gone. Package bytes remain in the shared theme/project asset stores; Font-only search, preview text, glyph page, and helper state are disposable UI projections.
+- A real 152,800-byte `14-Terminus.fnt` generated by pinned upstream `convbdf` passed browser import. The UI reported 14-pixel height, 12-pixel ascent, 8-pixel maximum width, 65,534 slots, recognizable glyphs, a 120-pixel `Computer Love 🙂` metric width, U+1F642 outside range with U+FFFD fallback, correct project UI-font state, working Play handoff, and zero application-console errors.
+- The 88-name font-pack catalog contains metadata only. Choosing a catalog-only font visibly requires the separate Rockbox fonts package; importing the FNT makes the theme self-contained.
+
 ## Known blockers
 
-- No Phase 8 or Assets-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
+- No Phase 8, Assets-workspace, or Font-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
 - Firmware Assets is verified only for the iPod Video compiled USB fallback logo/layout output. iPod Classic fallback changes, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
 - The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
 - The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
@@ -250,8 +259,8 @@ Post-Phase 8 Assets evidence:
 
 ## Next task
 
-Continue the Pulp migration with a dedicated Font workspace and a source-verified catalog of extended Rockbox default fonts, while keeping the existing loopback converter and exact `.fnt` bytes authoritative. Then migrate Theme/CFG project commit and Logic workflows without repainting config-only changes.
+Continue the Pulp migration with a source-safe Logic workspace for inspecting and selecting conditional branches without flattening source. Then migrate Theme/CFG into a dedicated project-wide workspace while preserving minimum-change commit behavior and avoiding preview repaints for config-only edits.
 
 ## Compatibility summary
 
-The editor now preserves the correct Rockbox split and has a real ordinary-theme asset workflow: connected USB is an SBS activity scene, compiled fallback changes remain opt-in firmware work, and imported/project/component assets retain exact path-and-byte identity. Known references can be inspected and changed safely without flattening source. External Level C remains authoritative for final pixels, while future path-bearing tags, device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.
+The editor now preserves the correct Rockbox split and has real ordinary-theme Assets and Fonts workflows. Connected USB is an SBS activity scene; compiled fallback changes remain opt-in firmware work; bitmaps and FNT files retain exact path-and-byte identity; and known references can be inspected and changed safely without flattening source. The dedicated Font preview removes the previous bitmap-glyph inspection gap, while general screen text, complex shaping, future reference-bearing syntax, device-only behavior, additional targets/features, and broad tag rendering remain visible external-Level-C limitations rather than hidden compatibility claims.

@@ -18,6 +18,8 @@ The semantic subset is independently implemented from behavior verified at Rockb
 
 The application can import an existing Rockbox `.fnt` file, validate its RB12 header, retain its exact bytes under `.rockbox/fonts/`, expose its actual height, ascent, maximum width, character range, and glyph count, and export the same binary unchanged. The Font Workshop also converts TTF/OTF/TTC through the accepted local companion architecture:
 
+The post-phase Pulp migration extends that foundation into the dedicated [Font Workspace](FONT_MODE.md): full RB12 table validation, actual monochrome/antialiased glyph pixels, advance-width and line-height previews, project-string range checks, exact CFG/`%Fl` usage, safe mutation, and a metadata-only catalog of the separately distributed 88-font Rockbox collection. The browser still does not substitute this preview for authoritative complex firmware text layout.
+
 ```bash
 npm run font:helper
 ```

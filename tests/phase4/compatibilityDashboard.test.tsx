@@ -33,8 +33,10 @@ describe('Phase 4 Compatibility Lab', () => {
         onSave={noOp}
         onExport={noOp}
         onImportZip={noOp}
-        onImportFont={noOp}
+        onShowFonts={noOp}
+        onShowAssets={noOp}
         onShowCompatibility={noOp}
+        onShowFirmware={noOp}
       />
     );
     expect(markup).toContain('Compatibility Lab');

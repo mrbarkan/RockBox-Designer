@@ -1,0 +1,22 @@
+export const rb12Fixture = () => {
+  const glyphCount = 95;
+  const bitmapBytes = 8;
+  const offsetStart = 36 + bitmapBytes;
+  const widthStart = offsetStart + glyphCount * 2;
+  const bytes = new Uint8Array(widthStart + glyphCount);
+  bytes.set(new TextEncoder().encode('RB12'));
+  const view = new DataView(bytes.buffer);
+  view.setUint16(4, 13, true);
+  view.setUint16(6, 16, true);
+  view.setUint16(8, 13, true);
+  view.setUint16(10, 1, true);
+  view.setUint32(12, 32, true);
+  view.setUint32(16, 32, true);
+  view.setUint32(20, glyphCount, true);
+  view.setUint32(24, bitmapBytes, true);
+  view.setUint32(28, glyphCount, true);
+  view.setUint32(32, glyphCount, true);
+  bytes.fill(0xff, 36, 36 + bitmapBytes);
+  bytes.fill(1, widthStart);
+  return bytes;
+};
