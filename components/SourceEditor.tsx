@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ProjectState } from '../types';
 import { compileAstScreen, compileWps, compileCfg, compileSbs, compileFms } from '../services/rockboxCompiler';
 import { parseRockbox } from '../rockbox/syntax';
@@ -8,12 +8,15 @@ interface SourceEditorProps {
   project: ProjectState;
   onClose: () => void;
   onApplyChanges: (screen: 'wps' | 'sbs' | 'fms' | 'cfg', content: string) => void;
+  initialFocus?: { tab: 'wps' | 'sbs' | 'fms' | 'cfg'; start: number; end: number };
 }
 
-export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, onApplyChanges }) => {
-  const [activeTab, setActiveTab] = useState<'wps' | 'sbs' | 'fms' | 'cfg'>('wps');
+export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, onApplyChanges, initialFocus }) => {
+  const [activeTab, setActiveTab] = useState<'wps' | 'sbs' | 'fms' | 'cfg'>(initialFocus?.tab ?? 'wps');
   const [content, setContent] = useState('');
   const [applied, setApplied] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const focusApplied = useRef(false);
 
   const sourceForTab = (tab: typeof activeTab) => {
     if (tab === 'cfg') return compileCfg(project);
@@ -29,6 +32,17 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
     setContent(sourceForTab(activeTab));
     setApplied(false);
   }, [activeTab, project]);
+
+  useEffect(() => {
+    if (focusApplied.current || !initialFocus || initialFocus.tab !== activeTab || content.length === 0) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = Math.max(0, Math.min(content.length, initialFocus.start));
+    const end = Math.max(start, Math.min(content.length, initialFocus.end));
+    textarea.focus();
+    textarea.setSelectionRange(start, end);
+    focusApplied.current = true;
+  }, [activeTab, content, initialFocus]);
 
   const diagnostics = useMemo(
     () => activeTab === 'cfg' ? [] : parseRockbox(content).diagnostics,
@@ -76,6 +90,7 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
         {/* Editor Area */}
         <div className="flex-1 relative">
             <textarea
+                ref={textareaRef}
                 value={content}
                 onChange={(e) => { setContent(e.target.value); setApplied(false); }}
                 className="w-full h-full bg-[#0a0a0a] text-[#d4d4d4] p-6 outline-none resize-none font-mono text-sm leading-relaxed"

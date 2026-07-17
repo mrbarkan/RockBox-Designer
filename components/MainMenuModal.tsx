@@ -10,6 +10,7 @@ interface MainMenuModalProps {
   onExport: () => void;
   onImportZip: () => void;
   onShowFonts: () => void;
+  onShowLogic: () => void;
   onShowAssets: () => void;
   onShowCompatibility: () => void;
   onShowFirmware: () => void;
@@ -40,7 +41,7 @@ const MenuButton = memo(({ icon, label, onClick, onClose, subLabel }: MenuButton
 MenuButton.displayName = 'MenuButton';
 
 export const MainMenuModal: React.FC<MainMenuModalProps> = ({
-    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onShowFonts, onShowAssets, onShowCompatibility, onShowFirmware
+    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onShowFonts, onShowLogic, onShowAssets, onShowCompatibility, onShowFirmware
 }) => {
   const [activeTab, setActiveTab] = useState<'menu' | 'about'>('menu');
 
@@ -85,6 +86,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} onClose={onClose} subLabel="Load existing .zip theme" />
                         <MenuButton icon="Aa" label="Fonts" onClick={onShowFonts} onClose={onClose} subLabel="RB12 preview, font pack, conversion, and usage" />
+                        <MenuButton icon="IF" label="Logic" onClick={onShowLogic} onClose={onClose} subLabel="Condition tree, branch previews, simulation, and source links" />
                         <MenuButton icon="▧" label="Assets" onClick={onShowAssets} onClose={onClose} subLabel="BMP conversion, strips, paths, and usage" />
                         <MenuButton icon="▦" label="Compatibility Lab" onClick={onShowCompatibility} onClose={onClose} subLabel="Official parser and pixel evidence" />
                         <div className="h-1 bg-gray-300 my-2" />

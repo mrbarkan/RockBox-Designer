@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   deleteNode,
   decodeKnownTag,
+  duplicateConditionalBranch,
   insertNode,
   KNOWN_TAG_SCHEMAS,
   moveNode,
@@ -85,6 +86,14 @@ describe('structural commands', () => {
     const conditional = document.nodes[0];
     const result = replaceConditionalBranch(document, conditional.id, 0, 'stopped');
     expect(serializeRockbox(result.document)).toBe('%?mp<stopped|paused>');
+  });
+
+  it('duplicates a conditional branch without normalizing its siblings', () => {
+    const document = parseRockbox('# keep\r\n%?mh< hold | free >\r\n%zzFuture(raw)');
+    const conditional = document.nodes.find(node => node.kind === 'conditional');
+    if (!conditional) throw new Error('Missing conditional');
+    const result = duplicateConditionalBranch(document, conditional.id, 0);
+    expect(serializeRockbox(result.document)).toBe('# keep\r\n%?mh< hold | free | hold >\r\n%zzFuture(raw)');
   });
 
   it('inserts, moves, and deletes nodes while retaining moved identity', () => {

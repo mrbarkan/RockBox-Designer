@@ -34,6 +34,7 @@ describe('Phase 4 Compatibility Lab', () => {
         onExport={noOp}
         onImportZip={noOp}
         onShowFonts={noOp}
+        onShowLogic={noOp}
         onShowAssets={noOp}
         onShowCompatibility={noOp}
         onShowFirmware={noOp}
@@ -41,5 +42,6 @@ describe('Phase 4 Compatibility Lab', () => {
     );
     expect(markup).toContain('Compatibility Lab');
     expect(markup).toContain('Official parser and pixel evidence');
+    expect(markup).toContain('Condition tree, branch previews, simulation, and source links');
   });
 });

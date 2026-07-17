@@ -162,6 +162,14 @@ This confirmed:
 
 The editor implements these factual contracts independently in TypeScript. It does not copy or link the Rockbox loader, scaler, or skin parser, and external Level C remains authoritative for final pixels.
 
+## Logic workspace conditional reference
+
+The post-phase Logic implementation re-inspected `lib/skin_parser/tag_table.c`, `lib/skin_parser/tag_table.h`, `apps/gui/skin_engine/skin_tokens.c`, `apps/gui/skin_engine/skin_render.c`, and `manual/appendix/wps_tags.tex` at the recorded SHA.
+
+This confirmed the current tag identities and truth/numeric values used by the existing independent interpreter, including `%mp` playback ordering, `%mm` repeat ordering, `%mh` hold, `%bc` charging, `%bp` charger presence, `%bu` USB insertion, `%mv` recent volume change, `%ps` shuffle, `%C` album-art presence, and `%Sr` RTL/LTR branch order. Human branch names are used only for the evidenced tags; every other branch keeps a neutral number.
+
+The application does not copy the Rockbox evaluator. The CST remains authoritative, explicit browser support is narrower than official syntax, and external Level C remains authoritative for the full conditional engine and device state.
+
 ## Licensing note
 
 Rockbox source files inspected here state that they are licensed under the GNU General Public License, version 2 or later, and `docs/COPYING` contains the project license text. No Rockbox parser implementation has been copied into Rockbox Designer. The generated factual registry is explicitly flagged for human licensing review. Vendoring, linking, translating, or distributing Rockbox implementation code requires an explicit project licensing decision before work continues.

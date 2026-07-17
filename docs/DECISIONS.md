@@ -251,3 +251,15 @@ BMP inspection follows the formats accepted by the pinned Rockbox loader. PNG/JP
 Replace the import-only modal with one lazy Font workspace that reuses the existing loopback converter. Record the 88 filenames in the pinned Rockbox `fonts/` directory as a metadata-only external catalog. Do not vendor BDF/FNT collection bytes or license text. A catalog-only selection must say that the player needs the separate Rockbox fonts package; importing the actual FNT makes the theme self-contained.
 
 **Consequences:** Real RB12 pixels and widths are now inspectable before export, malformed tables are rejected on explicit add/replace, package/source identity remains lossless, and the default editor path does not load the Font UI. RB12 cannot prove whether every in-range code point is a real glyph because converters may alias the default offset, so those are labeled probable rather than missing. Combining marks, bidirectional shaping, fallback chains, general screen-text rasterization, and firmware UI remain external Level C authority. The local helper and input-font licensing boundary from ADR-0013 is unchanged.
+
+## ADR-0022 — Project Rockbox conditionals into a source-safe Logic workspace
+
+**Status:** Accepted
+
+**Context:** The Screens layer inspector could force a branch, but it mixed conditional structure with visual layers and did not expose cross-screen nesting, exact expressions, target requirements, shared simulator controls, or direct source navigation. Pulp calls for a dedicated Logic mode and explicitly forbids simplifying complex imported conditions unless conversion is exact and reversible.
+
+**Decision:** Add `rockbox/logic/` as a read-only projection of authoritative conditional CST nodes. Common human labels are limited to behavior rechecked in the pinned manual, tag table, and skin-token implementation. Unsupported and invalid expressions remain exact and receive neutral branches plus a source-only warning. Store branch overrides as transient per-screen application state, feed them into the existing interpreter, and reuse the existing deterministic simulator rather than creating a second logic engine.
+
+The lazy Logic workspace provides screen counts, nested tree/search, active/forced branch state, target capability gates, exact raw blocks, shared simulation controls, Play access, and source/canvas reveals. The only new write command explicitly duplicates a selected supported branch at the end of its conditional through the minimum-change CST serializer. It never converts a condition to a proprietary rule format.
+
+**Consequences:** A non-author can understand and dogfood imported conditional states without losing access to the real code. Screen changes no longer discard other screens' preview overrides or collide identical node IDs across files. Unknown behavior remains visibly non-authoritative, and target-unavailable source stays available for another target. Complete conditional evaluation and firmware state remain external Level C concerns; common-condition insertion and richer source edits stay in Source/Components until separately evidenced.

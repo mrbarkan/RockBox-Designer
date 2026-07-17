@@ -7,6 +7,14 @@ The lossless syntax API is authoritative for imported WPS/SBS/FMS editing and ex
 
 Passing synthetic fixtures are evidence for those inputs, not a claim of complete Rockbox compatibility.
 
+## Unsupported conditional expressions stay advanced source
+
+- **Example:** A future `%?zzFuture<...>` test or a complex operand the browser semantic interpreter does not evaluate.
+- **Current behavior:** Logic inventories the exact conditional, nesting, branch source, and span; labels it preserved source; and permits a disposable forced-branch preview. It does not translate the expression into a simpler visual rule. Known target requirements such as FM, touch, recording, RTC, and album art are capability-gated.
+- **Preservation status:** Untouched conditionals, separators, comments, whitespace, and unknown tags round-trip exactly. Explicit branch duplication appends only a re-keyed copy of the chosen branch through the minimum-change serializer.
+- **Diagnostic:** The workspace distinguishes live browser state, preserved source, and unavailable-on-target conditions.
+- **Boundary:** Rockbox's external simulator remains authoritative for unsupported operands, complete numeric branch mapping, firmware state, and target behavior.
+
 ## Application migration remains screen-specific
 
 - **Example:** Importing a WPS through the current ZIP workflow and editing it on the canvas.
