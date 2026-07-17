@@ -26,6 +26,7 @@ interface EditorHeaderProps {
     setUseAstPreview: (v: boolean) => void;
     onOpenPlay: () => void;
     onOpenAssets: () => void;
+    onOpenFonts: () => void;
     onOpenFirmware: () => void;
 }
 
@@ -36,7 +37,7 @@ const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: st
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
     project, user, onLogout, activeScreen, setActiveScreen, selectedElement, rightPanelMode,
     onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
-    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenAssets, onOpenFirmware
+    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenAssets, onOpenFonts, onOpenFirmware
 }) => {
     const deviceProfile = getDeviceProfile(project.settings.target);
     const screenFiles = getMainScreenFiles(deviceProfile);
@@ -69,6 +70,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     title="Inspect, convert, replace, rename, and package real Rockbox assets"
                 >
                     ASSETS
+                </button>
+                <button
+                    type="button"
+                    onClick={onOpenFonts}
+                    className="border-2 border-black bg-[#8b5cf6] px-3 py-2 font-mono text-[10px] font-black uppercase text-white shadow-[3px_3px_0_#111] hover:bg-[#9f78ff] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    title="Inspect exact RB12 glyphs, compare widths, convert fonts locally, and manage references"
+                >
+                    FONTS
                 </button>
                 <button
                     type="button"

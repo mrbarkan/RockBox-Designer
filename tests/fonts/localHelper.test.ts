@@ -8,23 +8,7 @@ import {
   parseRb12Font
 } from '../../rockbox/fonts';
 import { createLocalFontHelper } from '../../scripts/fonts/local-helper';
-
-const rb12Fixture = () => {
-  const bytes = new Uint8Array(40);
-  bytes.set(new TextEncoder().encode('RB12'));
-  const view = new DataView(bytes.buffer);
-  view.setUint16(4, 13, true);
-  view.setUint16(6, 16, true);
-  view.setUint16(8, 13, true);
-  view.setUint16(10, 1, true);
-  view.setUint32(12, 32, true);
-  view.setUint32(16, 32, true);
-  view.setUint32(20, 95, true);
-  view.setUint32(24, 4, true);
-  view.setUint32(28, 95, true);
-  view.setUint32(32, 95, true);
-  return bytes;
-};
+import { rb12Fixture } from './rb12Fixture';
 
 const servers: ReturnType<typeof createLocalFontHelper>[] = [];
 

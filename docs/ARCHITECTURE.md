@@ -174,7 +174,7 @@ Comments are a syntax concern only. They remain exact in the source document and
 
 ## Phase 3 font boundary
 
-`rockbox/fonts/` independently validates the RB12 file header and exposes actual Rockbox font metrics. Existing `.fnt` bytes are canonical package assets under `.rockbox/fonts/`; UI display of metrics does not decode or redraw the bitmap glyphs.
+`rockbox/fonts/` independently validates the complete RB12 header, bitmap, padding, offset, and width-table layout. Existing `.fnt` bytes are canonical package assets under `.rockbox/fonts/`. The same domain decodes Rockbox's rotated 1-bit BDF glyph blocks and row-major 4-bit antialiased glyphs, measures stored advances, identifies declared-range misses and probable default-glyph aliases, inventories exact CFG/`%Fl` references, and applies minimum-change UI-font selection.
 
 Development conversion uses the pinned upstream `tools/convttf.c` from a separate checkout. `scripts/fonts/` builds its executable into a temporary directory, converts a licensed TTF/OTF/TTC input, validates the generated RB12 file, preserves it through package export/re-import, and can confirm that current Rockbox loads it in an external simulator. The repository distributes none of the GPL source, executable, input font, or generated font.
 
@@ -324,5 +324,7 @@ Browser Font Workshop
 ```
 
 `scripts/fonts/local-helper.ts` never accepts browser file paths, binds no public interface, and accepts only known local app origins unless an origin is explicitly configured. It uses a matching external `ROCKBOX_SOURCE_DIR` or obtains the exact pinned upstream source into a SHA-keyed user cache and builds there. Conversion files are removed after each request. `services/fontCompanion.ts` implements the versioned browser client, and the Font Workshop keeps existing `.fnt` imports independent of helper availability.
+
+`components/FontMode.tsx` replaces the import-only modal with one lazy workspace. Its transient search, tab, preview string, glyph page, and helper-health state do not duplicate `ProjectState`. It distinguishes canonical theme bytes from a metadata-only catalog of the 88 filenames in Rockbox's separately installed fonts package. Referencing a catalog-only name is visibly an external dependency; importing its actual FNT makes the theme self-contained. The application bundles no BDF/FNT collection bytes or third-party font licenses.
 
 The browser bundle contains no GPL source or executable and gains only the protocol client and UI. Input font licensing remains the user's responsibility; generated `.fnt` files should be shared only when the source license permits conversion and redistribution.

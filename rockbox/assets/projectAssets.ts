@@ -6,6 +6,7 @@ import { createThemeAsset } from '../packages/assetStore';
 import { archiveBasename, archiveDirname, joinArchivePath, normalizeArchivePath } from '../packages/paths';
 import type { ThemeAsset } from '../packages/types';
 import { themeScreenForPreview } from '../screens';
+import { parseRb12Font } from '../fonts/rb12';
 import { inspectRockboxBitmap } from './bitmap';
 
 export type ProjectAssetOwner = 'theme' | 'project' | 'component';
@@ -180,6 +181,20 @@ export const collectProjectAssetReferences = (project: ProjectState): ProjectAss
     });
   });
 
+  if (!output.some(reference => reference.scope === 'cfg' && reference.cfgKey === 'font')) {
+    const fontMatches = listProjectAssets(project).filter(record =>
+      record.asset.kind === 'font' && record.asset.basename.toLowerCase() === project.settings.uiFont.toLowerCase()
+    );
+    output.push({
+      id: 'legacy:settings:font',
+      scope: 'legacy',
+      label: 'Project UI font',
+      raw: project.settings.uiFont,
+      resolvedPath: fontMatches.length === 1 ? fontMatches[0].asset.archivePath : undefined,
+      resolutionBase: 'font'
+    });
+  }
+
   const hasSource = Boolean(project.wpsDocument || project.sbsDocument || project.fmsDocument || project.themePackage);
   if (!hasSource) {
     const basenameCounts = new Map<string, number>();
@@ -270,9 +285,19 @@ const updatePreviewAsset = (project: ProjectState, previousPath: string, asset?:
 const failure = (project: ProjectState, ...conflicts: string[]): AssetMutationResult => ({ ok: false, project, conflicts });
 
 const validateMutationBytes = (project: ProjectState, archivePath: string, bytes: Uint8Array) => {
-  if (!archivePath.toLowerCase().endsWith('.bmp')) return undefined;
-  const inspection = inspectRockboxBitmap(bytes);
-  return inspection.valid ? undefined : failure(project, inspection.error ?? 'Rockbox cannot load this BMP.');
+  if (archivePath.toLowerCase().endsWith('.bmp')) {
+    const inspection = inspectRockboxBitmap(bytes);
+    return inspection.valid ? undefined : failure(project, inspection.error ?? 'Rockbox cannot load this BMP.');
+  }
+  if (archivePath.toLowerCase().endsWith('.fnt')) {
+    try {
+      parseRb12Font(bytes);
+      return undefined;
+    } catch (error) {
+      return failure(project, error instanceof Error ? error.message : 'Rockbox cannot load this FNT.');
+    }
+  }
+  return undefined;
 };
 
 export const addProjectAsset = async (
@@ -303,7 +328,10 @@ export const replaceProjectAsset = async (
   const invalid = validateMutationBytes(project, archivePath, bytes);
   if (invalid) return invalid;
   const asset = await createThemeAsset(archivePath, bytes);
-  const replaced = replaceOwnedAsset(project, record.owner, archivePath, asset);
+  let replaced = replaceOwnedAsset(project, record.owner, archivePath, asset);
+  if (asset.kind === 'font' && asset.basename.toLowerCase() === project.settings.uiFont.toLowerCase()) {
+    replaced = { ...replaced, settings: { ...replaced.settings, fontMetrics: parseRb12Font(asset.bytes) } };
+  }
   return { ok: true, project: updatePreviewAsset(replaced, archivePath, asset), conflicts: [], message: `Replaced ${archivePath} without changing its references.` };
 };
 
@@ -383,6 +411,7 @@ export const renameProjectAsset = async (
     if (reference.cfgKey === 'iconset') settings.iconset = nextRaw;
     if (reference.cfgKey === 'viewers iconset') settings.viewersIconset = nextRaw;
   }
+  if (references.some(reference => reference.id === 'legacy:settings:font')) settings.uiFont = nextBasename;
   const legacyElementIds = new Set(references
     .filter(reference => reference.scope === 'legacy' && reference.id.startsWith('legacy:'))
     .map(reference => reference.id.slice('legacy:'.length)));

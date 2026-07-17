@@ -10,7 +10,6 @@ import { MainMenuModal } from './components/MainMenuModal';
 import { LoginModal } from './components/LoginModal';
 import { ProjectManagerModal } from './components/ProjectManagerModal';
 import { ColorPaletteModal } from './components/ColorPaletteModal';
-import { FontImportModal, type FontImportOptions, type FontImportResult } from './components/FontImportModal';
 import { compileScreen, generateZip } from './services/rockboxCompiler';
 import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
@@ -24,9 +23,6 @@ import { parseProjectData, stringifyProjectData } from './services/projectSerial
 import { getDeviceProfile, supportsScreenFile } from './rockbox/devices';
 import { parseRockbox } from './rockbox/syntax';
 import { BranchOverrides, interpretSkin, SemanticResult, SkinScreen } from './rockbox/semantics';
-import { parseRb12Font } from './rockbox/fonts';
-import { createThemeAsset } from './rockbox/packages';
-import { convertFontWithCompanion } from './services/fontCompanion';
 import { activityForPreview, themeScreenForPreview } from './rockbox/screens';
 import {
   createScenarioSession,
@@ -72,6 +68,11 @@ const AssetsMode = React.lazy(async () => {
   return { default: module.AssetsMode };
 });
 
+const FontMode = React.lazy(async () => {
+  const module = await import('./components/FontMode');
+  return { default: module.FontMode };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -96,7 +97,7 @@ export default function App() {
   const [showLibModal, setShowLibModal] = useState(false);
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
-  const [showFontImport, setShowFontImport] = useState(false);
+  const [showFonts, setShowFonts] = useState(false);
   const [showCompatibility, setShowCompatibility] = useState(false);
   const [showFirmware, setShowFirmware] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
@@ -425,34 +426,6 @@ export default function App() {
       alert(`${files.length} resources loaded.`);
   };
 
-  const handleFontImport = async (file: File, options: FontImportOptions): Promise<FontImportResult> => {
-      const direct = file.name.toLowerCase().endsWith('.fnt');
-      const converted = direct ? null : await convertFontWithCompanion({ file, ...options });
-      const bytes = direct ? new Uint8Array(await file.arrayBuffer()) : converted!.bytes;
-      const filename = direct ? file.name : converted!.filename;
-      const metrics = parseRb12Font(bytes);
-      const blobBytes = new Uint8Array(bytes);
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(reader.error ?? new Error('Unable to retain the generated Rockbox font.'));
-          reader.readAsDataURL(new Blob([blobBytes.buffer], { type: 'application/octet-stream' }));
-      });
-      const archivePath = `.rockbox/fonts/${filename}`;
-      const asset = await createThemeAsset(archivePath, bytes);
-      const activeProject = currentProject.current;
-      setProject({
-          ...activeProject,
-          settings: { ...activeProject.settings, uiFont: filename, fontMetrics: metrics },
-          assets: { ...activeProject.assets, [filename]: dataUrl },
-          themePackage: activeProject.themePackage ? {
-              ...activeProject.themePackage,
-              assets: [...activeProject.themePackage.assets.filter(candidate => candidate.archivePath !== archivePath), asset]
-          } : undefined
-      });
-      return { filename, metrics, converted: !direct, upstreamCommit: converted?.upstreamCommit };
-  };
-
   const handleTrackUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -607,8 +580,7 @@ export default function App() {
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
       {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
-      <FontImportModal isOpen={showFontImport} onClose={() => setShowFontImport(false)} onImport={handleFontImport} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onShowFonts={() => setShowFonts(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
       {showCompatibility ? (
         <React.Suspense fallback={<div className="fixed inset-0 z-[115] bg-black/70 flex items-center justify-center text-white font-mono text-sm">Loading compatibility evidence…</div>}>
           <CompatibilityDashboardModal isOpen onClose={() => setShowCompatibility(false)} initialDeviceId={deviceProfile.id} />
@@ -654,6 +626,16 @@ export default function App() {
             onProjectChange={setProject}
             onClose={() => setShowAssets(false)}
             onOpenPlay={() => { setShowAssets(false); setShowPlay(true); }}
+          />
+        </React.Suspense>
+      ) : null}
+      {showFonts ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[118] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Fonts…</div>}>
+          <FontMode
+            project={project}
+            onProjectChange={setProject}
+            onClose={() => setShowFonts(false)}
+            onOpenPlay={() => { setShowFonts(false); setShowPlay(true); }}
           />
         </React.Suspense>
       ) : null}
@@ -708,6 +690,7 @@ export default function App() {
             useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
             onOpenPlay={() => setShowPlay(true)}
             onOpenAssets={() => setShowAssets(true)}
+            onOpenFonts={() => setShowFonts(true)}
             onOpenFirmware={() => setShowFirmware(true)}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">

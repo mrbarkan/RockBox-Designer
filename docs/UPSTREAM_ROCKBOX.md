@@ -36,6 +36,12 @@ apps/gui/usb_screen.c
 apps/gui/quickscreen.c
 apps/recorder/bmp.c
 tools/convttf.c
+tools/convbdf.c
+firmware/font.c
+firmware/export/font.h
+firmware/common/diacritic.c
+fonts/README
+fonts/COPYING
 uisimulator/
 uisimulator/common/sim_tasks.c
 utils/themeeditor/
@@ -88,7 +94,9 @@ Phase 2 inspected `apps/gui/skin_engine/skin_tokens.c`, `skin_render.c`, and `sk
 
 Phase 3 re-inspected `lib/skin_parser/tag_table.c` and `apps/gui/skin_engine/skin_tokens.c` for SBS/FMS tag identity and current-screen behavior. It inspected `apps/misc.h`, `apps/root_menu.c`, and `apps/gui/icon.h` for activity values, root-menu ordering, and firmware icon IDs; `apps/gui/quickscreen.c` for the firmware-owned quick-screen layout; `apps/gui/usb_screen.c` for `ACTIVITY_USBSCREEN` 21, the theme-selected UI viewport parent, and the built-in fallback draw; and `apps/radio/radio_skin.c` for FMS state.
 
-The font workflow inspected `tools/convttf.c`, `firmware/font.c`, and `firmware/export/font.h`. The application independently parses the factual RB12 header and metrics. Development tooling builds and executes the unmodified converter from the separate pinned checkout, writes its executable outside the repository, and verifies generated output in an external Rockbox simulator. No upstream source, object, executable, or generated third-party font is committed or distributed.
+The font workflow inspected `tools/convttf.c`, `tools/convbdf.c`, `firmware/font.c`, `firmware/export/font.h`, `firmware/common/diacritic.c`, and the collection's `fonts/README`/`COPYING`. The application independently parses the factual RB12 layout, including 16-/32-bit offset selection, padding, width tables, rotated 1-bit BDF glyph blocks, and row-major 4-bit antialiased pixels. Development tooling builds and executes the unmodified converters from the separate pinned checkout, writes executables/output outside the repository, and verifies generated output in an external Rockbox simulator. No upstream source, object, executable, collection BDF/FNT, or generated third-party font is committed or distributed.
+
+The pinned `fonts/` directory contains 88 BDF filenames. Rockbox's manual describes these as a separate downloadable font package and requires runtime FNT files under `/.rockbox/fonts/`. `rockbox/fonts/catalog.ts` records only those factual output names, pixel heights encoded by the naming convention, and the source SHA. `npm run font:catalog:verify` checks the metadata without external source and, when `ROCKBOX_SOURCE_DIR` is set, compares it directly with all pinned `fonts/*.bdf` names.
 
 ## Phase 4 official render reference
 

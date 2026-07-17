@@ -2,7 +2,7 @@
 
 Rockbox Designer is a browser-based, source-preserving editor for Rockbox themes. It supports targeted WPS, SBS, and FMS dogfooding: import a theme ZIP, preview the documented source-linked subset at native device pixels, exercise deterministic device states in first-class Play mode, make narrow visual or source edits, and export without silently deleting unsupported syntax or assets. An advanced Compatibility Lab separates preservation, parsing, interpretation, rendering, editing, official validation, and known pixel differences per tag and target.
 
-It is not yet a full Rockbox renderer. Complex conditional functions and constructs outside the documented subset remain future work. Existing Rockbox `.fnt` files retain exact bytes and expose RB12 metrics. TTF/OTF/TTC conversion is available through a loopback-only local companion so the native GPL Rockbox converter and input font stay outside the browser bundle.
+It is not yet a full Rockbox renderer. Complex conditional functions and constructs outside the documented subset remain future work. The dedicated Fonts workspace retains exact RB12 `.fnt` bytes, draws their real monochrome or antialiased glyph pixels, measures advance widths, checks declared character ranges, and separates fonts included in the theme from the 88-name external Rockbox fonts package. TTF/OTF/TTC conversion is available through a loopback-only local companion so the native GPL Rockbox converter and input font stay outside the browser bundle.
 
 USB connected presentation is ordinary SBS theme behavior selected by Rockbox activity 21; Play renders that same SBS scene and keeps the built-in logo visible only as a firmware fallback boundary. Optional Firmware Assets is separate from theme editing and creates a SHA-pinned source patch package only when the built-in iPod Video fallback logo or placement itself must change. It requires recovery acknowledgement and exports no compiled or proprietary firmware. The actual external Rockbox simulator remains the Level C behavioral authority for the pinned target; device-only behavior still requires hardware testing.
 
@@ -33,7 +33,7 @@ Open the local address printed by the command, create a local profile, then:
 4. Drag or resize a supported viewport, or edit its known properties in the inspector.
 5. Use `SOURCE_EDITOR` for two-way WPS/SBS/FMS text changes. If source is invalid, fix the line/column diagnostics while the canvas safely retains the last valid preview.
 6. Open **Assets** to inspect exact package paths/bytes, convert PNG/JPEG images, build vertical strips, preview `%xl` frames, or safely replace/rename/delete a known asset.
-7. Choose **Import Font** to add an exact `.fnt` or convert TTF/OTF/TTC with selectable pixel size and glyph coverage.
+7. Open **Fonts** to inspect exact RB12 glyphs, preview project strings, compare widths and line heights, check missing ranges, manage `%Fl`/CFG usage, add an exact `.fnt`, or convert TTF/OTF/TTC locally.
 8. Open **Play** (or press `Cmd/Ctrl+P`) to select real Rockbox activities—including menu, WPS, recording, FM, quick screen, option select, system, and USB—and exercise deterministic power, hold, RTC, metadata, and capability-gated state.
 9. Copy a named scenario link when you need another person to see the same state.
 10. Export the resulting ZIP and test it on a Rockbox simulator or device.
@@ -51,6 +51,7 @@ npm run test:visual
 npm run test:themes
 npm run test:phase3-real
 npm run font:helper:report:verify
+npm run font:catalog:verify
 npm run phase4:render:report:verify
 npm run phase4:compatibility:report:verify
 npm run test:phase5
@@ -66,4 +67,4 @@ ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox ROCKBOX_SIMULATOR_BUILD_DIR=/absolu
 ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox npm run test:phase4-compatibility
 ```
 
-See [Assets Workspace](docs/ASSETS_MODE.md), [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
+See [Font Workspace](docs/FONT_MODE.md), [Assets Workspace](docs/ASSETS_MODE.md), [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
