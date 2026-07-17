@@ -32,7 +32,9 @@ const migrateProjectValues = (value: unknown): unknown => {
   if (settings && typeof settings === 'object' && Array.isArray(migrated.elements)) {
     migrated.settings = {
       ...(settings as Record<string, unknown>),
-      target: resolveDeviceProfileId((settings as Record<string, unknown>).target)
+      target: resolveDeviceProfileId((settings as Record<string, unknown>).target),
+      statusBarPosition: (settings as Record<string, unknown>).statusBarPosition
+        ?? ((settings as Record<string, unknown>).statusBarTop ? 'top' : 'off')
     };
   }
   return migrated;

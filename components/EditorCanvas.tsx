@@ -174,7 +174,32 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           renderToCanvas(ctx, renderList, imageCache, sim.textDirection);
       }
 
-  }, [project, activeScreen, sim, song, imageCache, screenWidth, screenHeight, sourcePreviewActive, semanticResult]);
+  }, [
+    project.elements,
+    project.assets,
+    project.selectedElementIds,
+    project.wpsAst,
+    project.sbsAst,
+    project.fmsAst,
+    project.wpsDocument,
+    project.sbsDocument,
+    project.fmsDocument,
+    project.settings.target,
+    project.settings.backdrop,
+    project.settings.uiFont,
+    project.settings.foregroundColor,
+    project.settings.backgroundColor,
+    project.settings.statusBarTop,
+    project.settings.statusBarPosition,
+    activeScreen,
+    sim,
+    song,
+    imageCache,
+    screenWidth,
+    screenHeight,
+    sourcePreviewActive,
+    semanticResult
+  ]);
 
   // 3. Interaction Handlers (DOM Layer)
   const handleMouseDown = (e: React.MouseEvent, el: WpsElement) => {

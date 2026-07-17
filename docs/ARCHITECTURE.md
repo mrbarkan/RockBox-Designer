@@ -336,3 +336,15 @@ The browser bundle contains no GPL source or executable and gains only the proto
 `App.tsx` retains transient branch overrides per WPS/SBS/FMS screen so identical span-derived node IDs in separate files cannot collide and switching screens does not discard a preview choice. Logic, Screens, and Play share the same simulator state and semantic interpreter. `components/LogicMode.tsx` is lazy-loaded; search and current selection are local UI state. Source reveal initializes `SourceEditor` with the authoritative file and span, while canvas reveal reuses the existing source-node selection.
 
 The one Logic structural mutation, `duplicateConditionalBranch`, is an immutable syntax command. It re-parses and re-keys only the chosen branch, appends it using the existing separator style, marks the parent dirty, and leaves surrounding bytes to the minimum-change serializer. Unsupported expressions are inspectable and force-previewable but do not receive that mutation control.
+
+## Post-phase Theme / CFG workspace
+
+`rockbox/theme/` projects one staged project-wide draft over the canonical package model. Imported projects edit `ThemePackage.cfg`; editor-created projects use `ProjectState.standaloneThemeConfig` after their first real commit. The stores are mutually exclusive authorities, and `services/rockboxCompiler.ts` exports either document without regenerating or flattening it.
+
+Typed controls are bindings over the source-preserving CFG document. A changed control updates only the final matching key through `updateCfgSetting`; raw source edits remain authoritative and then re-project the known settings subset. Comments, blank lines, duplicates, unknown settings, malformed lines, whitespace, and line endings remain source-only. Project author/description are Designer metadata and never become guessed Rockbox syntax.
+
+Screen reference edits normalize a safe archive path and relocate the matching canonical WPS/SBS/FMS document during export. References without a source document remain explicit warnings. The setting names, enumerations, and numeric ranges exposed by Theme were rechecked in pinned `apps/settings_list.c`; unsupported names remain raw rather than receiving guessed editors.
+
+`components/ThemeMode.tsx` owns only its disposable draft, tab, and notice state. **Commit project** performs the single history mutation. Config-only commits retain render-relevant object identities, while `EditorCanvas` lists only screen, asset, simulation, and visual-setting dependencies in its paint effect. Metadata and unknown CFG edits therefore persist without image reload or canvas repaint.
+
+The Theme domain and UI are loaded only when Theme or CFG Apply is used. Source CFG Apply uses the same commit transaction as the dedicated workspace, so there is no second settings or package pipeline.

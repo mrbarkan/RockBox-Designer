@@ -4,12 +4,12 @@ Last updated: 2026-07-17
 
 ## Current phase
 
-- **Phase:** Post-Phase 8 Pulp migration — source-safe Logic workspace
-- **Branch:** `codex/logic-workspace`
-- **Merged milestones:** Phase 0 through Phase 8, the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25), the source-safe Assets workspace in [PR #26](https://github.com/mrbarkan/RockBox-Designer/pull/26), and the canonical Font workspace in [PR #27](https://github.com/mrbarkan/RockBox-Designer/pull/27) at `2f26ad3`.
-- **Status:** Logic is now a first-class workspace over authoritative WPS/SBS/FMS conditional nodes. It inventories nested conditions and exact raw blocks, applies source-evidenced common labels, shows browser/target authority, keeps forced branches as per-screen preview state, drives the shared deterministic simulator, and reveals the selected condition on the canvas or in Source.
-- **Scope boundary:** The documented interpreter subset receives live Level A evaluation. Unknown, malformed, future, and target-unavailable expressions remain exact and can be force-previewed without an interpretation claim. The only Logic write duplicates an explicitly selected supported branch through the minimum-change CST serializer; all other advanced edits stay in Source. Complete conditional and firmware behavior remains external Level C.
-- **UX direction preserved:** Logic is a compact, lazy Pulp mode rather than a node graph. It does not duplicate project/source/simulation state, keeps Play prominent, and never rewrites complex imported logic into a proprietary beginner rule.
+- **Phase:** Post-Phase 8 Pulp migration — canonical Theme / CFG workspace
+- **Branch:** `codex/theme-workspace`
+- **Merged milestones:** Phase 0 through Phase 8, the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25), Assets in [PR #26](https://github.com/mrbarkan/RockBox-Designer/pull/26), Fonts in [PR #27](https://github.com/mrbarkan/RockBox-Designer/pull/27), and Logic in [PR #28](https://github.com/mrbarkan/RockBox-Designer/pull/28) at `b69b53f`.
+- **Status:** Theme is now a first-class project-wide workspace for metadata, target/capabilities, package paths, global appearance, UI behavior, quick-screen assignments, compatibility, and the complete lossless CFG document. Source CFG Apply uses the same transaction.
+- **Scope boundary:** Only setting names, enumerations, and numeric ranges rechecked in pinned `apps/settings_list.c` receive typed controls. Unknown, duplicate, malformed, and future CFG lines remain exact raw source. Package references do not invent missing assets or screens, and final firmware behavior remains external Level C.
+- **UX direction preserved:** Theme is a compact, lazy Pulp workspace with one staged draft and one **Commit project** action. It delegates exact bytes to Assets/Fonts, keeps Play prominent, and leaves config-only commits out of the canvas paint path.
 - **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
@@ -20,6 +20,7 @@ Last updated: 2026-07-17
 - UI screen routing maps USB to the SBS source document while preserving activity 21. Authored SBS pixels render first; a separate firmware-fallback operation uses the `%VI`-selected UI viewport and disappears when that viewport is deliberately 1 × 1.
 - ZIP import in `services/rockboxParser.ts` reads a lossless CFG, builds compatibility elements without comments, creates WPS/SBS/FMS source documents, imports render-relevant CFG settings, and retains package bytes.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
+- `rockbox/theme/` commits typed and raw CFG work through one source-preserving transaction. Imported packages retain `ThemePackage.cfg`; editor-created projects use the mutually exclusive `standaloneThemeConfig` after their first real commit.
 - WPS canvas rendering uses a source-linked render list at native target pixels with Rockbox-relative viewport dimensions, explicit clipping, font-slot sizing, conditional viewport activation, nearest-neighbor bitmap scaling, transparent bitmap keys, image-backed bars, and non-tinting source-derived editing overlays.
 - Imported package assets are binary and archive-path keyed; legacy upload controls still derive data URLs before export conversion. JSZip is an explicit module dependency.
 - `rockbox/syntax/` now provides a separate lossless document model with absolute source spans, exact raw slices, diagnostics, a structural conditional model, a tokenizer, and a minimum-change serializer.
@@ -258,9 +259,16 @@ Post-Phase 8 Logic evidence:
 - The explicit duplicate operation appends only a re-keyed selected branch. A generated three-branch `%mp` fixture was accepted by `checkwps.ipodvideo` from the pinned Rockbox SHA; no upstream code or validator binary is bundled.
 - Source reveal opens the authoritative file/span, canvas reveal reuses the source node selection, and unsupported expressions display their exact block with mutation disabled and no invented automatic false branch.
 
+Post-Phase 8 Theme / CFG evidence:
+
+- Pinned source inspection covered WPS/SBS/FMS/font/backdrop/icon paths; selector/statusbar/scrollbar/display settings; color settings; scroll ranges; hold behavior; and four quick-screen assignments in `apps/settings_list.c` at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`.
+- Focused tests cover exact raw inventory, comment omission from elements, CRLF/duplicate/unknown/malformed preservation, final-key minimum-change edits, metadata persistence, raw-known projection, config-only preview isolation, unsafe path refusal, screen relocation, standalone CFG JSON persistence, deterministic package round-trip, bottom status bars, and the lazy UI surface.
+- Theme metadata is project-only. Imported and standalone CFG ownership is singular; Source CFG and Theme share the same transaction; Assets and Fonts now resolve and update the standalone CFG authority too.
+- Production build keeps the Theme domain at 7.85 KB / 2.95 KB gzip and the UI at 20.35 KB / 5.42 KB gzip. Removing the duplicate global-settings panel leaves the main chunk at 599.46 KB / 178.92 KB gzip: 2.46 KB smaller minified and only 0.16 KB larger gzip than the merged Logic baseline.
+
 ## Known blockers
 
-- No Phase 8, Assets-workspace, Font-workspace, or Logic-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
+- No Phase 8, Assets-workspace, Font-workspace, Logic-workspace, or Theme-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
 - Firmware Assets is verified only for the iPod Video compiled USB fallback logo/layout output. iPod Classic fallback changes, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
 - The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
 - The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
@@ -269,8 +277,8 @@ Post-Phase 8 Logic evidence:
 
 ## Next task
 
-Migrate Theme/CFG into a dedicated project-wide workspace while preserving minimum-change commit behavior and avoiding preview repaints for config-only edits. Then consolidate the remaining shell navigation without duplicating the completed specialized workspaces.
+Consolidate the remaining shell navigation into a coherent Pulp mode bar without duplicating Theme, Assets, Fonts, Logic, Source, Play, or Firmware state. Then migrate the primary Screens workspace around the already authoritative source canvas.
 
 ## Compatibility summary
 
-The editor now preserves the correct Rockbox split and has real ordinary-theme Assets, Fonts, and Logic workflows. Connected USB is an SBS activity scene; compiled fallback changes remain opt-in firmware work; bitmaps and FNT files retain exact path-and-byte identity; and conditionals can be understood and previewed without flattening source. General screen text, complex shaping, unsupported operands, future reference-bearing syntax, device-only behavior, additional targets/features, and broad tag rendering remain visible external-Level-C limitations rather than hidden compatibility claims.
+The editor now preserves the correct Rockbox split and has real ordinary-theme Theme/CFG, Assets, Fonts, and Logic workflows. Connected USB is an SBS activity scene; compiled fallback changes remain opt-in firmware work; config/source/package identity stays lossless; and global settings can be committed without flattening raw syntax or repainting unrelated pixels. General screen text, complex shaping, unsupported operands/settings, future reference-bearing syntax, device-only behavior, additional targets/features, and broad tag rendering remain visible external-Level-C limitations rather than hidden compatibility claims.

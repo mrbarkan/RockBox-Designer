@@ -1,5 +1,5 @@
 import type { RockboxDocument } from './rockbox/syntax';
-import type { ThemePackage } from './rockbox/packages';
+import type { CfgDocument, ThemePackage } from './rockbox/packages';
 import type { ThemeAsset } from './rockbox/packages';
 import type { RockboxComponentInstance } from './rockbox/components';
 import type { DeviceProfileId } from './rockbox/devices';
@@ -87,6 +87,7 @@ export interface ProjectSettings {
   target: DeviceProfileId;
   backgroundColor: string;
   statusBarTop: boolean;
+  statusBarPosition?: 'off' | 'top' | 'bottom';
   backdrop?: string; 
   
   foregroundColor: string;     
@@ -121,6 +122,21 @@ export interface ProjectSettings {
   palette: string[];
 }
 
+export interface ProjectMetadata {
+  author: string;
+  description: string;
+}
+
+/**
+ * Canonical CFG storage for a project that was created in the editor rather
+ * than imported as a ThemePackage. Imported projects continue to own their CFG
+ * through ThemePackage, so a project never has two editable CFG authorities.
+ */
+export interface StandaloneThemeConfig {
+  cfg: CfgDocument;
+  cfgPath: string;
+}
+
 export interface RockboxFontMetrics {
   format: 'RB12';
   maxWidth: number;
@@ -138,6 +154,7 @@ export interface RockboxFontMetrics {
 
 export interface ProjectState {
   settings: ProjectSettings;
+  metadata?: ProjectMetadata;
   elements: WpsElement[];
   assets: Record<string, string>; 
   selectedElementIds: string[];
@@ -149,6 +166,7 @@ export interface ProjectState {
   sbsDocument?: RockboxDocument;
   fmsDocument?: RockboxDocument;
   themePackage?: ThemePackage;
+  standaloneThemeConfig?: StandaloneThemeConfig;
   /** Canonical user-added package bytes that do not belong to the imported base or a component. */
   projectAssets?: ThemeAsset[];
   componentAssets?: ThemeAsset[];

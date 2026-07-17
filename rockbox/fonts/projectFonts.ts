@@ -23,7 +23,7 @@ export type SetUiFontResult = {
 };
 
 const archiveRoot = (project: ProjectState) => {
-  const cfgPath = project.themePackage?.cfgPath ?? '';
+  const cfgPath = project.themePackage?.cfgPath ?? project.standaloneThemeConfig?.cfgPath ?? '';
   const marker = cfgPath.toLowerCase().indexOf('.rockbox/');
   return marker >= 0 ? cfgPath.slice(0, marker) : '';
 };
@@ -78,9 +78,13 @@ export const setProjectUiFont = (project: ProjectState, filename: string): SetUi
     ...project.themePackage,
     cfg: updateCfgSetting(project.themePackage.cfg, 'font', `/.rockbox/fonts/${basename}`)
   } : project.themePackage;
+  const standaloneThemeConfig = !project.themePackage?.cfg && project.standaloneThemeConfig ? {
+    ...project.standaloneThemeConfig,
+    cfg: updateCfgSetting(project.standaloneThemeConfig.cfg, 'font', `/.rockbox/fonts/${basename}`)
+  } : project.standaloneThemeConfig;
   return {
     ok: true,
-    project: { ...project, settings, themePackage },
+    project: { ...project, settings, themePackage, standaloneThemeConfig },
     message: packaged
       ? `${basename} is now the project UI font and remains packaged byte-exact.`
       : `${basename} is now the project UI font. It is an external dependency from the separate Rockbox fonts package.`

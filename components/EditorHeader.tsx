@@ -25,6 +25,7 @@ interface EditorHeaderProps {
     useAstPreview: boolean;
     setUseAstPreview: (v: boolean) => void;
     onOpenPlay: () => void;
+    onOpenTheme: () => void;
     onOpenAssets: () => void;
     onOpenFonts: () => void;
     onOpenLogic: () => void;
@@ -38,7 +39,7 @@ const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: st
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
     project, user, onLogout, activeScreen, setActiveScreen, selectedElement, rightPanelMode,
     onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
-    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenAssets, onOpenFonts, onOpenLogic, onOpenFirmware
+    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenTheme, onOpenAssets, onOpenFonts, onOpenLogic, onOpenFirmware
 }) => {
     const deviceProfile = getDeviceProfile(project.settings.target);
     const screenFiles = getMainScreenFiles(deviceProfile);
@@ -64,6 +65,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     </div>
                 ) : null}
                 <div className="ml-auto flex shrink-0 items-center gap-2 text-xs font-bold text-gray-700">
+                <button
+                    type="button"
+                    onClick={onOpenTheme}
+                    className="border-2 border-black bg-[#ff6b35] px-3 py-2 font-mono text-[10px] font-black uppercase text-black shadow-[3px_3px_0_#111] hover:bg-[#ff865d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    title="Configure the target, project metadata, global appearance, behavior, package paths, and lossless CFG"
+                >
+                    THEME
+                </button>
                 <button
                     type="button"
                     onClick={onOpenAssets}

@@ -228,6 +228,7 @@ export const DEFAULT_PROJECT: ProjectState = {
     target: DEFAULT_DEVICE_PROFILE_ID,
     backgroundColor: "#1e1e1e",
     statusBarTop: true,
+    statusBarPosition: 'top',
     foregroundColor: "#f0f0f0",
     selectorColor: "#3584e4", // Modern Blue
     selectorTextColor: "#ffffff",

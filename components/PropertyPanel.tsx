@@ -1,9 +1,7 @@
 
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WpsElement, ElementType, ProjectState, FontDefinition, ImageElement, ProgressBarElement, TextElement } from '../types';
 import { ROCKBOX_STANDARD_FONTS, GRAPHIC_ASSETS } from '../constants';
-import { deviceProfiles } from '../rockbox/devices';
-import type { DeviceProfileId } from '../rockbox/devices';
 
 interface PropertyPanelProps {
   element: WpsElement | null;
@@ -12,6 +10,7 @@ interface PropertyPanelProps {
   onUpdateProject: (updates: Partial<ProjectState['settings']>, newAsset?: { name: string, data: string }) => void;
   onDelete: (id: string) => void;
   onDeselect: () => void;
+  onOpenTheme: () => void;
 }
 
 // ... (parseFontId, buildFontId, CONTENT_TYPES, TOUCH_ACTIONS helpers remain the same as previous)
@@ -114,9 +113,7 @@ const TOUCH_ACTIONS = [
     { label: 'Quick Screen', value: 'quick_screen' },
 ];
 
-export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, onUpdate, onUpdateProject, onDelete, onDeselect }) => {
-  const backdropInputRef = useRef<HTMLInputElement>(null);
-  const iconsetInputRef = useRef<HTMLInputElement>(null);
+export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, onUpdate, onUpdateProject, onDelete, onDeselect, onOpenTheme }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const availableFonts = useMemo(() => {
@@ -137,26 +134,6 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
   const fontFamilies = Object.keys(availableFonts).sort();
 
   useEffect(() => setShowDeleteConfirm(false), [element?.id]);
-
-  const handleBackdropUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => onUpdateProject({ backdrop: file.name }, { name: file.name, data: ev.target?.result as string });
-      reader.readAsDataURL(file);
-      e.target.value = '';
-  };
-  
-  const handleIconsetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-          onUpdateProject({ iconset: `/.rockbox/icons/${file.name}` }, { name: file.name, data: ev.target?.result as string });
-      }
-      reader.readAsDataURL(file);
-      e.target.value = '';
-  };
 
   // Helper to inject Adwaita assets if they don't exist
   const ensureAdwaitaAssets = () => {
@@ -234,94 +211,13 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ element, project, 
   };
 
   if (!element) {
-    // --- GLOBAL PROJECT SETTINGS ---
     return (
-      <div className="p-6 text-black text-xs font-mono">
-        <h3 className="font-bold text-gray-500 uppercase tracking-widest mb-6 border-b border-gray-300 pb-2">Global Config</h3>
-        <div className="space-y-6 pb-12">
-            <div><label className="block mb-2 font-bold text-gray-600 uppercase">THEME_NAME</label><input type="text" value={project.settings.name} onChange={(e) => onUpdateProject({ name: e.target.value })} className="w-full bg-white border border-black p-2 text-sm" /></div>
-            <div>
-                <label className="block mb-2 font-bold text-gray-600 uppercase">DEVICE_PROFILE</label>
-                <select value={project.settings.target} onChange={(e) => onUpdateProject({ target: e.target.value as DeviceProfileId })} className="w-full bg-white border border-black p-2 text-sm">
-                    {deviceProfiles.map(profile => (
-                        <option key={profile.id} value={profile.id}>{profile.manufacturer} {profile.model}</option>
-                    ))}
-                </select>
-            </div>
-            
-            <div className="bg-white p-4 border border-gray-300">
-                <div className="text-[10px] font-bold text-gray-400 mb-3 uppercase">Core Colors</div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-[10px] block mb-1">BG Color</label>
-                        <div className="flex gap-2"><input type="color" value={project.settings.backgroundColor} onChange={(e) => onUpdateProject({ backgroundColor: e.target.value })} className="w-8 h-8 border border-black p-0 cursor-pointer"/><input type="text" value={project.settings.backgroundColor} onChange={e=>onUpdateProject({backgroundColor:e.target.value})} className="w-full border p-2"/></div>
-                    </div>
-                    <div>
-                        <label className="text-[10px] block mb-1">FG Color</label>
-                        <div className="flex gap-2"><input type="color" value={project.settings.foregroundColor} onChange={(e) => onUpdateProject({ foregroundColor: e.target.value })} className="w-8 h-8 border border-black p-0 cursor-pointer"/><input type="text" value={project.settings.foregroundColor} onChange={e=>onUpdateProject({foregroundColor:e.target.value})} className="w-full border p-2"/></div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white p-4 border border-gray-300">
-                 <div className="text-[10px] font-bold text-gray-400 mb-3 uppercase">Appearance</div>
-                 
-                 <div className="grid grid-cols-2 gap-4 mb-4">
-                     <div>
-                        <label className="block mb-2 font-bold text-gray-500 uppercase text-[10px]">Statusbar</label>
-                        <select value={project.settings.statusBarTop ? 'top' : 'off'} onChange={e => onUpdateProject({ statusBarTop: e.target.value === 'top' })} className="w-full bg-gray-100 border p-2">
-                            <option value="off">Off</option>
-                            <option value="top">Top</option>
-                        </select>
-                     </div>
-                     <div>
-                        <label className="block mb-2 font-bold text-gray-500 uppercase text-[10px]">Scrollbar</label>
-                        <select value={project.settings.scrollbar} onChange={e => onUpdateProject({ scrollbar: e.target.value as any })} className="w-full bg-gray-100 border p-2">
-                            <option value="off">Off</option>
-                            <option value="left">Left</option>
-                            <option value="right">Right</option>
-                        </select>
-                     </div>
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-4 mb-4">
-                     <div><label className="block mb-2 font-bold text-gray-500 uppercase text-[10px]">Vol Display</label><select value={project.settings.volumeDisplay} onChange={e => onUpdateProject({ volumeDisplay: e.target.value as any })} className="w-full bg-gray-100 border p-2"><option value="graphic">Graphic</option><option value="numeric">Numeric</option></select></div>
-                     <div><label className="block mb-2 font-bold text-gray-500 uppercase text-[10px]">Batt Display</label><select value={project.settings.batteryDisplay} onChange={e => onUpdateProject({ batteryDisplay: e.target.value as any })} className="w-full bg-gray-100 border p-2"><option value="graphic">Graphic</option><option value="numeric">Numeric</option></select></div>
-                 </div>
-                 
-                 <div className="mb-4">
-                     <label className="block mb-2 font-bold text-gray-500 uppercase text-[10px]">Backlight Hold</label>
-                     <select value={project.settings.backlightOnHold} onChange={e => onUpdateProject({ backlightOnHold: e.target.value as any })} className="w-full bg-gray-100 border p-2">
-                         <option value="normal">Normal</option>
-                         <option value="off">Always Off</option>
-                         <option value="on">Always On</option>
-                     </select>
-                 </div>
-
-                 <label className="flex items-center gap-3 mt-3 cursor-pointer">
-                     <input type="checkbox" checked={project.settings.showIcons} onChange={e => onUpdateProject({ showIcons: e.target.checked })} className="w-4 h-4" />
-                     <span className="font-bold text-gray-600 text-xs">Show Menu Icons</span>
-                 </label>
-            </div>
-            
-            <div className="bg-white p-4 border border-gray-300">
-                <div className="text-[10px] font-bold text-gray-400 mb-3 uppercase">Assets</div>
-                <div className="mb-3 border border-gray-200 bg-gray-50 p-3">
-                    <div className="text-[10px] font-bold uppercase text-gray-500">UI Font</div>
-                    <div className="mt-1 break-all font-bold">{project.settings.uiFont}</div>
-                    {project.settings.fontMetrics && (
-                        <div className="mt-2 text-[10px] leading-relaxed text-gray-500">
-                            RB12 · {project.settings.fontMetrics.height}px high · {project.settings.fontMetrics.maxWidth}px max width · {project.settings.fontMetrics.glyphCount} glyph slots · ascent {project.settings.fontMetrics.ascent}px
-                        </div>
-                    )}
-                </div>
-                <div className="flex flex-col gap-3">
-                    <button onClick={() => backdropInputRef.current?.click()} className="w-full py-2 bg-[#d4d4d4] border border-black hover:bg-white uppercase text-[10px] font-bold shadow-sm">{project.settings.backdrop ? 'Change Backdrop' : 'Upload Backdrop'}</button>
-                    <button onClick={() => iconsetInputRef.current?.click()} className="w-full py-2 bg-[#d4d4d4] border border-black hover:bg-white uppercase text-[10px] font-bold shadow-sm">{project.settings.iconset ? 'Change Icons' : 'Upload Iconset'}</button>
-                    <input type="file" ref={backdropInputRef} className="hidden" accept="image/*" onChange={handleBackdropUpload} />
-                    <input type="file" ref={iconsetInputRef} className="hidden" accept="image/*" onChange={handleIconsetUpload} />
-                </div>
-            </div>
+      <div className="p-6 font-mono text-xs text-black">
+        <div className="border-2 border-black bg-[#f8f8f3] p-5 shadow-[5px_5px_0_#111]">
+          <div className="text-[9px] font-black uppercase tracking-[0.22em] text-orange-700">One canonical project editor</div>
+          <h3 className="mt-2 text-base font-black uppercase">Theme settings moved</h3>
+          <p className="mt-3 leading-relaxed text-[#555]">Target, metadata, global colors, UI behavior, fonts, package paths, and raw CFG now commit together in Theme. This panel no longer writes a second settings path.</p>
+          <button type="button" onClick={onOpenTheme} className="mt-5 w-full border-2 border-black bg-[#ff6b35] px-4 py-3 text-[10px] font-black uppercase shadow-[3px_3px_0_#111]">Open Theme workspace</button>
         </div>
       </div>
     );

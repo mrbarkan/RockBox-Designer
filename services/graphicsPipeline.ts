@@ -254,13 +254,15 @@ export const evaluateTheme = (
     }
 
     // 3. System Overlay
-    if (project.settings.statusBarTop) {
-        ops.push({ type: 'set_viewport', x: 0, y: 0, w: screenWidth, h: 14, clip: false });
-        ops.push({ type: 'rect', x: 0, y: 0, w: screenWidth, h: 14, color: 'rgba(0,0,0,0.2)' });
-        ops.push({ type: 'line', x1: 0, y1: 14, x2: screenWidth, y2: 14, color: 'rgba(0,0,0,0.1)', width: 1 });
-        ops.push({ type: 'text', x: 2, y: 1, w: 20, h: 12, text: '▶', font: 'bold 9px monospace', color: project.settings.foregroundColor, align: 'left', scroll: false });
-        ops.push({ type: 'text', x: 30, y: 1, w: Math.max(0, screenWidth - 60), h: 12, text: sim.currentTime, font: '9px monospace', color: project.settings.foregroundColor, align: 'center', scroll: false });
-        ops.push({ type: 'text', x: Math.max(0, screenWidth - 40), y: 1, w: 38, h: 12, text: `${sim.batteryLevel}%`, font: '9px monospace', color: project.settings.foregroundColor, align: 'right', scroll: false });
+    const statusbar = project.settings.statusBarPosition ?? (project.settings.statusBarTop ? 'top' : 'off');
+    if (statusbar !== 'off') {
+        const y = statusbar === 'bottom' ? screenHeight - 14 : 0;
+        ops.push({ type: 'set_viewport', x: 0, y, w: screenWidth, h: 14, clip: false });
+        ops.push({ type: 'rect', x: 0, y, w: screenWidth, h: 14, color: 'rgba(0,0,0,0.2)' });
+        ops.push({ type: 'line', x1: 0, y1: statusbar === 'bottom' ? y : y + 14, x2: screenWidth, y2: statusbar === 'bottom' ? y : y + 14, color: 'rgba(0,0,0,0.1)', width: 1 });
+        ops.push({ type: 'text', x: 2, y: y + 1, w: 20, h: 12, text: '▶', font: 'bold 9px monospace', color: project.settings.foregroundColor, align: 'left', scroll: false });
+        ops.push({ type: 'text', x: 30, y: y + 1, w: Math.max(0, screenWidth - 60), h: 12, text: sim.currentTime, font: '9px monospace', color: project.settings.foregroundColor, align: 'center', scroll: false });
+        ops.push({ type: 'text', x: Math.max(0, screenWidth - 40), y: y + 1, w: 38, h: 12, text: `${sim.batteryLevel}%`, font: '9px monospace', color: project.settings.foregroundColor, align: 'right', scroll: false });
     }
 
     return ops;

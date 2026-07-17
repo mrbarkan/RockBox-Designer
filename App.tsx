@@ -10,7 +10,7 @@ import { MainMenuModal } from './components/MainMenuModal';
 import { LoginModal } from './components/LoginModal';
 import { ProjectManagerModal } from './components/ProjectManagerModal';
 import { ColorPaletteModal } from './components/ColorPaletteModal';
-import { compileScreen, generateZip } from './services/rockboxCompiler';
+import { compileCfg, compileScreen, generateZip } from './services/rockboxCompiler';
 import { parseZipTheme } from './services/rockboxParser';
 import { generateThemeFromPrompt } from './services/geminiService';
 import { applyThemeToProject } from './services/layoutEngine';
@@ -78,6 +78,11 @@ const LogicMode = React.lazy(async () => {
   return { default: module.LogicMode };
 });
 
+const ThemeMode = React.lazy(async () => {
+  const module = await import('./components/ThemeMode');
+  return { default: module.ThemeMode };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -107,6 +112,7 @@ export default function App() {
   const [showCompatibility, setShowCompatibility] = useState(false);
   const [showFirmware, setShowFirmware] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
+  const [showTheme, setShowTheme] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
   const [branchOverridesByScreen, setBranchOverridesByScreen] = useState<Record<SkinScreen, BranchOverrides>>({ wps: {}, sbs: {}, fms: {} });
@@ -138,7 +144,7 @@ export default function App() {
     settings: {
       'battery display': project.settings.batteryDisplay,
       'volume display': project.settings.volumeDisplay,
-      statusbar: project.settings.statusBarTop ? 'top' : 'off',
+      statusbar: project.settings.statusBarPosition ?? (project.settings.statusBarTop ? 'top' : 'off'),
       'backlight on button hold': project.settings.backlightOnHold,
       brightness: sim.brightness ?? 70,
       lang: 'english-us',
@@ -166,6 +172,7 @@ export default function App() {
     project.settings.batteryDisplay,
     project.settings.volumeDisplay,
     project.settings.statusBarTop,
+    project.settings.statusBarPosition,
     project.settings.backlightOnHold,
     sim.brightness,
     project.settings.selectorColor,
@@ -364,9 +371,15 @@ export default function App() {
   const handleUpdateSourceArguments = (nodeId: string, updates: Record<string, string>) =>
     applySyntaxEdit(document => updateTagArguments(document, nodeId, updates));
 
-  const handleApplySource = (screen: 'wps' | 'sbs' | 'fms' | 'cfg', content: string) => {
+  const handleApplySource = async (screen: 'wps' | 'sbs' | 'fms' | 'cfg', content: string) => {
     if (screen === 'cfg') {
-      setProject({ ...project, validationReport: ['CFG source editing is preserved but not yet wired to project settings.'] });
+      const { commitThemeWorkspace, createThemeWorkspaceDraft } = await import('./rockbox/theme');
+      const activeProject = currentProject.current;
+      const draft = createThemeWorkspaceDraft(activeProject, compileCfg(activeProject));
+      const result = commitThemeWorkspace(activeProject, compileCfg(activeProject), { ...draft, rawCfg: content });
+      setProject(result.ok
+        ? { ...result.project, validationReport: result.diagnostics.map(diagnostic => diagnostic.message) }
+        : { ...activeProject, validationReport: result.diagnostics.map(diagnostic => diagnostic.message) });
       return;
     }
     const document = parseRockbox(content);
@@ -385,9 +398,13 @@ export default function App() {
   };
 
   const handleUpdateProjectSettings = (updates: Partial<ProjectState['settings']>, newAsset?: { name: string, data: string }) => {
+    const normalizedUpdates = updates.statusBarTop === undefined ? updates : {
+      ...updates,
+      statusBarPosition: updates.statusBarPosition ?? (updates.statusBarTop ? 'top' as const : 'off' as const)
+    };
     const newState = {
       ...project,
-      settings: { ...project.settings, ...updates },
+      settings: { ...project.settings, ...normalizedUpdates },
       assets: newAsset ? { ...project.assets, [newAsset.name]: newAsset.data } : project.assets
     };
     setProject(newState);
@@ -609,7 +626,7 @@ export default function App() {
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
       {showSource && <SourceEditor project={project} initialFocus={sourceFocus} onClose={() => { setShowSource(false); setSourceFocus(undefined); }} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onShowFonts={() => setShowFonts(true)} onShowLogic={() => setShowLogic(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onShowTheme={() => setShowTheme(true)} onShowFonts={() => setShowFonts(true)} onShowLogic={() => setShowLogic(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
       {showCompatibility ? (
         <React.Suspense fallback={<div className="fixed inset-0 z-[115] bg-black/70 flex items-center justify-center text-white font-mono text-sm">Loading compatibility evidence…</div>}>
           <CompatibilityDashboardModal isOpen onClose={() => setShowCompatibility(false)} initialDeviceId={deviceProfile.id} />
@@ -655,6 +672,18 @@ export default function App() {
             onProjectChange={setProject}
             onClose={() => setShowAssets(false)}
             onOpenPlay={() => { setShowAssets(false); setShowPlay(true); }}
+          />
+        </React.Suspense>
+      ) : null}
+      {showTheme ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[117] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Theme…</div>}>
+          <ThemeMode
+            project={project}
+            onProjectChange={setProject}
+            onOpenAssets={() => { setShowTheme(false); setShowAssets(true); }}
+            onOpenFonts={() => { setShowTheme(false); setShowFonts(true); }}
+            onOpenPlay={() => { setShowTheme(false); setShowPlay(true); }}
+            onClose={() => setShowTheme(false)}
           />
         </React.Suspense>
       ) : null}
@@ -746,6 +775,7 @@ export default function App() {
             debugMode={debugMode} setDebugMode={setDebugMode}
             useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
             onOpenPlay={() => setShowPlay(true)}
+            onOpenTheme={() => setShowTheme(true)}
             onOpenAssets={() => setShowAssets(true)}
             onOpenFonts={() => setShowFonts(true)}
             onOpenLogic={() => setShowLogic(true)}
@@ -791,6 +821,7 @@ export default function App() {
           onSetBranchOverride={(nodeId, branch) => handleSetBranchOverride(activeThemeScreen as SkinScreen, nodeId, branch)}
           onUpdateSourceArguments={handleUpdateSourceArguments}
           onUpdateSourceText={handleUpdateAstText}
+          onOpenTheme={() => setShowTheme(true)}
       />
     </div>
   );

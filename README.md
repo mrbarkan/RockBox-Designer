@@ -8,6 +8,8 @@ USB connected presentation is ordinary SBS theme behavior selected by Rockbox ac
 
 Assets is the ordinary-theme package workshop. It keeps real ZIP bytes and archive paths authoritative, converts PNG/JPEG inputs into Rockbox BMPs, builds and previews vertical sprite strips, shows known WPS/SBS/FMS/CFG usage, and performs reference-aware replacement, rename, and guarded deletion without flattening source.
 
+Theme is the project-wide workspace. It stages metadata, target/capabilities, package paths, global appearance and behavior, quick-screen assignments, and the complete lossless CFG document behind one **Commit project** action. Comments remain source-only, unknown settings remain exact, and config-only commits do not repaint the canvas.
+
 ## Run locally
 
 Prerequisite: Node.js.
@@ -32,13 +34,14 @@ Open the local address printed by the command, create a local profile, then:
 3. Use the right panel to inspect viewports, visual elements, conditional groups, branches, source-only blocks, and unsupported preserved nodes.
 4. Drag or resize a supported viewport, or edit its known properties in the inspector.
 5. Use `SOURCE_EDITOR` for two-way WPS/SBS/FMS text changes. If source is invalid, fix the line/column diagnostics while the canvas safely retains the last valid preview.
-6. Open **Assets** to inspect exact package paths/bytes, convert PNG/JPEG images, build vertical strips, preview `%xl` frames, or safely replace/rename/delete a known asset.
-7. Open **Fonts** to inspect exact RB12 glyphs, preview project strings, compare widths and line heights, check missing ranges, manage `%Fl`/CFG usage, add an exact `.fnt`, or convert TTF/OTF/TTC locally.
-8. Open **Logic** to inspect nested conditionals, follow or force a branch without changing source, drive the shared simulator, and reveal the exact source or canvas location.
-9. Open **Play** (or press `Cmd/Ctrl+P`) to select real Rockbox activities—including menu, WPS, recording, FM, quick screen, option select, system, and USB—and exercise deterministic power, hold, RTC, metadata, and capability-gated state.
-10. Copy a named scenario link when you need another person to see the same state.
-11. Export the resulting ZIP and test it on a Rockbox simulator or device.
-11. Author the connected-USB scene in SBS with `%cs = 21`. Open **FW ASSETS** only when you intentionally need to replace the compiled iPod Video fallback logo or its placement.
+6. Open **Theme** to review the target, metadata, compatibility, paths, global settings, and raw CFG; use **Commit project** when the staged draft is ready.
+7. Open **Assets** to inspect exact package paths/bytes, convert PNG/JPEG images, build vertical strips, preview `%xl` frames, or safely replace/rename/delete a known asset.
+8. Open **Fonts** to inspect exact RB12 glyphs, preview project strings, compare widths and line heights, check missing ranges, manage `%Fl`/CFG usage, add an exact `.fnt`, or convert TTF/OTF/TTC locally.
+9. Open **Logic** to inspect nested conditionals, follow or force a branch without changing source, drive the shared simulator, and reveal the exact source or canvas location.
+10. Open **Play** (or press `Cmd/Ctrl+P`) to select real Rockbox activities—including menu, WPS, recording, FM, quick screen, option select, system, and USB—and exercise deterministic power, hold, RTC, metadata, and capability-gated state.
+11. Copy a named scenario link when you need another person to see the same state.
+12. Export the resulting ZIP and test it on a Rockbox simulator or device.
+13. Author the connected-USB scene in SBS with `%cs = 21`. Open **FW ASSETS** only when you intentionally need to replace the compiled iPod Video fallback logo or its placement.
 
 The product direction is now a compact, Pulp-inspired studio with specialized creative modes and Canva-style manipulation concentrated in Screens mode. The foundation phases remain intentionally focused; the studio migration will land through separate, behavior-preserving milestones described in [Pulp UX Guidelines](ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md).
 
@@ -68,4 +71,4 @@ ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox ROCKBOX_SIMULATOR_BUILD_DIR=/absolu
 ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox npm run test:phase4-compatibility
 ```
 
-See [Logic Workspace](docs/LOGIC_MODE.md), [Font Workspace](docs/FONT_MODE.md), [Assets Workspace](docs/ASSETS_MODE.md), [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
+See [Theme / CFG Workspace](docs/THEME_MODE.md), [Logic Workspace](docs/LOGIC_MODE.md), [Font Workspace](docs/FONT_MODE.md), [Assets Workspace](docs/ASSETS_MODE.md), [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.

@@ -19,6 +19,7 @@ describe('Rockbox CFG to editor settings', () => {
       'scrollbar width: 8',
       'volume display: numeric',
       'battery display: graphic',
+      'statusbar: bottom',
       'backlight on button hold: off',
       'qs top: brightness'
     ].join('\n'), DEFAULT_PROJECT.settings, 'Adwaitapod');
@@ -39,6 +40,8 @@ describe('Rockbox CFG to editor settings', () => {
       scrollbarWidth: 8,
       volumeDisplay: 'numeric',
       batteryDisplay: 'graphic',
+      statusBarTop: false,
+      statusBarPosition: 'bottom',
       backlightOnHold: 'off',
       qsTop: 'brightness'
     });
