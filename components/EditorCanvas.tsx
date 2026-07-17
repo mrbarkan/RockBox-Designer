@@ -17,6 +17,7 @@ import { getProjectSyntaxDocument } from '../services/rockboxSyntaxAdapter';
 import type { SemanticResult } from '../rockbox/semantics';
 import { renderSemanticToCanvas } from '../rockbox/rendering';
 import { themeScreenForPreview } from '../rockbox/screens';
+import { collectProjectAssetReferences, listProjectAssets } from '../rockbox/assets';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -77,41 +78,80 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   const [imageCache, setImageCache] = useState<Record<string, HTMLImageElement>>({});
   const albumArtRef = useRef<string | null>(null);
 
-  // 1. Asset Loading Effect
+  // Canonical package bytes own imported/project/component assets. Object URLs
+  // and decoded HTML images are disposable render state.
   useEffect(() => {
+      let cancelled = false;
+      const objectUrls: string[] = [];
+      const loadImage = (src: string) => new Promise<HTMLImageElement | null>(resolve => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => resolve(null);
+          image.src = src;
+      });
       const loadAssets = async () => {
-          const newCache: Record<string, HTMLImageElement> = { ...imageCache };
-          let changed = false;
+          const newCache: Record<string, HTMLImageElement> = {};
+          const records = listProjectAssets(project);
+          const basenameCounts = new Map<string, number>();
+          records.forEach(({ asset }) => basenameCounts.set(asset.basename, (basenameCounts.get(asset.basename) ?? 0) + 1));
+          const imagesByPath = new Map<string, HTMLImageElement>();
 
-          // Project Assets
-          for (const [name, base64] of Object.entries(project.assets)) {
-              if (!newCache[name]) {
-                  const img = new Image();
-                  img.src = base64 as string;
-                  await new Promise(r => img.onload = r);
-                  newCache[name] = img;
-                  changed = true;
-              }
+          const loadedImages = await Promise.all(records.map(async ({ asset }) => {
+              if (asset.kind !== 'bitmap') return null;
+              const url = URL.createObjectURL(new Blob([asset.bytes as BlobPart], { type: asset.mimeType ?? 'image/bmp' }));
+              objectUrls.push(url);
+              const image = await loadImage(url);
+              return image ? { asset, image } : null;
+          }));
+          for (const loaded of loadedImages) {
+              if (!loaded) continue;
+              const { asset, image } = loaded;
+              imagesByPath.set(asset.archivePath, image);
+              newCache[asset.archivePath] = image;
+              newCache[`/${asset.archivePath}`] = image;
+              if (basenameCounts.get(asset.basename) === 1) newCache[asset.basename] = image;
           }
 
-          // Special Assets (Album Art)
-          if (song.albumArt && song.albumArt !== albumArtRef.current) {
-               const img = new Image();
-               img.src = song.albumArt;
-               await new Promise(r => img.onload = r);
-               newCache['ALBUM_ART'] = img; // We map 'ALBUM_ART' key to this
+          const sourceScreen = themeScreenForPreview(activeScreen);
+          for (const reference of collectProjectAssetReferences(project)) {
+              if (reference.scope !== sourceScreen || !reference.resolvedPath) continue;
+              const image = imagesByPath.get(reference.resolvedPath);
+              if (image) newCache[reference.raw] = image;
+          }
+
+          // Legacy synthetic projects still use the compatibility data-URL map.
+          for (const [name, dataUrl] of Object.entries(project.assets) as [string, string][]) {
+              if (newCache[name] || !dataUrl.startsWith('data:image/')) continue;
+              const image = await loadImage(dataUrl);
+              if (image) newCache[name] = image;
+          }
+
+          if (song.albumArt) {
+               const image = await loadImage(song.albumArt);
+               if (image) newCache.ALBUM_ART = image;
                albumArtRef.current = song.albumArt;
-               changed = true;
-          } else if (!song.albumArt && albumArtRef.current) {
-               delete newCache['ALBUM_ART'];
+          } else {
                albumArtRef.current = null;
-               changed = true;
           }
-
-          if (changed) setImageCache(newCache);
+          if (!cancelled) setImageCache(newCache);
       };
       loadAssets();
-  }, [project.assets, song.albumArt]);
+      return () => {
+          cancelled = true;
+          objectUrls.forEach(url => URL.revokeObjectURL(url));
+      };
+  }, [
+    project.assets,
+    project.themePackage?.assets,
+    project.themePackage?.screenPaths,
+    project.projectAssets,
+    project.componentAssets,
+    project.wpsDocument,
+    project.sbsDocument,
+    project.fmsDocument,
+    activeScreen,
+    song.albumArt
+  ]);
 
   // 2. Render Loop
   useLayoutEffect(() => {
@@ -212,18 +252,20 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
     : project.elements.filter(el => el.screen === themeScreenForPreview(activeScreen));
   const astViewports = !readOnly && sourcePreviewActive
       ? semanticResult
-          ? semanticResult.operations.filter(operation => operation.type === 'setViewport').map(operation => ({
+          ? semanticResult.operations.filter(operation => operation.type === 'setViewport').map((operation, index) => ({
+              renderId: `${operation.source.nodeId}:viewport:${index}`,
               id: operation.source.nodeId,
               x: operation.rect.x,
               y: operation.rect.y,
               width: operation.rect.width,
               height: operation.rect.height
           }))
-          : listSyntaxViewports(syntaxDocument)
+          : listSyntaxViewports(syntaxDocument).map(node => ({ ...node, renderId: node.id }))
       : [];
   const astTextNodes = !readOnly && sourcePreviewActive
       ? semanticResult
-          ? semanticResult.operations.filter(operation => operation.type === 'drawText').map(operation => ({
+          ? semanticResult.operations.filter(operation => operation.type === 'drawText').map((operation, index) => ({
+              renderId: `${operation.source.nodeId}:text:${index}`,
               id: operation.source.nodeId,
               value: operation.text,
               x: operation.rect.x,
@@ -231,11 +273,12 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               width: operation.rect.width,
               height: operation.rect.height
           }))
-          : listSyntaxTextNodes(syntaxDocument, project.settings.uiFont)
+          : listSyntaxTextNodes(syntaxDocument, project.settings.uiFont).map(node => ({ ...node, renderId: node.id }))
       : [];
   const astImageNodes = !readOnly && sourcePreviewActive
       ? semanticResult
-          ? semanticResult.operations.filter(operation => operation.type === 'drawBitmap').map(operation => ({
+          ? semanticResult.operations.filter(operation => operation.type === 'drawBitmap').map((operation, index) => ({
+              renderId: `${operation.source.nodeId}:image:${index}`,
               id: operation.source.nodeId,
               filename: operation.assetPath,
               x: operation.rect.x,
@@ -243,7 +286,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               width: Math.min(operation.rect.width, 24),
               height: Math.min(operation.rect.height, 24)
           }))
-          : listSyntaxImageNodes(syntaxDocument, project.settings.uiFont)
+          : listSyntaxImageNodes(syntaxDocument, project.settings.uiFont).map(node => ({ ...node, renderId: node.id }))
       : [];
   const semanticElements = !readOnly && sourcePreviewActive && semanticResult
       ? semanticResult.operations.filter(operation =>
@@ -341,7 +384,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
             {sourcePreviewActive && astViewports.map(vp => (
                 <div
-                    key={vp.id}
+                    key={vp.renderId}
                     onMouseDown={(e) => handleAstMouseDown(e, vp)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(vp.id); }}
                     className={`absolute group z-20 hover:outline hover:outline-1 hover:outline-amber-400 ${project.selectedElementIds.includes(vp.id) ? 'outline outline-2 outline-orange-500' : debugMode ? 'outline outline-1 outline-amber-600/60' : ''}`}
@@ -363,7 +406,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
             {sourcePreviewActive && astTextNodes.map(node => (
                 <div
-                    key={node.id}
+                    key={node.renderId}
                     onDoubleClick={() => handleAstTextEdit(node)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
                     className={`absolute z-30 text-[9px] text-emerald-100/80 font-mono pointer-events-auto hover:border hover:border-dashed hover:border-emerald-400/70 ${project.selectedElementIds.includes(node.id) ? 'border border-dashed border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dashed border-emerald-400/70' : ''}`}
@@ -381,7 +424,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
             {sourcePreviewActive && astImageNodes.map(node => (
                 <div
-                    key={node.id}
+                    key={node.renderId}
                     onDoubleClick={() => handleAstImageEdit(node)}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(node.id); }}
                     className={`absolute z-30 text-[9px] text-sky-100/80 font-mono pointer-events-auto hover:border hover:border-dashed hover:border-sky-400/70 ${project.selectedElementIds.includes(node.id) ? 'border border-dashed border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dashed border-sky-400/70' : ''}`}
@@ -397,9 +440,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 </div>
             ))}
 
-            {semanticElements.map(operation => (
+            {semanticElements.map((operation, index) => (
                 <div
-                    key={`${operation.type}:${operation.source.nodeId}`}
+                    key={`${operation.type}:${operation.source.nodeId}:${index}`}
                     onClick={(e) => { e.stopPropagation(); onSelectElement(operation.source.nodeId); }}
                     className={`absolute z-[25] pointer-events-auto hover:border hover:border-dotted hover:border-cyan-300/50 ${project.selectedElementIds.includes(operation.source.nodeId) ? 'border border-dotted border-orange-500 bg-orange-500/10' : debugMode ? 'border border-dotted border-cyan-300/50' : ''}`}
                     style={{

@@ -34,6 +34,7 @@ apps/gui/statusbar-skinned.c
 apps/radio/radio_skin.c
 apps/gui/usb_screen.c
 apps/gui/quickscreen.c
+apps/recorder/bmp.c
 tools/convttf.c
 uisimulator/
 uisimulator/common/sim_tasks.c
@@ -138,6 +139,20 @@ Phase 7 inspected the complete native simulator boundary at the recorded SHA:
 An external iPod Video core was built and launch-smoked from this SHA. The prepared minimum runtime used by the Phase 4 harness loaded an authored SBS and produced two identical framebuffer hashes. A fresh stock simulator-disk installation launched and captured but rendered stock configuration in that harness, so it is retained as a documented limitation rather than being substituted for the canonical evidence.
 
 The feasibility report also records current official Emscripten requirements for pthread isolation, asynchronous browser main loops, virtual/persistent filesystems, dynamic modules, `setjmp`/`longjmp`, and audio startup. No Rockbox source, object, binary, runtime asset, screenshot, or WebAssembly module is committed.
+
+## Assets workspace bitmap reference
+
+The post-phase Assets implementation re-inspected `apps/recorder/bmp.c`, `apps/gui/skin_engine/skin_parser.c`, `lib/skin_parser/tag_table.c`, `manual/appendix/wps_tags.tex`, and the iPod Video/Classic target LCD definitions at the recorded SHA.
+
+This confirmed:
+
+- Theme skin images use BMP files, while the target bitmap directory is derived from the skin path without its extension.
+- `%xl` accepts an image handle and path with optional coordinates and an optional subimage count. With exactly three parameters, the third value is the subimage count; Adwaitapod uses this compact form.
+- Subimages are equal-height frames in one vertical bitmap, and the loader divides the bitmap height by the declared count.
+- The loader accepts uncompressed 1-, 4-, 8-, 16-, 24-, and 32-bit BMP data plus the supported 16-/32-bit bitfield layouts; unsupported compression and masks are rejected.
+- Both current iPod profiles use a 320 × 240 RGB565 LCD and expose bitmap scaling/JPEG capabilities, but generated theme assets remain BMP because the skin-image contract requires it.
+
+The editor implements these factual contracts independently in TypeScript. It does not copy or link the Rockbox loader, scaler, or skin parser, and external Level C remains authoritative for final pixels.
 
 ## Licensing note
 

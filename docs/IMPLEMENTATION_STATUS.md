@@ -4,12 +4,12 @@ Last updated: 2026-07-17
 
 ## Current phase
 
-- **Phase:** Post-Phase 8 theme-behavior correction
-- **Branch:** `codex/themeable-usb-sbs`
-- **Merged milestones:** Phase 0 through Phase 7; the external full-simulator feasibility evidence merged in [PR #23](https://github.com/mrbarkan/RockBox-Designer/pull/23) at `a204688`.
-- **Status:** USB connected now renders as the authoritative SBS activity-21 scene. The existing Phase 8 package is correctly scoped to the compiled iPod Video fallback logo and placement; its patch still applies to the exact upstream SHA, and two complete target builds produced byte-identical `rockbox.ipod` images.
-- **Scope boundary:** Firmware Assets exports patch/overlay/build inputs only. It bundles no Rockbox tree, compiled Rockbox firmware, Apple firmware, proprietary component, toolchain, or build output. iPod Classic remains target-gated.
-- **UX direction preserved:** Theme Mode and its ZIP remain unchanged. Play exposes verified Rockbox activities and identifies USB as SBS. Firmware Assets remains separate, always says **Requires custom firmware**, and requires explicit custom-firmware plus recovery acknowledgements.
+- **Phase:** Post-Phase 8 Pulp migration — source-safe Assets workspace
+- **Branch:** `codex/assets-workspace`
+- **Merged milestones:** Phase 0 through Phase 8 plus the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25) at `43ef474`.
+- **Status:** Ordinary theme assets now have a first-class package workspace over canonical bytes. It converts PNG/JPEG inputs to Rockbox BMP, builds vertical strips, previews exact `%xl` frames, shows known WPS/SBS/FMS/CFG usage, preserves duplicate basenames, and performs safe replace/rename/delete operations. Adwaitapod's 104-asset package passed a clean real-browser smoke across WPS/SBS/FMS/USB.
+- **Scope boundary:** Assets edits ordinary Theme ZIP bytes only. Firmware Assets remains a separate custom-firmware source-package workflow. Unsupported future path-bearing syntax is preserved but may require manual asset-reference review; external Level C remains the final rendering authority.
+- **UX direction preserved:** The compact Pulp-style Assets mode is lazy-loaded and does not flatten source. The editor header now keeps screen navigation and render/debug tools in separate scroll-safe rows so screen clicks cannot be intercepted at a 1280-pixel dogfood viewport.
 - **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
@@ -28,6 +28,10 @@ Last updated: 2026-07-17
 - The compiler, ZIP exporter, source editor, and code preview prefer the lossless document. A newly derived legacy AST remains only as the current renderer adapter.
 - `rockbox/packages/` now owns lossless CFG parsing, strict archive paths, binary assets and hashes, package diagnostics, manifests, import, and deterministic export.
 - Imported packages are canonical binary runtime state in `ProjectState.themePackage`; browser data URLs remain derived preview state.
+- `rockbox/assets/` now overlays imported, project-added, and component-owned bytes by exact archive path, builds a known source/CFG reference graph, validates current Rockbox BMP layouts, composes vertical strips, and applies guarded mutations without scan-and-replace source edits.
+- `ProjectState.projectAssets` stores user-added canonical bytes. The compiler gives explicit project bytes precedence over the matching imported path and uses component bytes only when no canonical project/theme path already exists.
+- Assets is a first-class lazy package workshop. Object URLs, thumbnails, search, and frame navigation are derived UI state; the main editor and package exporter continue to consume canonical bytes.
+- `EditorCanvas` now resolves raw bitmap names through the active screen's exact archive path before basename compatibility fallback. Several overlays from one source node receive distinct render identities while retaining the same source edit link.
 - Project JSON and mock-cloud persistence encode `Uint8Array` values explicitly and restore them on load.
 - `rockbox/registry/` exposes 193 generated Rockbox tag definitions from the pinned upstream SHA, including raw parameter specs, flags, tokens, categories, and baseline support states.
 - The lossless parser now uses the registry for longest official tag-name matching and still preserves unmatched future names generically.
@@ -88,7 +92,7 @@ Before Phase 0 changes:
 - Legacy pipe-style argument boundaries still use a small transitional arity table outside the evidenced image/viewport subset.
 - CFG source and unknown settings are preserved. Imported font, icon, color, selector, statusbar, scrollbar, display, backlight, scroll, and quick-setting values project into preview settings; broad settings-panel write-back to CFG remains incomplete.
 - Package path resolution is deliberately case-sensitive; case mismatches are diagnostics rather than silent basename fallback. Conventional ZIPs with one outer wrapper directory resolve their absolute `/.rockbox/...` CFG references inside that wrapper.
-- Binary assets are canonical for imported packages, while newly uploaded UI resources still enter through the legacy data-URL control before export conversion.
+- Imported, Assets-workspace, and component binary assets are canonical. Older synthetic-project upload controls still enter through the legacy data-URL compatibility path and are not the preferred package workflow.
 - FMS is supported by the package model and screen-aware semantics for frequency, presets, signal, stereo, tuned/scan, and RDS state. Tags outside that subset remain preserved and visibly unsupported.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
 - Imported RB12 font metrics are exact and the binary packages exactly, but browser glyph rasterization still uses browser text rather than the Rockbox bitmap glyphs. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
@@ -100,8 +104,8 @@ Latest passing validation on 2026-07-17:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 30 files, 174 tests
-npm run build          passed — Vite production build; 587.13 KB / 173.94 KB gzip main, 21.35 KB / 5.13 KB gzip Play, and 20.00 KB / 7.27 KB gzip Firmware Assets chunks
+npm test               passed — 31 files, 189 tests
+npm run build          passed — Vite production build; 601.85 KB / 178.98 KB gzip main, 21.63 KB / 6.67 KB gzip Assets, 21.35 KB / 5.13 KB gzip Play, and 20.00 KB / 7.28 KB gzip Firmware Assets chunks
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
@@ -159,6 +163,8 @@ Adwaitapod dogfood correction evidence:
 - Its WPS now activates only Player, info, and the correct playtime viewport for the default simulation; false Lockscreen, AOD, volume, and unused playtime branches do not paint.
 - A side-by-side local browser render against the supplied 320×240 reference verified album-art geometry, title/secondary rows, time labels, counter, sprites, transparent bitmap edges, and the image/backdrop/slider progress composition.
 - Interaction overlays remain available for editing but no longer stack translucent fills or labels over the theme when they are neither selected nor in debug mode.
+- Its package inventory now exposes 104 exact archive paths and zero missing known references. `BatteryStatus.bmp` resolves independently from each skin source and previews the compact `%xl(...,12)` form as twelve 14 × 16 frames rather than one 14 × 192 image.
+- The two-row editor header keeps WPS/SBS/FMS/USB tabs actionable at 1280 × 720. A clean import navigated all four states with source rendering still enabled and no browser console error.
 
 Phase 2 dogfood-hardening evidence:
 
@@ -225,9 +231,17 @@ Phase 8 evidence:
 - The isolated acceptance compiler was Arm GNU 9.3.1, not Rockbox's recommended `arm-elf-eabi-gcc` 9.5.0. The warning is preserved in the report, and exported instructions default to the recommended compiler while requiring explicit override for alternatives.
 - No generated firmware package, Rockbox source, object, compiled firmware, toolchain, local path, or proprietary component is committed.
 
+Post-Phase 8 Assets evidence:
+
+- Rockbox source inspection at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31` covered `apps/recorder/bmp.c`, the skin image parser, the current tag table, manual bitmap-strip documentation, and both iPod LCD profiles.
+- Focused tests cover deterministic 24-bit and alpha-bitfield BMPs, invalid compression, strip geometry, generated starter assets, duplicate basenames, compact and expanded `%xl` counts, exact WPS/SBS/FMS/CFG rename behavior, replace/delete guards, export determinism, and the lazy Assets UI surface.
+- Imported BMPs retain exact bytes. PNG/JPEG conversion and generated presets enter `ProjectState.projectAssets` as validated package bytes; preview object URLs are created and revoked as derived state.
+- The private Adwaitapod ZIP is not committed. Browser acceptance found 104 assets, zero missing known references, three 12-frame battery-strip references, a loader-compatible 8-bit header, correct frame navigation, working WPS/SBS/FMS/USB tabs, and zero console errors.
+- The starter shelf is locally generated and license-clean. Adding a preset never inserts or rewrites source implicitly.
+
 ## Known blockers
 
-- No Phase 8 acceptance blocker is open. The execution-plan phase gates are complete after merge.
+- No Phase 8 or Assets-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
 - Firmware Assets is verified only for the iPod Video compiled USB fallback logo/layout output. iPod Classic fallback changes, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
 - The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
 - The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
@@ -236,8 +250,8 @@ Phase 8 evidence:
 
 ## Next task
 
-Dogfood the Adwaitapod SBS USB scene and other activity states in Play, then compare the same package in the pinned external Level C simulator. Use Firmware Assets only if changing the compiled fallback itself; hardware installation still requires the documented backup and disk-mode recovery plan.
+Continue the Pulp migration with a dedicated Font workspace and a source-verified catalog of extended Rockbox default fonts, while keeping the existing loopback converter and exact `.fnt` bytes authoritative. Then migrate Theme/CFG project commit and Logic workflows without repainting config-only changes.
 
 ## Compatibility summary
 
-The editor now preserves the correct Rockbox split: the connected-USB presentation is an SBS activity scene, while only the built-in fallback logo and placement require the opt-in firmware package. Theme ZIP behavior is unchanged; the fallback patch applies at the pinned SHA and produces a reproducible real iPod Video firmware image. External Level C remains the authoritative firmware UI/theme reference, while device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.
+The editor now preserves the correct Rockbox split and has a real ordinary-theme asset workflow: connected USB is an SBS activity scene, compiled fallback changes remain opt-in firmware work, and imported/project/component assets retain exact path-and-byte identity. Known references can be inspected and changed safely without flattening source. External Level C remains authoritative for final pixels, while future path-bearing tags, device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.

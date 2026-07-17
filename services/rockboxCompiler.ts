@@ -10,6 +10,7 @@ import {
     ThemeAsset,
     ThemePackage
 } from '../rockbox/packages';
+import { stringifyProjectData } from './projectSerialization';
 
 // Convert hex to Rockbox hex (strip #)
 const toRbHex = (hex: string) => hex ? hex.replace('#', '') : 'FFFFFF';
@@ -262,6 +263,7 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
 
     const existingAssetMap = new Map<string, ThemeAsset>();
     for (const asset of project.themePackage?.assets ?? []) existingAssetMap.set(asset.archivePath, asset);
+    for (const asset of project.projectAssets ?? []) existingAssetMap.set(asset.archivePath, asset);
     for (const asset of project.componentAssets ?? []) {
         if (!existingAssetMap.has(asset.archivePath)) existingAssetMap.set(asset.archivePath, asset);
     }
@@ -278,7 +280,7 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
         addedAssets.push(await createThemeAsset(path, dataURItoBytes(dataUri)));
     }
 
-    const projectJson = JSON.stringify({ ...project, themePackage: undefined }, null, 2);
+    const projectJson = stringifyProjectData({ ...project, themePackage: undefined }, 2);
     const projectAsset = await createThemeAsset('rockbox_designer_project.json', new TextEncoder().encode(projectJson));
     const base = project.themePackage;
     const hasScreen = (screen: ScreenType) => Boolean(
