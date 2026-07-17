@@ -71,6 +71,8 @@ const SUPPORTED_CONDITIONAL_TAGS = new Set([
   'cf', 'cc', 'Lc', 'Sr', 'Tp', 'Tl', 'tp', 'tt', 'tm', 'ts', 'tx'
 ]);
 
+export const isSupportedConditionalTag = (name: string) => SUPPORTED_CONDITIONAL_TAGS.has(name);
+
 const DIRECTLY_INTERPRETED_TAGS = new Set([
   'V', 'Vl', 'Vi', 'Vd', 'VI', 'Vf', 'Vb', 'al', 'ac', 'ar', 'Fl', 'Fn', 's',
   'xl', 'x', 'xd', 'Cl', 'Cd', 'pb', 'pv', 'pR', 'St', 'tr', 'dr', 'T', 'LI', 'Li', 'LB'
@@ -347,7 +349,7 @@ function tagValue(tag: TagNode, options: InterpreterOptions): string | number | 
 const conditionalBranch = (node: ConditionalNode, options: InterpreterOptions): number | undefined => {
   const override = options.branchOverrides?.[node.id];
   if (override !== undefined) return Math.max(0, Math.min(node.branches.length - 1, override));
-  if (node.test.kind !== 'tag') return node.branches.length ? 0 : undefined;
+  if (node.test.kind !== 'tag' || !SUPPORTED_CONDITIONAL_TAGS.has(node.test.name)) return undefined;
   const name = node.test.name;
   if (name === 'mp') return Math.min(node.branches.length - 1, playbackBranch(options.sim.playStatus));
   if (name === 'mm') return Math.min(node.branches.length - 1, ({ off: 0, all: 1, one: 2 })[options.sim.repeat] ?? 0);

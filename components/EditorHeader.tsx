@@ -27,6 +27,7 @@ interface EditorHeaderProps {
     onOpenPlay: () => void;
     onOpenAssets: () => void;
     onOpenFonts: () => void;
+    onOpenLogic: () => void;
     onOpenFirmware: () => void;
 }
 
@@ -37,7 +38,7 @@ const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: st
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
     project, user, onLogout, activeScreen, setActiveScreen, selectedElement, rightPanelMode,
     onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
-    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenAssets, onOpenFonts, onOpenFirmware
+    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenAssets, onOpenFonts, onOpenLogic, onOpenFirmware
 }) => {
     const deviceProfile = getDeviceProfile(project.settings.target);
     const screenFiles = getMainScreenFiles(deviceProfile);
@@ -78,6 +79,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     title="Inspect exact RB12 glyphs, compare widths, convert fonts locally, and manage references"
                 >
                     FONTS
+                </button>
+                <button
+                    type="button"
+                    onClick={onOpenLogic}
+                    className="border-2 border-black bg-[#ffd23f] px-3 py-2 font-mono text-[10px] font-black uppercase text-black shadow-[3px_3px_0_#111] hover:bg-[#ffe271] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    title="Inspect Rockbox conditionals, preview branches, and reveal exact source"
+                >
+                    LOGIC
                 </button>
                 <button
                     type="button"

@@ -1,4 +1,4 @@
-import { createDiagnostic, parseRockbox, RockboxDocument, RockboxNode, TagNode } from '../syntax';
+import { createDiagnostic, parseRockbox, RockboxDocument, RockboxNode, serializeRockbox, TagNode } from '../syntax';
 import { updateKnownTagArguments } from './knownTags';
 
 export type EditResult = {
@@ -178,6 +178,33 @@ export const replaceConditionalBranch = (
     const branches = [...node.branches];
     branches[branchIndex] = rekeyDocument(parseRockbox(source), nextCreatedPrefix(document));
     return { ...node, branches, dirty: true };
+  });
+  if (!result.found) return failure(document, 'edit-node-not-found', `Conditional ${nodeId} was not found.`);
+  if (incompatible || !result.changed) return failure(document, 'edit-invalid-branch', 'The conditional branch does not exist.');
+  return success(result.document);
+};
+
+export const duplicateConditionalBranch = (
+  document: RockboxDocument,
+  nodeId: string,
+  branchIndex: number
+): EditResult => {
+  let incompatible = false;
+  const result = updateDocumentNode(document, nodeId, node => {
+    if (node.kind !== 'conditional' || !node.branches[branchIndex]) {
+      incompatible = true;
+      return null;
+    }
+    const duplicate = rekeyDocument(
+      parseRockbox(serializeRockbox(node.branches[branchIndex])),
+      nextCreatedPrefix(document)
+    );
+    return {
+      ...node,
+      branches: [...node.branches, duplicate],
+      separators: [...node.separators, node.separators[node.separators.length - 1] ?? '|'],
+      dirty: true
+    };
   });
   if (!result.found) return failure(document, 'edit-node-not-found', `Conditional ${nodeId} was not found.`);
   if (incompatible || !result.changed) return failure(document, 'edit-invalid-branch', 'The conditional branch does not exist.');

@@ -113,6 +113,19 @@ describe('source-linked WPS interpreter', () => {
     expect(result.layers.find(layer => layer.kind === 'conditional')?.selectedBranch).toBeUndefined();
   });
 
+  it('does not choose a branch for an unsupported conditional unless explicitly overridden', () => {
+    const document = parseRockbox('%?zzFuture<Assumed true|Assumed false>');
+    const conditional = document.nodes[0];
+    if (conditional.kind !== 'conditional') throw new Error('Missing conditional');
+    const automatic = interpretWps(document, options);
+    expect(automatic.layers.find(layer => layer.kind === 'conditional')?.selectedBranch).toBeUndefined();
+    expect(automatic.operations).toHaveLength(0);
+
+    const forced = interpretWps(document, { ...options, branchOverrides: { [conditional.id]: 0 } });
+    expect(forced.layers.find(layer => layer.kind === 'conditional')?.selectedBranch).toBe(0);
+    expect(forced.layers.some(layer => layer.label.includes('Assumed true') && layer.active)).toBe(true);
+  });
+
   it('uses compact xl frame counts and resolves progress image handles', () => {
     const result = interpretWps(parseRockbox([
       '%xl(P,PlayStatus.bmp,9)',

@@ -328,3 +328,11 @@ Browser Font Workshop
 `components/FontMode.tsx` replaces the import-only modal with one lazy workspace. Its transient search, tab, preview string, glyph page, and helper-health state do not duplicate `ProjectState`. It distinguishes canonical theme bytes from a metadata-only catalog of the 88 filenames in Rockbox's separately installed fonts package. Referencing a catalog-only name is visibly an external dependency; importing its actual FNT makes the theme self-contained. The application bundles no BDF/FNT collection bytes or third-party font licenses.
 
 The browser bundle contains no GPL source or executable and gains only the protocol client and UI. Input font licensing remains the user's responsibility; generated `.fnt` files should be shared only when the source license permits conversion and redistribution.
+
+## Post-phase Logic workspace
+
+`rockbox/logic/` is a read projection over lossless conditional CST nodes. It records nesting, parent branch, source span, exact expression/block, neutral or source-evidenced branch labels, browser-interpreter support, and device-capability gates. It never owns project or source state.
+
+`App.tsx` retains transient branch overrides per WPS/SBS/FMS screen so identical span-derived node IDs in separate files cannot collide and switching screens does not discard a preview choice. Logic, Screens, and Play share the same simulator state and semantic interpreter. `components/LogicMode.tsx` is lazy-loaded; search and current selection are local UI state. Source reveal initializes `SourceEditor` with the authoritative file and span, while canvas reveal reuses the existing source-node selection.
+
+The one Logic structural mutation, `duplicateConditionalBranch`, is an immutable syntax command. It re-parses and re-keys only the chosen branch, appends it using the existing separator style, marks the parent dirty, and leaves surrounding bytes to the minimum-change serializer. Unsupported expressions are inspectable and force-previewable but do not receive that mutation control.

@@ -17,7 +17,7 @@ import { applyThemeToProject } from './services/layoutEngine';
 import { parseAudioFile } from './services/audioService';
 import { storageService } from './services/storageService';
 import { useHistory } from './hooks/useHistory';
-import { EditResult, updateImageReference, updateTagArguments, updateTextNode, updateViewport } from './rockbox/editing';
+import { duplicateConditionalBranch, EditResult, updateImageReference, updateTagArguments, updateTextNode, updateViewport } from './rockbox/editing';
 import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from './services/rockboxSyntaxAdapter';
 import { parseProjectData, stringifyProjectData } from './services/projectSerialization';
 import { getDeviceProfile, supportsScreenFile } from './rockbox/devices';
@@ -73,6 +73,11 @@ const FontMode = React.lazy(async () => {
   return { default: module.FontMode };
 });
 
+const LogicMode = React.lazy(async () => {
+  const module = await import('./components/LogicMode');
+  return { default: module.LogicMode };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -98,12 +103,14 @@ export default function App() {
   const [showMainMenu, setShowMainMenu] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [showFonts, setShowFonts] = useState(false);
+  const [showLogic, setShowLogic] = useState(false);
   const [showCompatibility, setShowCompatibility] = useState(false);
   const [showFirmware, setShowFirmware] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
-  const [branchOverrides, setBranchOverrides] = useState<BranchOverrides>({});
+  const [branchOverridesByScreen, setBranchOverridesByScreen] = useState<Record<SkinScreen, BranchOverrides>>({ wps: {}, sbs: {}, fms: {} });
+  const [sourceFocus, setSourceFocus] = useState<{ tab: SkinScreen; start: number; end: number }>();
   
   const [isLayerStackCollapsed, setIsLayerStackCollapsed] = useState(false);
   const [zoom, setZoom] = useState(1.5);
@@ -115,6 +122,7 @@ export default function App() {
   const currentProject = useRef(project);
   currentProject.current = project;
   const activeThemeScreen = themeScreenForPreview(activeScreen);
+  const branchOverrides = branchOverridesByScreen[activeThemeScreen as SkinScreen] ?? {};
   const activeDocument = useMemo(
     () => getProjectSyntaxDocument(project, activeScreen),
     [activeScreen, project.wpsDocument, project.wpsAst, project.sbsDocument, project.sbsAst, project.fmsDocument, project.fmsAst]
@@ -303,7 +311,16 @@ export default function App() {
       }
   }, [activeScreen, deviceProfile.id]);
 
-  useEffect(() => setBranchOverrides({}), [project.settings.name, activeScreen]);
+  useEffect(() => setBranchOverridesByScreen({ wps: {}, sbs: {}, fms: {} }), [project.settings.name]);
+
+  const handleSetBranchOverride = (screen: SkinScreen, nodeId: string, branch: number | null) => {
+    setBranchOverridesByScreen(current => {
+      const screenOverrides = { ...current[screen] };
+      if (branch === null) delete screenOverrides[nodeId];
+      else screenOverrides[nodeId] = branch;
+      return { ...current, [screen]: screenOverrides };
+    });
+  };
 
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
@@ -314,13 +331,25 @@ export default function App() {
 
   const applySyntaxEdit = (edit: (document: NonNullable<ProjectState['wpsDocument']>) => EditResult) => {
     const document = getProjectSyntaxDocument(project, activeScreen);
-    if (!document) return;
+    if (!document) return undefined;
     const result = edit(document);
-    if (!result.changed && result.diagnostics.length === 0) return;
+    if (!result.changed && result.diagnostics.length === 0) return result;
     const next = applyProjectSyntaxDocument(project, activeScreen, result.document);
     setProject(result.diagnostics.length > 0
       ? { ...next, validationReport: result.diagnostics.map(diagnostic => diagnostic.message) }
       : next);
+    return result;
+  };
+
+  const handleDuplicateLogicBranch = (nodeId: string, branchIndex: number) => {
+    const result = applySyntaxEdit(document => duplicateConditionalBranch(document, nodeId, branchIndex));
+    if (!result) return { ok: false, message: 'No source document is available for this screen.' };
+    return {
+      ok: result.changed,
+      message: result.changed
+        ? `Duplicated branch ${branchIndex + 1} at the end of the conditional. Other source remained exact.`
+        : result.diagnostics.map(diagnostic => diagnostic.message).join(' ') || 'The branch was not changed.'
+    };
   };
 
   const handleUpdateAstViewport = (nodeId: string, updates: { x: number; y: number; width: number; height: number }) =>
@@ -578,9 +607,9 @@ export default function App() {
     <div className="flex h-screen w-screen bg-[#333] text-[#111] overflow-hidden font-sans relative">
       <LoginModal isOpen={showLogin && !user} onLoginSuccess={(u) => { setUser(u); setShowLogin(false); }} />
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
-      {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
+      {showSource && <SourceEditor project={project} initialFocus={sourceFocus} onClose={() => { setShowSource(false); setSourceFocus(undefined); }} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onShowFonts={() => setShowFonts(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onShowFonts={() => setShowFonts(true)} onShowLogic={() => setShowLogic(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
       {showCompatibility ? (
         <React.Suspense fallback={<div className="fixed inset-0 z-[115] bg-black/70 flex items-center justify-center text-white font-mono text-sm">Loading compatibility evidence…</div>}>
           <CompatibilityDashboardModal isOpen onClose={() => setShowCompatibility(false)} initialDeviceId={deviceProfile.id} />
@@ -639,6 +668,34 @@ export default function App() {
           />
         </React.Suspense>
       ) : null}
+      {showLogic ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[119] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Logic…</div>}>
+          <LogicMode
+            project={project}
+            profile={deviceProfile}
+            screen={activeThemeScreen as SkinScreen}
+            semanticResult={semanticResult}
+            branchOverrides={branchOverrides}
+            simulation={sim}
+            onScreenChange={screen => {
+              setActiveScreen(screen);
+              applySimulatorSession(transitionSimulator(simulatorSessionRef.current, { type: 'activity', activity: activityForPreview(screen) }, deviceProfile));
+              setActiveScenario('custom');
+            }}
+            onSetBranchOverride={(nodeId, branch) => handleSetBranchOverride(activeThemeScreen as SkinScreen, nodeId, branch)}
+            onSimulationChange={updates => handleSimulatorAction({ type: 'simulation', updates })}
+            onDuplicateBranch={handleDuplicateLogicBranch}
+            onRevealCanvas={nodeId => { setShowLogic(false); handleSelectElement(nodeId); }}
+            onRevealSource={(screen, span) => {
+              setShowLogic(false);
+              setSourceFocus({ tab: screen, start: span.start, end: span.end });
+              setShowSource(true);
+            }}
+            onOpenPlay={() => { setShowLogic(false); setShowPlay(true); }}
+            onClose={() => setShowLogic(false)}
+          />
+        </React.Suspense>
+      ) : null}
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
 
       {/* AI Prompt Modal */}
@@ -684,13 +741,14 @@ export default function App() {
               setActiveScenario('custom');
             }}
             selectedElement={selectedElement} rightPanelMode={rightPanelMode}
-            onAlign={alignElement} showSource={showSource} setShowSource={setShowSource}
+            onAlign={alignElement} showSource={showSource} setShowSource={value => { if (value) setSourceFocus(undefined); setShowSource(value); }}
             showGrid={showGrid} setShowGrid={setShowGrid} zoom={zoom} setZoom={setZoom}
             debugMode={debugMode} setDebugMode={setDebugMode}
             useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
             onOpenPlay={() => setShowPlay(true)}
             onOpenAssets={() => setShowAssets(true)}
             onOpenFonts={() => setShowFonts(true)}
+            onOpenLogic={() => setShowLogic(true)}
             onOpenFirmware={() => setShowFirmware(true)}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
@@ -730,14 +788,7 @@ export default function App() {
           setIsLayerStackCollapsed={setIsLayerStackCollapsed} activeScreen={activeScreen}
           semanticResult={semanticResult}
           branchOverrides={branchOverrides}
-          onSetBranchOverride={(nodeId, branch) => setBranchOverrides(current => {
-            if (branch === null) {
-              const next = { ...current };
-              delete next[nodeId];
-              return next;
-            }
-            return { ...current, [nodeId]: branch };
-          })}
+          onSetBranchOverride={(nodeId, branch) => handleSetBranchOverride(activeThemeScreen as SkinScreen, nodeId, branch)}
           onUpdateSourceArguments={handleUpdateSourceArguments}
           onUpdateSourceText={handleUpdateAstText}
       />

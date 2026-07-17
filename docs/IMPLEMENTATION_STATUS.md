@@ -4,12 +4,12 @@ Last updated: 2026-07-17
 
 ## Current phase
 
-- **Phase:** Post-Phase 8 Pulp migration — canonical Font workspace
-- **Branch:** `codex/font-workspace`
-- **Merged milestones:** Phase 0 through Phase 8, the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25), and the source-safe Assets workspace in [PR #26](https://github.com/mrbarkan/RockBox-Designer/pull/26) at `509014b`.
-- **Status:** Fonts is now a first-class workspace over exact RB12 bytes. It draws real 1-bit and 4-bit glyphs, measures stored advances and line heights, checks declared ranges, compares package fonts, inventories resolved CFG/`%Fl` usage, converts outline fonts through the existing local helper, and safely selects/replaces/renames/deletes FNT assets. A pinned metadata-only catalog distinguishes all 88 names in the separately installed Rockbox fonts package from fonts actually bundled in the theme.
-- **Scope boundary:** Font bytes, header/table metrics, glyph pixels, ordinary advance widths, and range checks are exact. RB12 cannot explicitly identify every in-range converter fallback; combining marks, bidirectional shaping, fallback chains, general screen-text rasterization, and firmware UI remain external Level C concerns. No Rockbox collection font bytes or licenses are bundled.
-- **UX direction preserved:** The import-only modal is removed. The compact Pulp-style Font mode is lazy-loaded, keeps project bytes global, exposes Play, and labels an unbundled catalog selection as an external font-package dependency.
+- **Phase:** Post-Phase 8 Pulp migration — source-safe Logic workspace
+- **Branch:** `codex/logic-workspace`
+- **Merged milestones:** Phase 0 through Phase 8, the USB/SBS correction in [PR #25](https://github.com/mrbarkan/RockBox-Designer/pull/25), the source-safe Assets workspace in [PR #26](https://github.com/mrbarkan/RockBox-Designer/pull/26), and the canonical Font workspace in [PR #27](https://github.com/mrbarkan/RockBox-Designer/pull/27) at `2f26ad3`.
+- **Status:** Logic is now a first-class workspace over authoritative WPS/SBS/FMS conditional nodes. It inventories nested conditions and exact raw blocks, applies source-evidenced common labels, shows browser/target authority, keeps forced branches as per-screen preview state, drives the shared deterministic simulator, and reveals the selected condition on the canvas or in Source.
+- **Scope boundary:** The documented interpreter subset receives live Level A evaluation. Unknown, malformed, future, and target-unavailable expressions remain exact and can be force-previewed without an interpretation claim. The only Logic write duplicates an explicitly selected supported branch through the minimum-change CST serializer; all other advanced edits stay in Source. Complete conditional and firmware behavior remains external Level C.
+- **UX direction preserved:** Logic is a compact, lazy Pulp mode rather than a node graph. It does not duplicate project/source/simulation state, keeps Play prominent, and never rewrites complex imported logic into a proprietary beginner rule.
 - **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
@@ -41,15 +41,17 @@ Last updated: 2026-07-17
 - `rockbox/validation/` models all required official-comparison categories; ordinary validation checks the report without requiring a Rockbox checkout.
 - `scripts/themes/` generates public fixtures, prepares ignored private real-theme fixtures, and reports preservation, package, support, and optional CheckWPS evidence separately.
 - `rockbox/semantics/` interprets the supported WPS/SBS/FMS subsets without mutating source, retains a CST source link on every authored render operation, and labels firmware-derived menu, quick-screen, and tuner projections separately.
+- `rockbox/logic/` projects lossless conditional nodes into nested, source-linked records with exact expressions/branches, evidenced labels, browser support, and target capability gates. Branch overrides are transient and partitioned by WPS/SBS/FMS screen so node IDs cannot collide across files.
 - `rockbox/rendering/` owns the browser canvas renderer and a deterministic RGB pixel renderer used for 320×240 WPS, SBS, and FMS goldens.
 - The logic-aware right panel distinguishes global preloads, viewports, elements, conditionals, branches, source-only constructs, and unsupported preserved nodes. Losslessly preserved comments stay in the source editor and are intentionally omitted from the visual layer projection.
 - `rockbox/fonts/` validates the complete RB12 bitmap/offset/width layout, decodes rotated 1-bit and packed 4-bit glyphs, measures stored advances, checks declared ranges/default aliases, inventories exact references, and exposes a pinned 88-name metadata catalog. Font assets are packaged byte-exact under `.rockbox/fonts/`.
 - `scripts/fonts/` builds the pinned upstream `tools/convttf.c` only from an external checkout, converts licensed TTF/OTF/TTC inputs, and can verify generated output in an external Rockbox simulator. No GPL source, binary, or third-party generated font is bundled.
 - The versioned local font helper binds to `127.0.0.1`, checks an exact origin allowlist and protocol header, accepts only in-memory font bytes/parameters, uses a private temporary directory, and returns validated RB12 bytes. Fonts exposes helper state, pixel size, glyph range, exact metrics/pixels, source usage, comparison, package ownership, and licensing state without adding GPL code to the browser bundle.
-- The dedicated Font workspace is a 26.69 KB minified / 7.84 KB gzip lazy chunk. No native converter, GPL source, collection BDF/FNT, or third-party font license is present in the browser bundle.
+- The dedicated Font workspace is a 26.68 KB minified / 7.84 KB gzip lazy chunk. No native converter, GPL source, collection BDF/FNT, or third-party font license is present in the browser bundle.
+- The dedicated Logic workspace is a 16.17 KB minified / 5.16 KB gzip lazy chunk. Its only initial-path cost is the shared per-screen override/source-focus wiring; the condition inventory and UI remain out of the main chunk.
 - `scripts/phase4/` builds no browser dependency. It runs pinned external CheckWPS targets and an external simulator, normalizes screenshots, computes a classified pixel diff, and writes offline-verifiable evidence reports.
 - `rockbox/semantics/` exports an explicit support catalog so the Compatibility Lab does not confuse 193 known tag names with the smaller interpreted/rendered subset.
-- The Compatibility Lab remains an advanced code-split evidence modal. The checked-in Pulp guideline now informs the first focused migration—Play—without widening Phase 5 into the remaining Theme/Components/Assets/Logic studio modes.
+- The Compatibility Lab remains an advanced code-split evidence modal. The focused Pulp migration now has Play, Components, Assets, Fonts, Firmware Assets, and Logic workspaces without replacing the source-authoritative editor shell in one risky rewrite.
 - `rockbox/simulator/` owns deterministic scenarios, pure state transitions, capability enforcement, and stable scenario links. `timelineMs` replaces wall-clock reads for playback, seek, RTC, scrolling, `%mv`, and `%Tl`.
 - Play is a first-class, lazy-loaded Level A workflow. `DeviceShell` maps physical or verified touch input around the existing renderer without owning screen pixels. The old four-column simulation panel is removed; Screens retains a compact scenario strip.
 - The original Phase 5 main chunk was 584.83 KB / 172.99 KB gzip and Play was 15.63 KB / 4.10 KB gzip. The current checked compatibility catalog records 121 interpreted/rendered tags and still only 12 source-aware edit surfaces.
@@ -95,7 +97,7 @@ Before Phase 0 changes:
 - Imported, Assets-workspace, and component binary assets are canonical. Older synthetic-project upload controls still enter through the legacy data-URL compatibility path and are not the preferred package workflow.
 - FMS is supported by the package model and screen-aware semantics for frequency, presets, signal, stereo, tuned/scan, and RDS state. Tags outside that subset remain preserved and visibly unsupported.
 - Syntax assumptions and official comparisons use Rockbox source at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the latest local corpus report includes AMusicPod and Adwaitapod.
-- Imported RB12 font metrics and bytes are exact, and the dedicated Fonts workspace draws the stored Rockbox bitmap glyphs. General screen-preview text still uses the browser approximation rather than routing every semantic text operation through the RB12 rasterizer. The evidenced `%?if`, `%?and`, `%?or`, `%St`, and `%ss` subset is automatic; other operands remain preserved and visibly unsupported.
+- Imported RB12 font metrics and bytes are exact, and the dedicated Fonts workspace draws the stored Rockbox bitmap glyphs. General screen-preview text still uses the browser approximation rather than routing every semantic text operation through the RB12 rasterizer. Logic exposes the evidenced conditional subset and preserves other operands visibly; a forced unsupported branch is an inspection aid, not a behavior claim.
 - Level A Play state is deterministic and shareable by named scenario, but it is not a full firmware simulator. Custom state is intentionally not encoded into scenario URLs.
 
 ## Validation
@@ -104,8 +106,8 @@ Latest passing validation on 2026-07-17:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 32 files, 197 tests
-npm run build          passed — Vite production build; 599.17 KB / 177.98 KB gzip main, 26.69 KB / 7.84 KB gzip Fonts, 21.63 KB / 6.67 KB gzip Assets, 21.35 KB / 5.14 KB gzip Play, and 20.00 KB / 7.27 KB gzip Firmware Assets chunks
+npm test               passed — 33 files, 205 tests
+npm run build          passed — Vite production build; 601.92 KB / 178.76 KB gzip main, 16.17 KB / 5.16 KB gzip Logic, 26.68 KB / 7.84 KB gzip Fonts, 21.63 KB / 6.67 KB gzip Assets, 21.35 KB / 5.13 KB gzip Play, and 20.00 KB / 7.28 KB gzip Firmware Assets chunks
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run font:catalog:verify passed — 88 font-package names; exact match to pinned external `fonts/*.bdf`
 npm run test:coverage  passed — coverage runner operational
@@ -248,9 +250,17 @@ Post-Phase 8 Font evidence:
 - A real 152,800-byte `14-Terminus.fnt` generated by pinned upstream `convbdf` passed browser import. The UI reported 14-pixel height, 12-pixel ascent, 8-pixel maximum width, 65,534 slots, recognizable glyphs, a 120-pixel `Computer Love 🙂` metric width, U+1F642 outside range with U+FFFD fallback, correct project UI-font state, working Play handoff, and zero application-console errors.
 - The 88-name font-pack catalog contains metadata only. Choosing a catalog-only font visibly requires the separate Rockbox fonts package; importing the FNT makes the theme self-contained.
 
+Post-Phase 8 Logic evidence:
+
+- Source inspection at the pinned SHA covered the current tag table/header, skin-token values, conditional rendering path, and manual branch orders for playback, repeat, hold, charge/power/USB, volume-change, shuffle, album-art, and language-direction conditions.
+- Focused tests cover nested condition inventory, parent-branch identity, comment omission, exact unknown preservation, source-evidenced branch labels, iPod Classic FM gating, per-screen counts, Level A active branches, the Pulp UI surface, and CRLF/unknown-safe branch duplication.
+- Forced branches remain outside `ProjectState` and are partitioned by WPS/SBS/FMS. They repaint the shared semantic result but never dirty source. Logic simulator controls use the same `SimulationState` and transition path as Screens and Play.
+- The explicit duplicate operation appends only a re-keyed selected branch. A generated three-branch `%mp` fixture was accepted by `checkwps.ipodvideo` from the pinned Rockbox SHA; no upstream code or validator binary is bundled.
+- Source reveal opens the authoritative file/span, canvas reveal reuses the source node selection, and unsupported expressions display their exact block with mutation disabled and no invented automatic false branch.
+
 ## Known blockers
 
-- No Phase 8, Assets-workspace, or Font-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
+- No Phase 8, Assets-workspace, Font-workspace, or Logic-workspace acceptance blocker is open. The execution-plan phase gates remain complete.
 - Firmware Assets is verified only for the iPod Video compiled USB fallback logo/layout output. iPod Classic fallback changes, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
 - The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
 - The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
@@ -259,8 +269,8 @@ Post-Phase 8 Font evidence:
 
 ## Next task
 
-Continue the Pulp migration with a source-safe Logic workspace for inspecting and selecting conditional branches without flattening source. Then migrate Theme/CFG into a dedicated project-wide workspace while preserving minimum-change commit behavior and avoiding preview repaints for config-only edits.
+Migrate Theme/CFG into a dedicated project-wide workspace while preserving minimum-change commit behavior and avoiding preview repaints for config-only edits. Then consolidate the remaining shell navigation without duplicating the completed specialized workspaces.
 
 ## Compatibility summary
 
-The editor now preserves the correct Rockbox split and has real ordinary-theme Assets and Fonts workflows. Connected USB is an SBS activity scene; compiled fallback changes remain opt-in firmware work; bitmaps and FNT files retain exact path-and-byte identity; and known references can be inspected and changed safely without flattening source. The dedicated Font preview removes the previous bitmap-glyph inspection gap, while general screen text, complex shaping, future reference-bearing syntax, device-only behavior, additional targets/features, and broad tag rendering remain visible external-Level-C limitations rather than hidden compatibility claims.
+The editor now preserves the correct Rockbox split and has real ordinary-theme Assets, Fonts, and Logic workflows. Connected USB is an SBS activity scene; compiled fallback changes remain opt-in firmware work; bitmaps and FNT files retain exact path-and-byte identity; and conditionals can be understood and previewed without flattening source. General screen text, complex shaping, unsupported operands, future reference-bearing syntax, device-only behavior, additional targets/features, and broad tag rendering remain visible external-Level-C limitations rather than hidden compatibility claims.
