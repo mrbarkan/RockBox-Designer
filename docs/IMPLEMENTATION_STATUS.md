@@ -4,12 +4,13 @@ Last updated: 2026-07-16
 
 ## Current phase
 
-- **Phase:** Phase 7 full Rockbox simulator feasibility
-- **Branch:** `codex/phase-7-full-simulator-feasibility`
-- **Merged milestones:** Phase 0 through Phase 6; the source-aware component ecosystem merged in [PR #22](https://github.com/mrbarkan/RockBox-Designer/pull/22) at `9773386`.
-- **Status:** Phase 7 acceptance passes through the documented-blocker path. One pinned external iPod Video core builds and launch-smokes, the prepared official harness loads an authored theme and emits two reproducible framebuffers, and the checked report covers every required feasibility area.
-- **Scope boundary:** Level C WebAssembly was not started. ADR-0017 requires an explicit GPL distribution and browser-runtime decision before implementation. The browser client and editor remain independent with zero Phase 7 bundle bytes.
-- **UX direction preserved:** Play remains accurately labeled Level A, external official validation remains Level B, and Level C remains visibly unshipped rather than being represented by a partial native port.
+- **Phase:** Phase 8 Firmware Mode
+- **Branch:** `codex/phase-8-firmware-mode`
+- **Merged milestones:** Phase 0 through Phase 7; the external full-simulator feasibility evidence merged in [PR #23](https://github.com/mrbarkan/RockBox-Designer/pull/23) at `a204688`.
+- **Status:** Phase 8 acceptance passes. The editor exports a deterministic, opt-in iPod Video USB-screen source package; its patch applies to the exact upstream SHA, and two complete target builds produced byte-identical `rockbox.ipod` images.
+- **Scope boundary:** Firmware Mode exports patch/overlay/build inputs only. It bundles no Rockbox tree, compiled Rockbox firmware, Apple firmware, proprietary component, toolchain, or build output. iPod Classic remains target-gated.
+- **UX direction preserved:** Theme Mode and its ZIP remain unchanged. Firmware Mode is a separate lazy-loaded workspace that always says **Requires custom firmware** and requires explicit custom-firmware plus recovery acknowledgements.
+- **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
 
@@ -53,6 +54,10 @@ Last updated: 2026-07-16
 - `scripts/phase7/` builds and launch-smokes one pinned native simulator core outside the repository, inspects the complete upstream SDL/build/runtime boundary, and writes a derived feasibility report without local paths or GPL artifacts.
 - ADR-0017 keeps actual Rockbox runtime delivery outside the browser until GPL source delivery, hosted isolation, build, thread/main-loop, dynamic-code, persistence, audio, performance, target, and maintenance choices are approved.
 - The measured canonical external simulator is a 1,581,480-byte iPod Video core with a 2,058,415-byte/129-file prepared minimum runtime. It excludes codecs/plugins and is development evidence, not a distributed application asset.
+- `rockbox/firmware/` owns the target/SHA contract, exact USB BMP validation, patch/header generation, deterministic source-package manifest, safety metadata, and ZIP creation without touching `ProjectState` or the Theme Mode exporter.
+- Firmware Mode is a focused lazy-loaded workspace. It accepts the upstream-selected 176 × 48 uncompressed 24-bit BMP, previews left/center/right placement, refuses unsupported targets, and keeps recovery confirmations intentionally non-persistent. Its production chunk is 19.84 KB minified / 7.23 KB gzip; the main chunk is 583.01 KB / 172.47 KB gzip.
+- `scripts/phase8/` extracts the actual generated package, runs its SHA and patch checks, and performs two full `ipodvideo` normal builds in external detached worktrees. Only sanitized hashes and metrics enter `reports/phase8-firmware/latest.json`.
+- ADR-0018 keeps the browser, GPL patch package, cross compiler, target build outputs, and hardware installation as separate trust boundaries.
 
 ## Baseline findings
 
@@ -94,8 +99,8 @@ Latest passing validation on 2026-07-16:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 29 files, 164 tests
-npm run build          passed — Vite production build; Play and Components code-split
+npm test               passed — 30 files, 167 tests
+npm run build          passed — Vite production build; 583.01 KB / 172.47 KB gzip main and 19.84 KB / 7.23 KB gzip Firmware Mode chunks
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
@@ -116,6 +121,10 @@ npm run test:phase7    passed — 3 feasibility boundary, stage, and independenc
 Phase 7 native         passed — external iPod Video core built and launch-smoked with dummy SDL drivers
 Phase 7 feasibility    passed — native/theme/capture stages evidenced; 7 browser-port constraint groups documented
 Phase 7 report         passed — offline report verification, no local paths or bundled simulator artifacts
+Phase 8 package        passed — deterministic patch/overlay/manifest/build package, target and recovery gated
+Phase 8 patch          passed — `git apply --check` at pinned `ipodvideo` SHA
+Phase 8 target build   passed — two complete builds, byte-identical 1,160,624-byte `rockbox.ipod`
+Phase 8 report         passed — offline hashes/metrics, no local paths or committed build artifacts
 ```
 
 Phase 1F evidence:
@@ -201,20 +210,32 @@ Phase 7 evidence:
 - The prepared minimum-runtime official harness loads an authored SBS and deterministic settings. Two clean firmware framebuffer dumps have the same normalized SHA-256.
 - A fresh stock runtime also launches and captures but uses stock configuration in that harness; the report keeps this limitation visible and does not substitute those pixels for the canonical evidence.
 - Source inspection covers SDL display/input, task threads and timing, audio, filesystem root, target generation, dynamic codec/plugin loading, GPL distribution, Emscripten, persistence, asset mounting, build size, performance, and upstream maintenance at the exact registry SHA.
-- The report records seven explicit browser-port constraint groups. Prototype stages 4 and 5 remain blocked by the Level C distribution/runtime decision, and target switching remains deferred.
+- The historical report records seven explicit browser-port constraint groups. The owner subsequently chose external Level C, so browser prototype stages 4 and 5 are closed under the current architecture rather than pending; external target expansion remains evidence-driven.
 - No browser code changed. No Rockbox source, object, executable, runtime asset, screenshot, or WebAssembly module is committed.
+
+Phase 8 evidence:
+
+- Firmware Mode accepts only the exact upstream iPod Video USB bitmap contract and rejects wrong dimensions, depth, compression, or truncated pixel data before export.
+- The generated package contains eight deterministic files: manifest, documentation/licensing, one source patch, one GPL source header overlay, one user bitmap overlay, and two verification/build scripts.
+- The generated verification script refuses any checkout except `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the build script uses a detached worktree and leaves the supplied checkout untouched.
+- The patch applied cleanly to `apps/gui/usb_screen.c`, replaced the target-selected `usblogo.176x48x16.bmp`, and compiled the normal `ipodvideo` target twice.
+- Both firmware images are 1,160,624 bytes with SHA-256 `5c7bb4cc8cd5604310b227d27f693ab17e2b4110f9cbd4221f9d66a24c2c879c`. Install ZIP hashes differ because Rockbox generates archive metadata per build; the firmware image itself is reproducible.
+- The isolated acceptance compiler was Arm GNU 9.3.1, not Rockbox's recommended `arm-elf-eabi-gcc` 9.5.0. The warning is preserved in the report, and exported instructions default to the recommended compiler while requiring explicit override for alternatives.
+- No generated firmware package, Rockbox source, object, compiled firmware, toolchain, local path, or proprietary component is committed.
 
 ## Known blockers
 
-- No Phase 7 acceptance blocker is open; the execution plan explicitly accepts a documented feasibility report that explains the blockers while the editor remains independent.
-- Level C implementation is blocked on the owner's GPL distribution and browser-runtime architecture decision recorded in ADR-0017. This is not permission to start a partial WebAssembly port.
+- No Phase 8 acceptance blocker is open. The execution-plan phase gates are complete after merge.
+- Firmware Mode is verified only for iPod Video USB logo/layout output. iPod Classic, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
+- The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
+- The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
 - The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
 - This remains targeted WPS/SBS/FMS dogfood support, not a claim that every real-theme construct or Rockbox bitmap glyph renders exactly.
 
 ## Next task
 
-Review and merge the Phase 7 evidence. Before any Level C WebAssembly implementation, obtain the ADR-0017 owner decision covering GPL source delivery, hosted isolation, browser support, target scope, codec/plugin packaging, persistence, audio, performance budgets, and upstream maintenance. Phase 8 has not started.
+Review and merge Phase 8. After merge, dogfood the separate USB Firmware Mode package first on the external pinned simulator/build workflow, then on hardware only with the documented backup and disk-mode recovery plan. Further firmware-owned features should be proposed as separately verified target slices rather than being implied by this USB acceptance.
 
 ## Compatibility summary
 
-Phase 7 preserves the Phase 6 dogfood-ready browser editor and adds an honest boundary for the actual Rockbox runtime. Levels A and B remain available without native dependencies; one external native target, authored-theme load, and reproducible screenshot path are evidenced. Level C, full firmware behavior, remote/touch targets, bitmap-glyph parity, and broad tag rendering remain visible limitations rather than hidden compatibility claims.
+Phase 8 preserves the Phase 7 dogfood-ready theme editor and adds an honest, opt-in source-package path for one firmware-owned screen. Theme ZIP behavior is unchanged; the USB patch applies at the pinned SHA and produces a reproducible real iPod Video firmware image. External Level C remains the authoritative firmware UI/theme reference, while device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.

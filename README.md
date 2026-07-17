@@ -1,8 +1,10 @@
 # Rockbox Designer
 
-Rockbox Designer is a browser-based, source-preserving editor for Rockbox themes. Phase 5 supports targeted WPS, SBS, and FMS dogfooding: import a theme ZIP, preview the documented source-linked subset at native device pixels, exercise deterministic device states in first-class Play mode, make narrow visual or source edits, and export without silently deleting unsupported syntax or assets. An advanced Compatibility Lab separates preservation, parsing, interpretation, rendering, editing, official validation, and known pixel differences per tag and target.
+Rockbox Designer is a browser-based, source-preserving editor for Rockbox themes. It supports targeted WPS, SBS, and FMS dogfooding: import a theme ZIP, preview the documented source-linked subset at native device pixels, exercise deterministic device states in first-class Play mode, make narrow visual or source edits, and export without silently deleting unsupported syntax or assets. An advanced Compatibility Lab separates preservation, parsing, interpretation, rendering, editing, official validation, and known pixel differences per tag and target.
 
 It is not yet a full Rockbox renderer. Complex conditional functions and constructs outside the documented subset remain future work. Existing Rockbox `.fnt` files retain exact bytes and expose RB12 metrics. TTF/OTF/TTC conversion is available through a loopback-only local companion so the native GPL Rockbox converter and input font stay outside the browser bundle.
+
+Optional Firmware Mode is explicitly separate from theme editing. Its first verified output creates a SHA-pinned source patch package for a custom iPod Video USB logo and placement. It requires recovery acknowledgement and exports no compiled or proprietary firmware. The actual external Rockbox simulator remains the Level C behavioral authority for the pinned target; device-only behavior still requires hardware testing.
 
 ## Run locally
 
@@ -32,6 +34,7 @@ Open the local address printed by the command, create a local profile, then:
 7. Open **Play** (or press `Cmd/Ctrl+P`) to exercise deterministic playback, power, USB, hold, RTC, metadata, FM/RDS, and capability-gated touch/remote scenarios.
 8. Copy a named scenario link when you need another person to see the same state.
 9. Export the resulting ZIP and test it on a Rockbox simulator or device.
+10. For a firmware-owned USB screen, open **FW MODE**, read the recovery gate, and export the separate source package only for a verified iPod Video target.
 
 The product direction is now a compact, Pulp-inspired studio with specialized creative modes and Canva-style manipulation concentrated in Screens mode. The foundation phases remain intentionally focused; the studio migration will land through separate, behavior-preserving milestones described in [Pulp UX Guidelines](ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md).
 
@@ -48,6 +51,7 @@ npm run font:helper:report:verify
 npm run phase4:render:report:verify
 npm run phase4:compatibility:report:verify
 npm run test:phase5
+npm run phase8:firmware:report:verify
 ```
 
 Local real-theme and official checks require private fixtures or a separate Rockbox checkout:
@@ -59,4 +63,4 @@ ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox ROCKBOX_SIMULATOR_BUILD_DIR=/absolu
 ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox npm run test:phase4-compatibility
 ```
 
-See [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
+See [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.

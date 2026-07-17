@@ -261,6 +261,30 @@ Phase 7 development evidence
 
 ADR-0017 keeps Level C separate. A browser port would require a GPL distribution product plus a maintained Emscripten host build, pthread/main-loop architecture, virtual and persistent simulator disk, codec/plugin strategy, audio behavior, performance budgets, and an upstream refresh process. Until approved, the browser bundle has zero Phase 7 runtime bytes and Play remains accurately labeled Level A.
 
+The owner selected the external Level C architecture. The pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its recorded target and revision; it is not a substitute for testing device-only hardware effects.
+
+## Phase 8 Firmware Mode source packages
+
+Firmware Mode is isolated from the theme document and package layers:
+
+```text
+explicit Firmware Mode entry
+  -> verified DeviceProfile + exact Rockbox SHA
+  -> target-specific asset validation
+  -> generated source patch + GPL overlay + manifest
+  -> deterministic source-package ZIP
+  -> external clean worktree and cross build
+  -> rockbox.ipod / rockbox.zip outside this repository
+
+Theme Mode
+  -> unchanged WPS/SBS/FMS/CFG/assets pipeline
+  -> never imports Firmware Mode state
+```
+
+`rockbox/firmware/` owns the pure target contract, BMP inspection, patch/header generation, deterministic manifest, and package creation. `components/FirmwareMode.tsx` owns only opt-in interaction, recovery acknowledgement, preview placement, and download. `scripts/phase8/` extracts the actual generated package, verifies it against the pinned checkout, performs two complete device builds, and commits only derived hashes and metrics.
+
+The first patch replaces the stock USB logo positioning expression with a generated macro and overlays the target-selected 176 × 48 bitmap. It neither invents a standard theme file nor changes the browser's USB scenario semantics. ADR-0018 records the licensing, target, build, and recovery boundary.
+
 The accepted delivery architecture is a loopback-only local companion:
 
 ```text

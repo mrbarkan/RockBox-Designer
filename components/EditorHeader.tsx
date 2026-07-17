@@ -24,6 +24,7 @@ interface EditorHeaderProps {
     useAstPreview: boolean;
     setUseAstPreview: (v: boolean) => void;
     onOpenPlay: () => void;
+    onOpenFirmware: () => void;
 }
 
 const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: string, activeId: ScreenType, onClick: (id: ScreenType) => void }) => (
@@ -33,7 +34,7 @@ const TabButton = ({ id, label, activeId, onClick }: { id: ScreenType, label: st
 export const EditorHeader: React.FC<EditorHeaderProps> = ({
     project, user, onLogout, activeScreen, setActiveScreen, selectedElement, rightPanelMode,
     onAlign, showSource, setShowSource, showGrid, setShowGrid, zoom, setZoom,
-    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay
+    debugMode, setDebugMode, useAstPreview, setUseAstPreview, onOpenPlay, onOpenFirmware
 }) => {
     const deviceProfile = getDeviceProfile(project.settings.target);
     const screenFiles = getMainScreenFiles(deviceProfile);
@@ -65,6 +66,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                 )}
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                <button
+                    type="button"
+                    onClick={onOpenFirmware}
+                    className="border-2 border-black bg-[#ffd23f] px-3 py-2 font-mono text-[10px] font-black uppercase text-black shadow-[3px_3px_0_#111] hover:bg-[#ffe271] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    title="Optional source patches for firmware-owned screens"
+                >
+                    FW MODE
+                </button>
                 <button
                     type="button"
                     onClick={onOpenPlay}
