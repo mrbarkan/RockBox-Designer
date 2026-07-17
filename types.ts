@@ -235,7 +235,10 @@ export interface SimulationState {
   repeat: 'off' | 'all' | 'one'; 
   
   currentTime: string;
+  currentDate?: string;
   clock12Hour: boolean;
+  brightness?: number;
+  sleepTimerSeconds?: number;
   volumeLastChanged: number; 
   diskActivity: boolean; 
   sublineCycle: number; 
@@ -253,6 +256,11 @@ export interface SimulationState {
   menuIconIds: number[];
   menuTitleIconId: number;
   menuSelectedIndex: number;
+
+  recordingElapsedSeconds?: number;
+  recordingFrequencyKhz?: number;
+  recordingFormat?: 'wav' | 'aiff' | 'wv' | 'mp3';
+  recordingLevel?: number;
 
   fmAvailable: boolean;
   fmFrequency: number;

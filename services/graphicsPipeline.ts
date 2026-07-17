@@ -3,6 +3,7 @@ import { ProjectState, ScreenType, SimulationState, SongMetadata, RenderList, Re
 import { checkCondition, parseRockboxString } from './rockboxTagParser';
 import { ROCKBOX_STANDARD_FONTS, GRAPHIC_ASSETS } from '../constants';
 import { getDeviceProfile } from '../rockbox/devices';
+import { themeScreenForPreview } from '../rockbox/screens';
 
 // --- HELPERS ---
 
@@ -31,7 +32,8 @@ export const evaluateTheme = (
     song: SongMetadata
 ): RenderList => {
     const ops: RenderList = [];
-    const elements = project.elements.filter(el => el.screen === screen);
+    const sourceScreen = themeScreenForPreview(screen);
+    const elements = project.elements.filter(el => el.screen === sourceScreen);
     const profile = getDeviceProfile(project.settings.target);
     const screenWidth = profile.mainScreen.width;
     const screenHeight = profile.mainScreen.height;
@@ -47,8 +49,6 @@ export const evaluateTheme = (
             x: 0, y: 0, w: screenWidth, h: screenHeight,
             assetKey: project.settings.backdrop
         });
-    } else if (screen === 'usb') {
-        ops.push({ type: 'rect', x: 0, y: 0, w: screenWidth, h: screenHeight, color: '#000000' });
     }
 
     // 2. Iterate Elements with State

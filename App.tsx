@@ -27,6 +27,7 @@ import { BranchOverrides, interpretSkin, SemanticResult, SkinScreen } from './ro
 import { parseRb12Font } from './rockbox/fonts';
 import { createThemeAsset } from './rockbox/packages';
 import { convertFontWithCompanion } from './services/fontCompanion';
+import { activityForPreview, themeScreenForPreview } from './rockbox/screens';
 import {
   createScenarioSession,
   enforceTargetCapabilities,
@@ -106,11 +107,12 @@ export default function App() {
   const latestValidSemantic = useRef<Record<string, SemanticResult>>({});
   const currentProject = useRef(project);
   currentProject.current = project;
+  const activeThemeScreen = themeScreenForPreview(activeScreen);
   const activeDocument = useMemo(
-    () => activeScreen === 'usb' ? undefined : getProjectSyntaxDocument(project, activeScreen),
+    () => getProjectSyntaxDocument(project, activeScreen),
     [activeScreen, project.wpsDocument, project.wpsAst, project.sbsDocument, project.sbsAst, project.fmsDocument, project.fmsAst]
   );
-  const interpretedSkin = useMemo(() => activeDocument && activeScreen !== 'usb' ? interpretSkin(activeDocument, {
+  const interpretedSkin = useMemo(() => activeDocument ? interpretSkin(activeDocument, {
     width: deviceProfile.mainScreen.width,
     height: deviceProfile.mainScreen.height,
     defaultFont: project.settings.uiFont,
@@ -123,6 +125,7 @@ export default function App() {
       'volume display': project.settings.volumeDisplay,
       statusbar: project.settings.statusBarTop ? 'top' : 'off',
       'backlight on button hold': project.settings.backlightOnHold,
+      brightness: sim.brightness ?? 70,
       lang: 'english-us',
       'selector color': project.settings.selectorColor,
       'selector text color': project.settings.selectorTextColor,
@@ -137,11 +140,11 @@ export default function App() {
       'qs right': project.settings.qsRight
     },
     branchOverrides,
-    screen: activeScreen as SkinScreen,
+    screen: activeThemeScreen as SkinScreen,
     capabilities: deviceProfile.capabilities
   }) : null, [
     activeDocument,
-    activeScreen,
+    activeThemeScreen,
     project.settings.uiFont,
     project.settings.foregroundColor,
     project.settings.backgroundColor,
@@ -149,6 +152,7 @@ export default function App() {
     project.settings.volumeDisplay,
     project.settings.statusBarTop,
     project.settings.backlightOnHold,
+    sim.brightness,
     project.settings.selectorColor,
     project.settings.selectorTextColor,
     project.settings.lineSelectorType,
@@ -294,13 +298,6 @@ export default function App() {
 
   useEffect(() => setBranchOverrides({}), [project.settings.name, activeScreen]);
 
-  useEffect(() => {
-    const activity = { wps: 2, sbs: 1, fms: 4, usb: 21 }[activeScreen];
-    setSim(current => current.currentActivity === activity
-      ? current
-      : { ...current, currentActivity: activity });
-  }, [activeScreen]);
-
   const handleUpdateElement = (id: string, updates: Partial<WpsElement>) => {
     setProject({
       ...project,
@@ -391,6 +388,11 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (ev) => {
           const result = ev.target?.result as string;
+          if (activeScreen === 'usb') {
+              setProject({ ...project, assets: { ...project.assets, [file.name]: result } });
+              alert(`${file.name} was added as an SBS resource. Reference it from the USB activity branch in the source editor.`);
+              return;
+          }
           const newEl: ImageElement = {
               id: Math.random().toString(36).substr(2, 9),
               name: file.name, type: ElementType.IMAGE, screen: activeScreen,
@@ -675,7 +677,11 @@ export default function App() {
         <EditorHeader 
             project={project} user={user} onLogout={handleLogout}
             activeScreen={activeScreen} setActiveScreen={screen => {
-              setActiveScreen(screen);
+              applySimulatorSession(transitionSimulator(
+                simulatorSessionRef.current,
+                { type: 'activity', activity: activityForPreview(screen) },
+                deviceProfile
+              ));
               setActiveScenario('custom');
             }}
             selectedElement={selectedElement} rightPanelMode={rightPanelMode}

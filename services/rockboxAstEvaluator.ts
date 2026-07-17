@@ -1,6 +1,7 @@
 import { ProjectState, RenderList, RenderOp, ScreenType, SimulationState, SongMetadata, RockboxAstDocument, RockboxAstNode, RockboxTagNode } from '../types';
 import { checkCondition, parseRockboxString } from './rockboxTagParser';
 import { getDeviceProfile } from '../rockbox/devices';
+import { themeScreenForPreview } from '../rockbox/screens';
 
 const toCssHex = (hex: string) => hex ? `#${hex.replace(/^0x/, '').replace(/[^0-9A-Fa-f]/g, '')}` : '#ffffff';
 
@@ -25,9 +26,10 @@ type AstContext = {
 };
 
 const getDocumentForScreen = (project: ProjectState, screen: ScreenType): RockboxAstDocument | undefined => {
-  if (screen === 'wps') return project.wpsAst;
-  if (screen === 'sbs') return project.sbsAst;
-  if (screen === 'fms') return project.fmsAst;
+  const sourceScreen = themeScreenForPreview(screen);
+  if (sourceScreen === 'wps') return project.wpsAst;
+  if (sourceScreen === 'sbs') return project.sbsAst;
+  if (sourceScreen === 'fms') return project.fmsAst;
   return undefined;
 };
 

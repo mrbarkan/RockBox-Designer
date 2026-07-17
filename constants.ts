@@ -180,7 +180,10 @@ export const DEFAULT_SIMULATION: SimulationState = {
   isUsb: false,
   playStatus: 'play',
   currentTime: "12:45:00",
+  currentDate: '2026-07-17',
   clock12Hour: false,
+  brightness: 70,
+  sleepTimerSeconds: 0,
   shuffle: false,
   repeat: 'off',
   externalPower: false,
@@ -200,6 +203,10 @@ export const DEFAULT_SIMULATION: SimulationState = {
   menuIconIds: [29, 0, 25, 20, 21, 2, 9, 24, 10],
   menuTitleIconId: 31,
   menuSelectedIndex: 2,
+  recordingElapsedSeconds: 0,
+  recordingFrequencyKhz: 44.1,
+  recordingFormat: 'wav',
+  recordingLevel: 0.62,
   fmAvailable: true,
   fmFrequency: 101.7,
   fmPresetName: 'FM Radio',
@@ -439,50 +446,6 @@ export const DEFAULT_PROJECT: ProjectState = {
         visible: true, locked: false,
         content: '%ti - %ts',
         fontId: '14-Nimbus.fnt',
-        align: 'center',
-        color: '#ffffff'
-    },
-
-    // --- USB ELEMENTS ---
-     {
-      id: 'usb-bg',
-      name: 'USB BG',
-      type: ElementType.RECT,
-      screen: 'usb',
-      x: 0, y: 0, width: 320, height: 240,
-      visible: true, locked: true,
-      color: "#000000"
-    },
-    {
-        id: 'usb-icon',
-        name: 'USB Icon',
-        type: ElementType.IMAGE,
-        screen: 'usb',
-        x: 110, y: 70, width: 100, height: 100,
-        visible: true, locked: false,
-        src: createAsset(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-            <g stroke="#ffffff" stroke-width="5" stroke-linecap="round">
-                <line x1="50" y1="95" x2="50" y2="55"/>
-                <line x1="50" y1="55" x2="20" y2="35"/>
-                <line x1="50" y1="55" x2="80" y2="35"/>
-                <line x1="50" y1="55" x2="50" y2="25"/>
-            </g>
-            <path d="M50 10 L38 28 L62 28 Z" fill="#ffffff"/>
-            <circle cx="20" cy="35" r="6" fill="#ffffff"/>
-            <rect x="74" y="29" width="12" height="12" fill="#ffffff"/>
-            <circle cx="50" cy="55" r="4" fill="#ffffff"/>
-        </svg>`),
-        filename: 'usb_mode.bmp'
-    },
-    {
-        id: 'usb-text',
-        name: 'Disk Mode',
-        type: ElementType.TEXT,
-        screen: 'usb',
-        x: 0, y: 180, width: 320, height: 30,
-        visible: true, locked: false,
-        content: 'DISK MODE',
-        fontId: '20-Nimbus.fnt',
         align: 'center',
         color: '#ffffff'
     }

@@ -44,6 +44,8 @@ Available named scenarios:
 
 Manual control changes mark the session as **Custom state**. Named scenario links are shareable; arbitrary custom state is not silently encoded into a potentially huge URL.
 
+Play can also select the source-verified Rockbox activities used by advanced SBS themes: main menu (1), while playing (2), recording (3), FM (4), quick screen (10), option select (12), system (16), and USB connected (21). WPS and FMS use their matching source documents; all remaining activities, including USB, project through SBS.
+
 ## Capability restrictions
 
 Scenarios consult the selected `DeviceProfile` before application:
@@ -76,7 +78,7 @@ No Rockbox implementation code is copied or bundled.
 - Source-linked tests prove scenario changes select real `%mp`, `%bc`, `%bp`, `%bu`, `%mh`, `%C`, `%Sr`, `%cc`, `%tp`, `%Tp`, `%Tl`, and `%mv` branches.
 - Capability tests prevent Classic FM and current-profile touch/remote simulation.
 - Server-rendered Play tests verify Level A labeling, progressive capability explanations, and the complete control surface.
-- The Phase 4 compatibility report now records 101 interpreted/rendered tags while keeping preservation, parsing, editing, official validation, and target availability separate.
+- The Phase 4 compatibility report now records 121 interpreted/rendered tags while keeping preservation, parsing, editing, official validation, and target availability separate.
 
 Run the focused suite with:
 
@@ -86,7 +88,7 @@ npm run test:phase5
 
 ## Explicit limits
 
-- This is not a firmware port and does not simulate Rockbox audio, storage, menus, or USB protocol internals.
+- This is not a firmware port and does not simulate Rockbox audio, storage, complete menu internals, or USB protocol internals. Its menu rows and USB scene are source-linked visual projections over verified state.
 - Click-wheel inputs change only the documented browser state.
 - Touch input records target coordinates and recent-touch state only on a verified touchscreen profile.
 - Remote rendering remains unavailable until a verified target profile and remote source-document model exist.

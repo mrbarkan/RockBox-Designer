@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-16T20:13:48.684Z",
+  "generatedAt": "2026-07-17T12:59:59.119Z",
   "upstream": {
     "repository": "https://github.com/Rockbox/rockbox.git",
     "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31"
@@ -25,7 +25,7 @@
     },
     {
       "path": "rockbox/components/engine.ts",
-      "sha256": "f7172047edba56bfe708834a3cfbc1b62cbff8ad11904766d5a29aac88e6fabc"
+      "sha256": "8548814c102523d9abbffc333c07262996292985e84587a1cf254084b1b14768"
     },
     {
       "path": "rockbox/components/types.ts",

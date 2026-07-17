@@ -35,7 +35,7 @@ export type FirmwarePackageFile = {
 export type FirmwarePackageManifest = {
   schemaVersion: typeof FIRMWARE_PACKAGE_SCHEMA_VERSION;
   mode: 'firmware';
-  feature: 'usb-screen';
+  feature: 'usb-fallback-logo';
   packageName: string;
   target: {
     deviceProfileId: typeof FIRMWARE_DEVICE_PROFILE_ID;
@@ -51,7 +51,7 @@ export type FirmwarePackageManifest = {
     containsRockboxBinary: false;
     containsProprietaryFirmware: false;
   };
-  usbScreen: {
+  usbFallback: {
     logoPosition: UsbLogoPosition;
     logoAssetPath: typeof USB_LOGO_SOURCE_PATH;
     logoWidth: 176;
@@ -70,7 +70,7 @@ export const firmwareAvailability = (profile: DeviceProfile): FirmwareAvailabili
   if (profile.id !== FIRMWARE_DEVICE_PROFILE_ID || profile.rockboxTarget !== FIRMWARE_TARGET) {
     return {
       available: false,
-      reason: `The first verified Firmware Mode target is Apple iPod Video 5G/5.5G (${FIRMWARE_TARGET}). ${profile.model} remains Theme Mode only.`
+      reason: `The first verified Firmware Assets target is Apple iPod Video 5G/5.5G (${FIRMWARE_TARGET}). ${profile.model} remains Theme Mode only.`
     };
   }
   if (profile.source.rockboxCommit !== FIRMWARE_UPSTREAM_COMMIT) {

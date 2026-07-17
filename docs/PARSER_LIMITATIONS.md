@@ -91,7 +91,7 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 ## Level A simulation is not full firmware behavior
 
 - **Example:** Selecting USB connected, pressing the click wheel, or opening the remote-display scenario.
-- **Current behavior:** Named Phase 5 scenarios deterministically drive the documented semantic state and real condition branches. The device shell maps controls to browser actions but remains separate from the screen renderer. USB is still a stock firmware boundary, and unsupported touch/remote scenarios stay disabled.
+- **Current behavior:** Named Phase 5 scenarios deterministically drive the documented semantic state and real condition branches. The device shell maps controls to browser actions but remains separate from the screen renderer. Play can select verified Rockbox activities; USB renders the authoritative SBS at activity 21 and then labels the compiled fallback separately. Unsupported touch/remote scenarios stay disabled.
 - **Preservation status:** Simulation never rewrites source.
 - **Diagnostic:** Play labels itself Level A and explains unavailable target capabilities.
 - **Current evidence:** Phase 7 built and launch-smoked one external native iPod Video core, reused the authored-theme/two-frame official capture, and documented the GPL, build, thread/main-loop, dynamic-code, filesystem, audio, bundle, and maintenance constraints. The owner selected external Level C: the pinned actual simulator is the firmware UI/theme authority. Phase 8 separately proves a generated USB source patch through two real iPod Video firmware builds.

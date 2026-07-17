@@ -63,9 +63,9 @@ export const simulatorScenarios: SimulatorScenario[] = [
   {
     id: 'usb-connected',
     name: 'USB connected',
-    description: 'The stock firmware USB boundary; standard themes do not author a .usb screen.',
+    description: 'Theme-authored SBS presentation at Rockbox USB activity 21, with the compiled fallback logo confined to the selected UI viewport.',
     activeScreen: 'usb',
-    simulation: { isUsb: true, externalPower: true }
+    simulation: { currentActivity: 21, isUsb: true, externalPower: true }
   },
   {
     id: 'volume-overlay',

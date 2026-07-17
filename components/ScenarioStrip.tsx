@@ -15,7 +15,7 @@ type ScenarioStripProps = {
 const quickScenarios: SimulatorScenarioId[] = [
   'normal-playback',
   'paused-low-battery',
-  'charging-over-usb',
+  'usb-connected',
   'hold-active'
 ];
 

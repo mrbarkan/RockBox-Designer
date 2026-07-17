@@ -13,6 +13,7 @@ import {
   transitionSimulator
 } from '../../rockbox/simulator';
 import { parseRockbox } from '../../rockbox/syntax';
+import { themeScreenForPreview } from '../../rockbox/screens';
 
 const video = getDeviceProfile('apple-ipod-video-5g');
 const classic = getDeviceProfile('apple-ipod-classic-6g');
@@ -29,7 +30,7 @@ const renderedText = (
   background: '#000000',
   sim: session.simulation,
   song: session.song,
-  screen: session.activeScreen === 'usb' ? 'wps' : session.activeScreen,
+  screen: themeScreenForPreview(session.activeScreen),
   capabilities: profile.capabilities
 }).operations
   .filter(operation => operation.type === 'drawText')
@@ -58,6 +59,7 @@ describe('Phase 5 deterministic scenarios', () => {
 
     const constrained = enforceTargetCapabilities(createScenarioSession('fm-preset'), classic);
     expect(constrained.activeScreen).toBe('wps');
+    expect(constrained.simulation.currentActivity).toBe(2);
     expect(constrained.simulation.fmAvailable).toBe(false);
     expect(constrained.simulation.fmRdsAvailable).toBe(false);
   });
@@ -130,5 +132,20 @@ describe('Phase 5 deterministic scenarios', () => {
     const expired = transitionSimulator(initial, { type: 'advance', milliseconds: 2_000 }, video);
     expect(renderedText('%?mv(2)<VISIBLE|HIDDEN>', expired)).toContain('HIDDEN');
     expect(DEFAULT_SIMULATION.timelineMs).toBe(0);
+  });
+
+  it('routes the USB preview through SBS activity 21 without inventing a .usb document', () => {
+    const usb = createScenarioSession('usb-connected');
+    expect(usb.activeScreen).toBe('usb');
+    expect(themeScreenForPreview(usb.activeScreen)).toBe('sbs');
+    expect(usb.simulation.currentActivity).toBe(21);
+    expect(usb.simulation.isUsb).toBe(true);
+
+    const quick = transitionSimulator(usb, { type: 'activity', activity: 10 }, video);
+    expect(quick.activeScreen).toBe('sbs');
+    expect(quick.simulation.currentActivity).toBe(10);
+    const backToUsb = transitionSimulator(quick, { type: 'activity', activity: 21 }, video);
+    expect(backToUsb.activeScreen).toBe('usb');
+    expect(backToUsb.simulation.currentActivity).toBe(21);
   });
 });

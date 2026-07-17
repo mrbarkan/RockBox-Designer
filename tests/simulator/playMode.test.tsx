@@ -35,11 +35,36 @@ describe('Phase 5 Play mode', () => {
     expect(html).toContain('Copy scenario link');
     expect(html).toContain('Seeking forward');
     expect(html).toContain('Track metadata');
+    expect(html).toContain('Rockbox activity');
+    expect(html).toContain('10 · Quick screen');
+    expect(html).toContain('21 · USB connected');
+    expect(html).toContain('Theme projection');
+    expect(html).toContain('Brightness 70%');
     expect(html).toContain('Charging');
     expect(html).toContain('USB inserted');
     expect(html).toContain('FM &amp; RDS');
     expect(html).toContain('Browser state preview only');
     expect(html).not.toContain('compatibility percentage');
+  });
+
+  it('identifies USB as an SBS activity scene instead of a standalone theme screen', () => {
+    const profile = getDeviceProfile('apple-ipod-video-5g');
+    const html = renderToStaticMarkup(
+      <PlayMode
+        project={DEFAULT_PROJECT}
+        profile={profile}
+        session={createScenarioSession('usb-connected')}
+        activeScenario="usb-connected"
+        semanticResult={null}
+        onClose={() => undefined}
+        onApplyScenario={() => undefined}
+        onAction={() => undefined}
+      />
+    );
+
+    expect(html).toContain('SBS · USB activity 21');
+    expect(html).toContain('USB presentation is authored in the SBS');
+    expect(html).toContain('%cs = 21');
   });
 
   it('explains FM, touch, and remote restrictions on iPod Classic', () => {

@@ -87,7 +87,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <MenuButton icon="▦" label="Compatibility Lab" onClick={onShowCompatibility} onClose={onClose} subLabel="Official parser and pixel evidence" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="⬇" label="Export Theme" onClick={onExport} onClose={onClose} subLabel="Compile to .zip for iPod" />
-                        <MenuButton icon="FW" label="Firmware Mode" onClick={onShowFirmware} onClose={onClose} subLabel="Requires custom firmware · source package" />
+                        <MenuButton icon="FW" label="Firmware Assets" onClick={onShowFirmware} onClose={onClose} subLabel="Built-in USB fallback · source package" />
                     </div>
                 )}
 

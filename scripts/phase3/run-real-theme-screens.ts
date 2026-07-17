@@ -69,6 +69,18 @@ for (const screen of ['wps', 'sbs', 'fms'] as const satisfies readonly SkinScree
   const quickScreen = screen === 'sbs'
     ? interpretSkin(edit.document, { ...options, screen, sim: { ...DEFAULT_SIMULATION, currentActivity: 10 } })
     : undefined;
+  const usbScreen = screen === 'sbs'
+    ? interpretSkin(edit.document, {
+        ...options,
+        screen,
+        sim: { ...DEFAULT_SIMULATION, currentActivity: 21, isUsb: true, externalPower: true }
+      })
+    : undefined;
+  const usbText = usbScreen?.operations
+    .filter(operation => operation.type === 'drawText')
+    .map(operation => operation.text)
+    .join(' ') ?? '';
+  const usbFallback = usbScreen?.operations.find(operation => operation.type === 'drawFirmwareFallback');
   const renderedText = semantic.operations
     .filter(operation => operation.type === 'drawText')
     .map(operation => operation.text)
@@ -88,6 +100,14 @@ for (const screen of ['wps', 'sbs', 'fms'] as const satisfies readonly SkinScree
     unsupportedNodesRetained: semantic.layers.filter(layer => layer.kind === 'unsupported').length,
     menuPreview: screen === 'sbs' && semantic.layers.some(layer => layer.label.includes('Rockbox menu list')),
     quickScreenPreview: screen === 'sbs' && Boolean(quickScreen?.layers.some(layer => layer.label.includes('firmware controlled'))),
+    usbSbsPreview: screen === 'sbs' &&
+      usbText.includes('Connected to USB') &&
+      usbText.includes('Eject before disconnecting') &&
+      Boolean(usbScreen?.operations.some(operation => operation.type === 'drawBitmap' && /Notification/i.test(operation.assetPath))) &&
+      !usbScreen?.layers.some(layer => layer.label.includes('Rockbox menu list')),
+    usbFallbackViewport: screen === 'sbs' && usbFallback?.type === 'drawFirmwareFallback'
+      ? usbFallback.rect
+      : undefined,
     fmStatePreview: screen === 'fms' &&
       renderedText.includes(DEFAULT_SIMULATION.fmFrequency.toFixed(1)) &&
       renderedText.includes(DEFAULT_SIMULATION.fmStereo ? 'Stereo' : 'Mono')
@@ -131,5 +151,7 @@ if (
     !result.commentsExcludedFromElements || !result.valid || !result.exactAfterExport || !result.pathRetained
   ) || !screens.find(result => result.screen === 'sbs')?.menuPreview ||
   !screens.find(result => result.screen === 'sbs')?.quickScreenPreview ||
+  !screens.find(result => result.screen === 'sbs')?.usbSbsPreview ||
+  JSON.stringify(screens.find(result => result.screen === 'sbs')?.usbFallbackViewport) !== JSON.stringify({ x: 0, y: 0, width: 1, height: 1 }) ||
   !screens.find(result => result.screen === 'fms')?.fmStatePreview
 ) throw new Error('Phase 3 real-theme screen acceptance failed. Inspect the generated report.');

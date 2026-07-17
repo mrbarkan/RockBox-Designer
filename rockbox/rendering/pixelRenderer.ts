@@ -75,6 +75,10 @@ export const renderToPixelImage = (
       fill(image, operation.rect, [24, 24, 24]);
       outline(image, operation.rect, [96, 96, 96]);
     }
+    if (operation.type === 'drawFirmwareFallback' && operation.rect.width > 1 && operation.rect.height > 1) {
+      fill(image, operation.rect, [42, 42, 42]);
+      outline(image, operation.rect, [96, 96, 96]);
+    }
     if (operation.type === 'drawBitmap') {
       fill(image, { ...operation.rect, width: Math.min(12, operation.rect.width), height: Math.min(12, operation.rect.height) }, [72, 96, 112]);
     }

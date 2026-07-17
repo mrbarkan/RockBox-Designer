@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-13T19:25:13.757Z",
+  "generatedAt": "2026-07-17T13:04:16.166Z",
   "scope": {
     "fixture": "Adwaitapod",
     "privateFixtureCommitted": false,
@@ -23,9 +23,10 @@
       "commentsExcludedFromElements": true,
       "valid": true,
       "operationCount": 40,
-      "unsupportedNodesRetained": 17,
+      "unsupportedNodesRetained": 3,
       "menuPreview": false,
       "quickScreenPreview": false,
+      "usbSbsPreview": false,
       "fmStatePreview": false,
       "exactAfterExport": true,
       "pathRetained": true
@@ -40,9 +41,16 @@
       "commentsExcludedFromElements": true,
       "valid": true,
       "operationCount": 57,
-      "unsupportedNodesRetained": 34,
+      "unsupportedNodesRetained": 7,
       "menuPreview": true,
       "quickScreenPreview": true,
+      "usbSbsPreview": true,
+      "usbFallbackViewport": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
       "fmStatePreview": false,
       "exactAfterExport": true,
       "pathRetained": true
@@ -57,9 +65,10 @@
       "commentsExcludedFromElements": true,
       "valid": true,
       "operationCount": 34,
-      "unsupportedNodesRetained": 14,
+      "unsupportedNodesRetained": 0,
       "menuPreview": false,
       "quickScreenPreview": false,
+      "usbSbsPreview": false,
       "fmStatePreview": true,
       "exactAfterExport": true,
       "pathRetained": true

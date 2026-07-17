@@ -155,7 +155,7 @@ Examples:
 - “Touch regions are unavailable on this player.”
 - “This component requires a color display.”
 - “This tag is preserved but is not rendered yet.”
-- “The USB screen is controlled by firmware.”
+- “USB is an SBS activity scene; the built-in logo remains a firmware fallback.”
 - “This font contains more glyphs than recommended for this target.”
 - “This quick-screen layout follows Rockbox’s built-in structure.”
 - “This screen is influenced by SBS rather than independently skinned.”
@@ -1325,7 +1325,7 @@ Only export supported files that actually exist or were intentionally created.
 
 Optional later features for behavior compiled into Rockbox:
 
-- USB screen layout
+- Built-in USB fallback logo and placement beyond the SBS-authored scene
 - Built-in icons
 - Deeper quick-screen changes
 - System dialogs

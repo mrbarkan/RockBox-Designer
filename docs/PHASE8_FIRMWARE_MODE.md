@@ -2,7 +2,9 @@
 
 ## Result
 
-Phase 8 adds an explicit, opt-in Firmware Mode for behavior that Rockbox compiles into the firmware. The first verified output customizes the built-in USB screen for the Apple iPod Video 5G/5.5G target.
+Phase 8 adds an explicit, opt-in Firmware Assets workspace for behavior that Rockbox compiles into the firmware. Its first verified output customizes the built-in USB fallback logo and placement for the Apple iPod Video 5G/5.5G target.
+
+The connected-USB presentation itself is themeable in SBS at activity 21. Rockbox draws the built-in logo afterward inside the UI viewport selected by `%VI`; a theme such as Adwaitapod can supply its own viewports, images, text, and conditionals and clip that fallback with a 1 × 1 UI viewport. This workspace is needed only to change the compiled fallback asset or its placement.
 
 The browser does not compile or distribute firmware. It exports a deterministic source package containing:
 

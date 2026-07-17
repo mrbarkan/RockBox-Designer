@@ -16,6 +16,7 @@ import {
 import { getProjectSyntaxDocument } from '../services/rockboxSyntaxAdapter';
 import type { SemanticResult } from '../rockbox/semantics';
 import { renderSemanticToCanvas } from '../rockbox/rendering';
+import { themeScreenForPreview } from '../rockbox/screens';
 
 interface EditorCanvasProps {
   project: ProjectState;
@@ -206,7 +207,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   };
 
   // Only render interaction boxes for visible elements on current screen
-  const interactionElements = readOnly ? [] : project.elements.filter(el => el.screen === activeScreen);
+  const interactionElements = readOnly || activeScreen === 'usb'
+    ? []
+    : project.elements.filter(el => el.screen === themeScreenForPreview(activeScreen));
   const astViewports = !readOnly && sourcePreviewActive
       ? semanticResult
           ? semanticResult.operations.filter(operation => operation.type === 'setViewport').map(operation => ({
