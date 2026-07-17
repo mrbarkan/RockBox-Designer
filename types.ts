@@ -149,6 +149,8 @@ export interface ProjectState {
   sbsDocument?: RockboxDocument;
   fmsDocument?: RockboxDocument;
   themePackage?: ThemePackage;
+  /** Canonical user-added package bytes that do not belong to the imported base or a component. */
+  projectAssets?: ThemeAsset[];
   componentAssets?: ThemeAsset[];
   componentInstances?: RockboxComponentInstance[];
 }

@@ -67,6 +67,11 @@ const FirmwareMode = React.lazy(async () => {
   return { default: module.FirmwareMode };
 });
 
+const AssetsMode = React.lazy(async () => {
+  const module = await import('./components/AssetsMode');
+  return { default: module.AssetsMode };
+});
+
 export default function App() {
   const { state: project, set: setProject, undo, redo, canUndo, canRedo } = useHistory<ProjectState>(DEFAULT_PROJECT);
 
@@ -94,6 +99,7 @@ export default function App() {
   const [showFontImport, setShowFontImport] = useState(false);
   const [showCompatibility, setShowCompatibility] = useState(false);
   const [showFirmware, setShowFirmware] = useState(false);
+  const [showAssets, setShowAssets] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [useAstPreview, setUseAstPreview] = useState(true);
   const [branchOverrides, setBranchOverrides] = useState<BranchOverrides>({});
@@ -601,7 +607,7 @@ export default function App() {
       {user && <ProjectManagerModal isOpen={showCloudProjects} onClose={() => setShowCloudProjects(false)} user={user} onLoadProject={(p) => setProject(p)} />}
       {showSource && <SourceEditor project={project} onClose={() => setShowSource(false)} onApplyChanges={handleApplySource} />}
       <RemixModal isOpen={showRemixModal} onClose={() => setShowRemixModal(false)} />
-      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
+      <MainMenuModal isOpen={showMainMenu} onClose={() => setShowMainMenu(false)} onNew={handleNewProject} onOpen={() => setShowCloudProjects(true)} onSave={handleSaveProject} onExport={handleExport} onImportZip={() => importZipInputRef.current?.click()} onImportFont={() => setShowFontImport(true)} onShowAssets={() => setShowAssets(true)} onShowCompatibility={() => setShowCompatibility(true)} onShowFirmware={() => setShowFirmware(true)} />
       <FontImportModal isOpen={showFontImport} onClose={() => setShowFontImport(false)} onImport={handleFontImport} />
       {showCompatibility ? (
         <React.Suspense fallback={<div className="fixed inset-0 z-[115] bg-black/70 flex items-center justify-center text-white font-mono text-sm">Loading compatibility evidence…</div>}>
@@ -638,6 +644,17 @@ export default function App() {
       {showFirmware ? (
         <React.Suspense fallback={<div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Firmware Mode…</div>}>
           <FirmwareMode profile={deviceProfile} projectName={project.settings.name} onClose={() => setShowFirmware(false)} />
+        </React.Suspense>
+      ) : null}
+      {showAssets ? (
+        <React.Suspense fallback={<div className="fixed inset-0 z-[118] flex items-center justify-center bg-[#242424] font-mono text-sm font-black uppercase text-white">Loading Assets…</div>}>
+          <AssetsMode
+            project={project}
+            activeScreen={activeScreen}
+            onProjectChange={setProject}
+            onClose={() => setShowAssets(false)}
+            onOpenPlay={() => { setShowAssets(false); setShowPlay(true); }}
+          />
         </React.Suspense>
       ) : null}
       <ColorPaletteModal isOpen={showPalette} onClose={() => setShowPalette(false)} palette={project.settings.palette} onUpdatePalette={(p) => handleUpdateProjectSettings({ palette: p })} />
@@ -690,6 +707,7 @@ export default function App() {
             debugMode={debugMode} setDebugMode={setDebugMode}
             useAstPreview={useAstPreview} setUseAstPreview={setUseAstPreview}
             onOpenPlay={() => setShowPlay(true)}
+            onOpenAssets={() => setShowAssets(true)}
             onOpenFirmware={() => setShowFirmware(true)}
         />
         <div className="flex-1 overflow-auto bg-[#2a2a2a] relative flex items-center justify-center p-20 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">

@@ -26,6 +26,9 @@ export const KNOWN_TAG_SCHEMAS: Record<string, string[]> = {
   X: ['path'],
   pb: ['x', 'y', 'width', 'height', 'path'],
   pv: ['x', 'y', 'width', 'height', 'path'],
+  pR: ['x', 'y', 'width', 'height', 'path'],
+  tr: ['x', 'y', 'width', 'height', 'path'],
+  St: ['x', 'y', 'width', 'height', 'path'],
   Cl: ['x', 'y', 'width', 'height', 'horizontalAlign', 'verticalAlign'],
   Cd: [],
   T: ['x', 'y', 'width', 'height', 'action'],
@@ -36,6 +39,11 @@ export const getKnownTagSchema = (tag: TagNode): string[] | undefined => {
   if (tag.name === 'x' && tag.invocationStyle === 'parentheses') {
     const slots = splitRawArguments(tag);
     if (slots.length >= 4) return ['handle', 'path', 'x', 'y'];
+  }
+  if (tag.name === 'xl') {
+    const slots = splitRawArguments(tag);
+    if (slots.length === 3) return ['handle', 'path', 'count'];
+    if (slots.length === 4) return ['handle', 'path', 'x', 'y'];
   }
   return KNOWN_TAG_SCHEMAS[tag.name];
 };

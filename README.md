@@ -6,6 +6,8 @@ It is not yet a full Rockbox renderer. Complex conditional functions and constru
 
 USB connected presentation is ordinary SBS theme behavior selected by Rockbox activity 21; Play renders that same SBS scene and keeps the built-in logo visible only as a firmware fallback boundary. Optional Firmware Assets is separate from theme editing and creates a SHA-pinned source patch package only when the built-in iPod Video fallback logo or placement itself must change. It requires recovery acknowledgement and exports no compiled or proprietary firmware. The actual external Rockbox simulator remains the Level C behavioral authority for the pinned target; device-only behavior still requires hardware testing.
 
+Assets is the ordinary-theme package workshop. It keeps real ZIP bytes and archive paths authoritative, converts PNG/JPEG inputs into Rockbox BMPs, builds and previews vertical sprite strips, shows known WPS/SBS/FMS/CFG usage, and performs reference-aware replacement, rename, and guarded deletion without flattening source.
+
 ## Run locally
 
 Prerequisite: Node.js.
@@ -30,11 +32,12 @@ Open the local address printed by the command, create a local profile, then:
 3. Use the right panel to inspect viewports, visual elements, conditional groups, branches, source-only blocks, and unsupported preserved nodes.
 4. Drag or resize a supported viewport, or edit its known properties in the inspector.
 5. Use `SOURCE_EDITOR` for two-way WPS/SBS/FMS text changes. If source is invalid, fix the line/column diagnostics while the canvas safely retains the last valid preview.
-6. Choose **Import Font** to add an exact `.fnt` or convert TTF/OTF/TTC with selectable pixel size and glyph coverage.
-7. Open **Play** (or press `Cmd/Ctrl+P`) to select real Rockbox activities—including menu, WPS, recording, FM, quick screen, option select, system, and USB—and exercise deterministic power, hold, RTC, metadata, and capability-gated state.
-8. Copy a named scenario link when you need another person to see the same state.
-9. Export the resulting ZIP and test it on a Rockbox simulator or device.
-10. Author the connected-USB scene in SBS with `%cs = 21`. Open **FW ASSETS** only when you intentionally need to replace the compiled iPod Video fallback logo or its placement.
+6. Open **Assets** to inspect exact package paths/bytes, convert PNG/JPEG images, build vertical strips, preview `%xl` frames, or safely replace/rename/delete a known asset.
+7. Choose **Import Font** to add an exact `.fnt` or convert TTF/OTF/TTC with selectable pixel size and glyph coverage.
+8. Open **Play** (or press `Cmd/Ctrl+P`) to select real Rockbox activities—including menu, WPS, recording, FM, quick screen, option select, system, and USB—and exercise deterministic power, hold, RTC, metadata, and capability-gated state.
+9. Copy a named scenario link when you need another person to see the same state.
+10. Export the resulting ZIP and test it on a Rockbox simulator or device.
+11. Author the connected-USB scene in SBS with `%cs = 21`. Open **FW ASSETS** only when you intentionally need to replace the compiled iPod Video fallback logo or its placement.
 
 The product direction is now a compact, Pulp-inspired studio with specialized creative modes and Canva-style manipulation concentrated in Screens mode. The foundation phases remain intentionally focused; the studio migration will land through separate, behavior-preserving milestones described in [Pulp UX Guidelines](ROCKBOX_DESIGNER_PULP_UX_GUIDELINES.md).
 
@@ -63,4 +66,4 @@ ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox ROCKBOX_SIMULATOR_BUILD_DIR=/absolu
 ROCKBOX_SOURCE_DIR=/absolute/path/to/rockbox npm run test:phase4-compatibility
 ```
 
-See [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
+See [Assets Workspace](docs/ASSETS_MODE.md), [Phase 8 Firmware Mode](docs/PHASE8_FIRMWARE_MODE.md), [Phase 5 Device-State Simulator](docs/PHASE5_DEVICE_SIMULATOR.md), [Phase 4 Official Validation](docs/PHASE4_OFFICIAL_VALIDATION.md), [Phase 3 Screen Editor and Font Pipeline](docs/PHASE3_SCREEN_AND_FONT.md), [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md), and [Parser Limitations](docs/PARSER_LIMITATIONS.md) for the exact support boundary.
