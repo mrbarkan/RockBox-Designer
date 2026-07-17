@@ -160,7 +160,7 @@ export const PlayMode: React.FC<PlayModeProps> = ({
               </div>
             </div>
             <div className="border-t border-[#aaa] pt-3 text-[10px] text-[#555]">
-              Browser state preview only. Official skin-engine validation remains Level B; full firmware simulation remains Level C.
+              Browser state preview only. Official skin-engine validation remains Level B; the pinned external Rockbox simulator is Level C.
             </div>
           </section>
 

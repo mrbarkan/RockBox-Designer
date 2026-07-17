@@ -149,8 +149,8 @@ The generator refuses an upstream SHA or simulator target mismatch. It inspects 
 - [Emscripten setjmp/longjmp support](https://emscripten.org/docs/porting/setjmp-longjmp.html)
 - [Emscripten audio guidance](https://emscripten.org/docs/porting/Audio.html)
 
-## Decision required before Level C implementation
+## Level C decision outcome
 
-The owner must choose whether Rockbox Designer will distribute and maintain a GPL Level C runtime. That choice must cover source delivery, hosting headers, browser support, target scope, codec/plugin strategy, persistence, performance budgets, and the upstream maintenance commitment.
+On 2026-07-16 the owner chose the external Level C path. Rockbox Designer will not distribute or maintain a browser WebAssembly runtime under the current architecture. The actual Rockbox UI simulator at a pinned target and SHA is the authoritative firmware UI/theme reference.
 
-Until then, Levels A and B remain the product and validation paths, and the browser editor continues to work independently.
+Levels A and B remain the browser product and official-validation paths, and the editor continues to work independently. External simulator evidence does not prove device-only hardware behavior.

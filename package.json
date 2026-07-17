@@ -22,6 +22,7 @@
     "test:phase6": "vitest run tests/components",
     "test:phase7": "vitest run tests/phase7",
     "test:phase7-feasibility": "tsx scripts/phase7/run-simulator-feasibility.ts",
+    "test:phase8-firmware": "tsx scripts/phase8/run-firmware-validation.ts",
     "test:phase6-official": "tsx scripts/phase6/run-component-validation.ts",
     "test:themes": "npm run themes:fixtures:verify && tsx scripts/themes/run-theme-compatibility.ts",
     "test:visual": "vitest run tests/rendering/pixelRenderer.test.ts",
@@ -39,6 +40,7 @@
     "phase4:compatibility:report:verify": "node scripts/verify-phase4-compatibility-report.mjs",
     "phase6:component:report:verify": "node scripts/verify-phase6-component-report.mjs",
     "phase7:simulator:report:verify": "node scripts/verify-phase7-simulator-report.mjs",
+    "phase8:firmware:report:verify": "node scripts/verify-phase8-firmware-report.mjs",
     "phase7:native:build": "tsx scripts/phase7/build-native-ipodvideo.ts",
     "font:convert": "tsx scripts/fonts/convert-font.ts",
     "font:helper": "tsx scripts/fonts/local-helper.ts",
@@ -49,7 +51,7 @@
     "visual:golden:generate": "tsx scripts/visual/generate-phase2-golden.ts && tsx scripts/visual/generate-phase3-goldens.ts",
     "registry:generate": "node scripts/generate-rockbox-tag-registry.mjs",
     "registry:verify": "node scripts/verify-rockbox-tag-registry.mjs",
-    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run phase2:official:report:verify && npm run phase2:real:report:verify && npm run phase3:official:report:verify && npm run phase3:real:report:verify && npm run phase3:font:report:verify && npm run font:helper:report:verify && npm run phase4:render:report:verify && npm run phase4:compatibility:report:verify && npm run phase6:component:report:verify && npm run phase7:simulator:report:verify && npm run theme:report:verify && npm run typecheck && npm test && npm run build"
+    "validate": "npm run registry:verify && npm run device:verify && npm run official:report:verify && npm run phase2:official:report:verify && npm run phase2:real:report:verify && npm run phase3:official:report:verify && npm run phase3:real:report:verify && npm run phase3:font:report:verify && npm run font:helper:report:verify && npm run phase4:render:report:verify && npm run phase4:compatibility:report:verify && npm run phase6:component:report:verify && npm run phase7:simulator:report:verify && npm run phase8:firmware:report:verify && npm run theme:report:verify && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

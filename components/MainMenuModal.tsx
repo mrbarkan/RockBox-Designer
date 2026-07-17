@@ -11,6 +11,7 @@ interface MainMenuModalProps {
   onImportZip: () => void;
   onImportFont: () => void;
   onShowCompatibility: () => void;
+  onShowFirmware: () => void;
 }
 
 type MenuButtonProps = {
@@ -38,7 +39,7 @@ const MenuButton = memo(({ icon, label, onClick, onClose, subLabel }: MenuButton
 MenuButton.displayName = 'MenuButton';
 
 export const MainMenuModal: React.FC<MainMenuModalProps> = ({
-    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onImportFont, onShowCompatibility
+    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onImportFont, onShowCompatibility, onShowFirmware
 }) => {
   const [activeTab, setActiveTab] = useState<'menu' | 'about'>('menu');
 
@@ -86,6 +87,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <MenuButton icon="▦" label="Compatibility Lab" onClick={onShowCompatibility} onClose={onClose} subLabel="Official parser and pixel evidence" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="⬇" label="Export Theme" onClick={onExport} onClose={onClose} subLabel="Compile to .zip for iPod" />
+                        <MenuButton icon="FW" label="Firmware Mode" onClick={onShowFirmware} onClose={onClose} subLabel="Requires custom firmware · source package" />
                     </div>
                 )}
 

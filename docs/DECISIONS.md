@@ -181,7 +181,7 @@ The focused Components workspace is lazy-loaded. It shows unavailable definition
 
 **Consequences:** Component insert/remove is exact, reversible, package-aware, and naturally covered by whole-project undo. Imported or manually written source is not heuristically converted into components. Editing source inside a recorded component boundary may make safe removal refuse until the user resolves the conflict. Personal/public component sharing remains deferred until the versioned format has further real-world evidence. The main production chunk is 582.02 KB / 172.23 KB gzip; Components loads as 9.31 KB / 2.75 KB gzip UI plus a shared 14.25 KB / 5.15 KB gzip component-domain chunk.
 
-## ADR-0017 — Keep the full Rockbox simulator external until Level C distribution is approved
+## ADR-0017 — Keep the full Rockbox simulator external
 
 **Status:** Accepted
 
@@ -189,7 +189,7 @@ The focused Components workspace is lazy-loaded. It shows unavailable definition
 
 Emscripten can supply SDL, pthreads, virtual filesystems, persistence, dynamic modules, and `setjmp`/`longjmp` compatibility, but the combination needs explicit product architecture. Pthreads require cross-origin isolation, browser main-loop code must yield, persistent storage synchronizes asynchronously, dynamic linking with pthreads remains high-risk, and the measured native core excludes the codec/plugin bundle. Serving a WebAssembly derivative also requires a GPL source-delivery, notices, hosting, versioning, and upstream-update policy.
 
-**Decision:** Phase 7 passes through its documented-feasibility-report acceptance path. Do not start or distribute a Level C WebAssembly port until the owner approves:
+**Decision:** Phase 7 passes through its documented-feasibility-report acceptance path. Do not start or distribute a Level C WebAssembly port unless the owner later approves:
 
 - a GPL-compatible distribution and corresponding-source delivery model;
 - hosted cross-origin isolation and supported-browser policy;
@@ -202,4 +202,18 @@ Emscripten can supply SDL, pthreads, virtual filesystems, persistence, dynamic m
 
 Keep the current levels explicit: Level A is the independent deterministic browser state simulator, Level B is external official validation, and Level C is not shipped. The external Phase 7 recipe may build the iPod Video core and minimum runtime from the exact registry SHA, apply a generated-Makefile-only Apple Clang override for local feasibility, and smoke-launch it with dummy SDL drivers. It must not write Rockbox source, objects, binaries, runtime assets, or screenshots into the repository.
 
-**Consequences:** Native target, generated-theme load, and screenshot stages are evidenced without changing the browser client or adding a GPL artifact. The checked report records every browser-port blocker, exact upstream paths, external binary/runtime metrics, and the zero-byte browser impact. The editor remains usable independently. Prototype stages 4 and 5 are intentionally blocked by the decision above, and target switching remains deferred until one browser target is stable.
+On 2026-07-16 the owner chose the external Level C path. The actual Rockbox UI simulator at a pinned target and SHA is the behavioral authority for firmware UI and theme behavior; the browser will not carry a partial WebAssembly runtime. This choice does not turn simulator evidence into a claim about device-only hardware behavior.
+
+**Consequences:** Native target, generated-theme load, and screenshot stages are evidenced without changing the browser client or adding a GPL artifact. The checked report records every browser-port blocker, exact upstream paths, external binary/runtime metrics, and the zero-byte browser impact. The editor remains usable independently. Prototype stages 4 and 5 are intentionally closed under the chosen external architecture rather than remaining a pending product blocker. Target-specific external simulator recipes may expand only with pinned evidence.
+
+## ADR-0018 — Export Firmware Mode as a SHA-pinned source package
+
+**Status:** Accepted
+
+**Context:** The USB screen is owned by `apps/gui/usb_screen.c` and a target-selected built-in bitmap. Representing it as a `.usb` theme file would be fictional. Building firmware in the browser would require a cross compiler, Rockbox source, GPL distribution, and risky device-install workflow inside the ordinary theme editor.
+
+**Decision:** Firmware Mode is a separate, lazy-loaded, opt-in workspace. Its first verified target is `ipodvideo` at `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`. It accepts only a 176 × 48 uncompressed 24-bit BMP, generates a small reviewable source patch plus GPL header and target asset overlay, and exports deterministic verification/build instructions. Export requires explicit custom-firmware and recovery acknowledgements. The package refuses any other Rockbox SHA, builds in a detached external worktree, and contains no Rockbox tree, compiled firmware, or proprietary component.
+
+Theme Mode, its ZIP format, and its source-preserving document pipeline do not import Firmware Mode state. iPod Classic remains unavailable until separately verified. External target builds are acceptance evidence; the browser never claims to have compiled or hardware-tested the result.
+
+**Consequences:** A non-themeable screen now has an honest end-to-end authoring path without weakening theme semantics or bundling a Rockbox source tree or binary. The archive explicitly identifies its Rockbox-derived patch and generated source as GPL, and includes the matching notice. The pinned patch applies cleanly, and two complete iPod Video builds produced byte-identical `rockbox.ipod` images. The local evidence compiler was Arm GNU 9.3.1 rather than Rockbox's recommended 9.5.0, so the report preserves that warning and the exported instructions default to the recommended toolchain. Users still need target recovery knowledge and actual-device testing before installation.

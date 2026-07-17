@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-17T00:47:54.074Z",
+  "upstream": {
+    "repository": "https://git.rockbox.org/cgit/rockbox.git/",
+    "commit": "078a506dfd0deb18165a3ed80c7fcbdb3afb0d31",
+    "target": "ipodvideo",
+    "sourceTreeBundled": false,
+    "binaryBundled": false,
+    "proprietaryFirmwareBundled": false
+  },
+  "feature": {
+    "id": "usb-screen",
+    "sourcePatch": "apps/gui/usb_screen.c",
+    "sourceOverlay": "apps/gui/rockbox_designer_usb.h",
+    "targetAsset": "apps/bitmaps/native/usblogo.176x48x16.bmp",
+    "logoPosition": "center",
+    "patchCheckPassed": true
+  },
+  "package": {
+    "schemaVersion": 1,
+    "filename": "phase-8-acceptance-firmware-ipodvideo.zip",
+    "bytes": 6146,
+    "sha256": "d4de07068e19edd0d18b815430b20604607a9d721c2a83ed759779e3e1e60204",
+    "fileCount": 8,
+    "ordinaryThemeInstall": false,
+    "containsRockboxSourceTree": false,
+    "containsRockboxDerivedPatch": true,
+    "containsGeneratedGplSource": true,
+    "containsRockboxBinary": false,
+    "containsProprietaryFirmware": false
+  },
+  "targetBuild": {
+    "status": "passed",
+    "buildScript": "scripts/build-ipodvideo.sh",
+    "compiler": "arm-none-eabi-gcc (GNU Arm Embedded Toolchain 9-2020-q2-update) 9.3.1 20200408 (release)",
+    "compilerPrefix": "arm-none-eabi-",
+    "compilerRockboxRecommended": false,
+    "rockboxRecommendedCompiler": "arm-elf-eabi-gcc 9.5.0",
+    "passes": 2,
+    "reproducibleFirmwareBinary": true,
+    "builds": [
+      {
+        "pass": 1,
+        "firmware": {
+          "bytes": 1160624,
+          "sha256": "5c7bb4cc8cd5604310b227d27f693ab17e2b4110f9cbd4221f9d66a24c2c879c"
+        },
+        "installZip": {
+          "bytes": 9108205,
+          "sha256": "cc7933df64179a7b8098d4a3f47cbe9e3510d8991c6322a54578b87c5c73e792"
+        }
+      },
+      {
+        "pass": 2,
+        "firmware": {
+          "bytes": 1160624,
+          "sha256": "5c7bb4cc8cd5604310b227d27f693ab17e2b4110f9cbd4221f9d66a24c2c879c"
+        },
+        "installZip": {
+          "bytes": 9108200,
+          "sha256": "3b932d33743e4e7435d9fc114c496479bfd90dad3ce8857206ecba52a7dec297"
+        }
+      }
+    ]
+  },
+  "productBoundary": {
+    "firmwareModeOptIn": true,
+    "firmwareModeEntryPointSeparate": true,
+    "requiresRecoveryAcknowledgement": true,
+    "themeModeOutputChanged": false,
+    "browserCompilesFirmware": false,
+    "externalLevelCRemainsAuthoritative": true
+  },
+  "evidence": {
+    "packageZipRetainedOutsideRepository": true,
+    "workRootOutsideRepository": true,
+    "localPathsCommitted": false,
+    "outputCommitted": false,
+    "reportOnlyCommitsHashesAndMetrics": true
+  }
+}
