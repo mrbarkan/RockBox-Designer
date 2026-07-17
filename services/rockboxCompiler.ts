@@ -6,7 +6,10 @@ import { parseRockbox, serializeRockbox } from '../rockbox/syntax';
 import {
     createThemeAsset,
     exportThemePackage,
+    getCfgValues,
+    normalizeArchivePath,
     parseCfg,
+    serializeCfg,
     ThemeAsset,
     ThemePackage
 } from '../rockbox/packages';
@@ -185,7 +188,7 @@ export const compileAstScreen = (project: ProjectState, screen: ScreenType): str
   return null;
 };
 
-export const compileCfg = (project: ProjectState): string => {
+export const compileGeneratedCfg = (project: ProjectState): string => {
   const themeName = project.settings.name.replace(/\s+/g, '_').toLowerCase();
   const s = project.settings;
 
@@ -204,7 +207,7 @@ line selector start color: ${toRbHex(s.selectorColor)}
 line selector end color: ${toRbHex(s.lineSelectorEndColor || s.selectorColor)}
 line selector text color: ${toRbHex(s.selectorTextColor)}
 selector type: ${s.lineSelectorType === 'bar_gradient' ? 'bar (gradient)' : s.lineSelectorType === 'bar_inverse' ? 'bar (inverse)' : s.lineSelectorType === 'pointer' ? 'pointer' : 'bar (color)'}
-statusbar: ${s.statusBarTop ? 'top' : 'off'}
+statusbar: ${s.statusBarPosition ?? (s.statusBarTop ? 'top' : 'off')}
 scrollbar: ${s.scrollbar}
 scrollbar width: ${s.scrollbarWidth}
 volume display: ${s.volumeDisplay}
@@ -226,6 +229,11 @@ backdrop: -
   if (s.qsRight) cfg += `qs right: ${s.qsRight}\n`;
 
   return cfg;
+};
+
+export const compileCfg = (project: ProjectState): string => {
+  const document = project.themePackage?.cfg ?? project.standaloneThemeConfig?.cfg;
+  return document ? serializeCfg(document) : compileGeneratedCfg(project);
 };
 
 function dataURItoBytes(dataURI: string): Uint8Array {
@@ -288,17 +296,21 @@ export const generateZip = async (project: ProjectState): Promise<Blob | null> =
     );
     const screens: ThemePackage['screens'] = base ? { ...base.screens } : {};
     const screenPaths: ThemePackage['screenPaths'] = base ? { ...base.screenPaths } : {};
+    const standaloneCfg = project.standaloneThemeConfig?.cfg;
     for (const screen of ['wps', 'sbs', 'fms'] as const) {
         const document = screen === 'wps' ? project.wpsDocument : screen === 'sbs' ? project.sbsDocument : project.fmsDocument;
         if (document) screens[screen] = document;
         if (!base && hasScreen(screen)) {
             screens[screen] = document ?? parseRockbox(compileScreen(project, screen));
-            screenPaths[screen] = `.rockbox/wps/${themeName}.${screen}`;
+            const configured = standaloneCfg ? getCfgValues(standaloneCfg, screen).at(-1) : undefined;
+            screenPaths[screen] = configured && configured !== '-'
+                ? normalizeArchivePath(configured) ?? `.rockbox/wps/${themeName}.${screen}`
+                : `.rockbox/wps/${themeName}.${screen}`;
         }
     }
     const theme: ThemePackage = {
-        cfg: base?.cfg ?? parseCfg(compileCfg(project)),
-        cfgPath: base?.cfgPath ?? `.rockbox/themes/${themeName}.cfg`,
+        cfg: base?.cfg ?? project.standaloneThemeConfig?.cfg ?? parseCfg(compileGeneratedCfg(project)),
+        cfgPath: base?.cfgPath ?? project.standaloneThemeConfig?.cfgPath ?? `.rockbox/themes/${themeName}.cfg`,
         screens,
         screenPaths,
         assets: [...existingAssets.filter(asset => asset.archivePath !== 'rockbox_designer_project.json'), ...addedAssets, projectAsset],

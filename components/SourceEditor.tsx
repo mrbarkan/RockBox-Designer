@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ProjectState } from '../types';
 import { compileAstScreen, compileWps, compileCfg, compileSbs, compileFms } from '../services/rockboxCompiler';
 import { parseRockbox } from '../rockbox/syntax';
+import { parseCfg } from '../rockbox/packages';
 
 interface SourceEditorProps {
   project: ProjectState;
@@ -49,6 +50,14 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
     [activeTab, content]
   );
   const errors = diagnostics.filter(diagnostic => diagnostic.severity === 'error');
+  const cfgInventory = useMemo(
+    () => activeTab === 'cfg' ? parseCfg(content).lines.reduce((counts, line) => ({
+      comments: counts.comments + (line.kind === 'comment' ? 1 : 0),
+      settings: counts.settings + (line.kind === 'setting' ? 1 : 0),
+      raw: counts.raw + (line.kind === 'invalid' ? 1 : 0)
+    }), { comments: 0, settings: 0, raw: 0 }) : undefined,
+    [activeTab, content]
+  );
 
   const handleApply = () => {
       onApplyChanges(activeTab, content);
@@ -75,13 +84,13 @@ export const SourceEditor: React.FC<SourceEditorProps> = ({ project, onClose, on
         <div className="bg-[#111] p-3 flex justify-between items-center border-b border-black">
              <div>
                 <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Two-way source</span>
-                <span className={`ml-3 border px-2 py-1 text-[9px] font-bold ${activeTab === 'cfg' ? 'border-gray-600 text-gray-500' : errors.length ? 'border-amber-500 text-amber-400' : 'border-emerald-700 text-emerald-400'}`}>
-                    {activeTab === 'cfg' ? 'READ ONLY' : errors.length ? `${errors.length} ERROR${errors.length === 1 ? '' : 'S'} · PREVIEW WILL STALE` : 'PREVIEW READY'}
+                <span className={`ml-3 border px-2 py-1 text-[9px] font-bold ${activeTab === 'cfg' ? 'border-orange-600 text-orange-400' : errors.length ? 'border-amber-500 text-amber-400' : 'border-emerald-700 text-emerald-400'}`}>
+                    {activeTab === 'cfg' ? `LOSSLESS CFG · ${cfgInventory?.comments ?? 0} COMMENTS · ${cfgInventory?.settings ?? 0} SETTINGS · ${cfgInventory?.raw ?? 0} RAW` : errors.length ? `${errors.length} ERROR${errors.length === 1 ? '' : 'S'} · PREVIEW WILL STALE` : 'PREVIEW READY'}
                 </span>
              </div>
              <div className="flex gap-3">
                  <button className="px-3 py-1.5 bg-[#333] text-gray-300 text-xs border border-black hover:bg-[#444]" onClick={() => setContent(sourceForTab(activeTab))}>Reset</button>
-                 <button onClick={handleApply} disabled={activeTab === 'cfg'} className="px-4 py-1.5 bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-bold uppercase border border-black shadow-[2px_2px_0px_black] active:translate-y-[1px] active:shadow-none transition-all">
+                 <button onClick={handleApply} className="px-4 py-1.5 bg-orange-600 text-white text-xs font-bold uppercase border border-black shadow-[2px_2px_0px_black] active:translate-y-[1px] active:shadow-none transition-all">
                      Apply Changes
                  </button>
              </div>

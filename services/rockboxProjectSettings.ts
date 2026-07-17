@@ -45,7 +45,10 @@ export const settingsFromRockboxCfg = (
     else if (key === 'show icons') settings.showIcons = enabled(value);
     else if (key === 'scrollbar') settings.scrollbar = lower === 'left' || lower === 'right' ? lower : 'off';
     else if (key === 'scrollbar width') settings.scrollbarWidth = integer(value, settings.scrollbarWidth);
-    else if (key === 'statusbar') settings.statusBarTop = lower === 'top';
+    else if (key === 'statusbar') {
+      settings.statusBarPosition = lower === 'top' || lower === 'bottom' ? lower : 'off';
+      settings.statusBarTop = settings.statusBarPosition === 'top';
+    }
     else if (key === 'volume display' && (lower === 'graphic' || lower === 'numeric')) settings.volumeDisplay = lower;
     else if (key === 'battery display' && (lower === 'graphic' || lower === 'numeric')) settings.batteryDisplay = lower;
     else if (key === 'backlight on button hold' && (lower === 'normal' || lower === 'off' || lower === 'on')) settings.backlightOnHold = lower;

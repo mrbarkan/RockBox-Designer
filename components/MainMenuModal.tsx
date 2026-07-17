@@ -9,6 +9,7 @@ interface MainMenuModalProps {
   onSave: () => void;
   onExport: () => void;
   onImportZip: () => void;
+  onShowTheme: () => void;
   onShowFonts: () => void;
   onShowLogic: () => void;
   onShowAssets: () => void;
@@ -41,7 +42,7 @@ const MenuButton = memo(({ icon, label, onClick, onClose, subLabel }: MenuButton
 MenuButton.displayName = 'MenuButton';
 
 export const MainMenuModal: React.FC<MainMenuModalProps> = ({
-    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onShowFonts, onShowLogic, onShowAssets, onShowCompatibility, onShowFirmware
+    isOpen, onClose, onNew, onOpen, onSave, onExport, onImportZip, onShowTheme, onShowFonts, onShowLogic, onShowAssets, onShowCompatibility, onShowFirmware
 }) => {
   const [activeTab, setActiveTab] = useState<'menu' | 'about'>('menu');
 
@@ -85,6 +86,7 @@ export const MainMenuModal: React.FC<MainMenuModalProps> = ({
                         <MenuButton icon="💾" label="Save Project" onClick={onSave} onClose={onClose} subLabel="Download .json" />
                         <div className="h-1 bg-gray-300 my-2" />
                         <MenuButton icon="📦" label="Import Theme" onClick={onImportZip} onClose={onClose} subLabel="Load existing .zip theme" />
+                        <MenuButton icon="T" label="Theme" onClick={onShowTheme} onClose={onClose} subLabel="Target, global settings, package paths, and lossless CFG" />
                         <MenuButton icon="Aa" label="Fonts" onClick={onShowFonts} onClose={onClose} subLabel="RB12 preview, font pack, conversion, and usage" />
                         <MenuButton icon="IF" label="Logic" onClick={onShowLogic} onClose={onClose} subLabel="Condition tree, branch previews, simulation, and source links" />
                         <MenuButton icon="▧" label="Assets" onClick={onShowAssets} onClose={onClose} subLabel="BMP conversion, strips, paths, and usage" />

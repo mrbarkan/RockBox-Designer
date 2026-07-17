@@ -63,13 +63,13 @@ Passing synthetic fixtures are evidence for those inputs, not a claim of complet
 - **Diagnostic:** Available through `RockboxDocument.diagnostics`.
 - **Planned phase:** Expand fixtures as real themes and official parser differences reveal additional recovery cases.
 
-## CFG settings-panel synchronization is incomplete
+## CFG editing is source-safe but intentionally bounded
 
 - **Example:** Comments, blank lines, duplicate keys, unknown settings, or values with significant surrounding whitespace.
-- **Current behavior:** Imported CFG source is preserved exactly and exported unchanged. The low-level update helper preserves formatting, but every settings-panel control is not yet wired to it.
-- **Preservation status:** Exact when untouched and for tested helper updates.
-- **Diagnostic:** Missing package references are reported during import.
-- **Planned phase:** Wire broader CFG editing as the settings and source-editor workflows mature.
+- **Current behavior:** Theme and Source CFG share one commit transaction. The source remains exact; typed controls update only the final matching verified key; comments and raw lines never become visual elements. Unknown-only edits persist without repainting the canvas. WPS/SBS/FMS path edits relocate an existing canonical screen document, while missing documents remain warnings.
+- **Preservation status:** Exact when untouched, for raw edits, and for tested minimum-change typed updates including CRLF and duplicate keys.
+- **Diagnostic:** Unsafe CFG/screen paths and invalid typed colors/ranges block commit. Missing package references are reported without deleting source.
+- **Boundary:** The workspace exposes only the global-setting names and value shapes rechecked in pinned `apps/settings_list.c`. The rest of Rockbox's settings catalog remains raw source rather than receiving guessed controls.
 
 ## FMS visual support remains a documented subset
 

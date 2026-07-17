@@ -3,6 +3,7 @@ import { applyProjectSyntaxDocument, getProjectSyntaxDocument } from '../../serv
 import { decodeKnownTag, splitRawArguments, updateTagArguments } from '../editing';
 import type { RockboxDocument, RockboxNode, TagNode } from '../syntax';
 import { createThemeAsset } from '../packages/assetStore';
+import { getCfgValues } from '../packages/cfgParser';
 import { archiveBasename, archiveDirname, joinArchivePath, normalizeArchivePath } from '../packages/paths';
 import type { ThemeAsset } from '../packages/types';
 import { themeScreenForPreview } from '../screens';
@@ -60,7 +61,7 @@ const bytesToDataUrl = (bytes: Uint8Array, mimeType = 'application/octet-stream'
 };
 
 const archiveRoot = (project: ProjectState) => {
-  const cfgPath = project.themePackage?.cfgPath ?? '';
+  const cfgPath = project.themePackage?.cfgPath ?? project.standaloneThemeConfig?.cfgPath ?? '';
   const marker = cfgPath.toLowerCase().indexOf('.rockbox/');
   return marker >= 0 ? cfgPath.slice(0, marker) : '';
 };
@@ -130,7 +131,9 @@ const screenReferences = (
   assetPaths: Set<string>
 ) => {
   const output: ProjectAssetReference[] = [];
-  const screenPath = project.themePackage?.screenPaths[screen];
+  const cfg = project.themePackage?.cfg ?? project.standaloneThemeConfig?.cfg;
+  const screenPath = project.themePackage?.screenPaths[screen]
+    ?? (cfg ? normalizeArchivePath(getCfgValues(cfg, screen).at(-1) ?? '') ?? undefined : undefined);
   walkTags(document.nodes, tag => {
     const argumentIndex = PATH_ARGUMENTS[tag.name];
     if (argumentIndex === undefined) return;
@@ -165,7 +168,8 @@ export const collectProjectAssetReferences = (project: ProjectState): ProjectAss
     if (document) output.push(...screenReferences(project, screen, document, assetPaths));
   }
 
-  project.themePackage?.cfg?.lines.forEach((line, index) => {
+  const cfg = project.themePackage?.cfg ?? project.standaloneThemeConfig?.cfg;
+  cfg?.lines.forEach((line, index) => {
     const key = line.key?.toLowerCase();
     const raw = line.value ?? '';
     if (line.kind !== 'setting' || !key || !ASSET_CFG_KEYS.has(key) || !raw || raw === '-') return;
@@ -195,7 +199,7 @@ export const collectProjectAssetReferences = (project: ProjectState): ProjectAss
     });
   }
 
-  const hasSource = Boolean(project.wpsDocument || project.sbsDocument || project.fmsDocument || project.themePackage);
+  const hasSource = Boolean(project.wpsDocument || project.sbsDocument || project.fmsDocument || project.themePackage || project.standaloneThemeConfig);
   if (!hasSource) {
     const basenameCounts = new Map<string, number>();
     listProjectAssets(project).forEach(({ asset }) => basenameCounts.set(asset.basename, (basenameCounts.get(asset.basename) ?? 0) + 1));
@@ -380,19 +384,20 @@ export const renameProjectAsset = async (
   }
 
   const cfgReferences = references.filter(reference => reference.scope === 'cfg' && reference.cfgLineIndex !== undefined);
-  if (nextProject.themePackage?.cfg && cfgReferences.length > 0) {
+  const canonicalCfg = nextProject.themePackage?.cfg ?? nextProject.standaloneThemeConfig?.cfg;
+  if (canonicalCfg && cfgReferences.length > 0) {
     const replacements = new Map(cfgReferences.map(reference => [reference.cfgLineIndex!, rewrittenReference(project, reference, nextPath)]));
-    const cfg = nextProject.themePackage.cfg;
+    const cfg = canonicalCfg;
     const lines = cfg.lines.map((line, index) => replacements.has(index) ? {
       ...line,
       value: replacements.get(index),
       valueRaw: rewriteCfgLine(line.valueRaw ?? '', replacements.get(index)!),
       dirty: true
     } : line);
-    nextProject = {
-      ...nextProject,
-      themePackage: { ...nextProject.themePackage, cfg: { ...cfg, lines, dirty: true } }
-    };
+    const updatedCfg = { ...cfg, lines, dirty: true };
+    nextProject = nextProject.themePackage?.cfg
+      ? { ...nextProject, themePackage: { ...nextProject.themePackage, cfg: updatedCfg } }
+      : { ...nextProject, standaloneThemeConfig: { ...nextProject.standaloneThemeConfig!, cfg: updatedCfg } };
   }
 
   const renamed = await createThemeAsset(nextPath, record.asset.bytes);

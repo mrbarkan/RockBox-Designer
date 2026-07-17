@@ -24,6 +24,7 @@ interface EditorSidebarProps {
     onSetBranchOverride: (nodeId: string, branch: number | null) => void;
     onUpdateSourceArguments: (nodeId: string, updates: Record<string, string>) => void;
     onUpdateSourceText: (nodeId: string, value: string) => void;
+    onOpenTheme: () => void;
 }
 
 export const EditorSidebar: React.FC<EditorSidebarProps> = ({
@@ -31,7 +32,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
     onUpdateElement, onUpdateProject, onDeleteElement, onSelectElement,
     isLayerStackCollapsed, setIsLayerStackCollapsed, activeScreen,
     semanticResult, branchOverrides, onSetBranchOverride, onUpdateSourceArguments,
-    onUpdateSourceText
+    onUpdateSourceText, onOpenTheme
 }) => {
     
     const selectedElement = project.elements.find(el => selectedElementIds.includes(el.id)) || null;
@@ -42,7 +43,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                 <span className="mr-3 opacity-50">///</span>
                 <div className="flex bg-[#d4d4d4] rounded border border-[#999] p-1 gap-1">
                     <button onClick={() => setRightPanelMode('inspector')} className={`px-3 py-1.5 rounded-sm ${rightPanelMode === 'inspector' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}>Edit</button>
-                    <button onClick={() => setRightPanelMode('settings')} className={`px-3 py-1.5 rounded-sm ${rightPanelMode === 'settings' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}>Project</button>
+                    <button onClick={onOpenTheme} className="px-3 py-1.5 rounded-sm text-gray-500 hover:bg-white hover:text-black">Theme</button>
                     <button onClick={() => setRightPanelMode('files')} className={`px-3 py-1.5 rounded-sm ${rightPanelMode === 'files' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}>Files</button>
                 </div>
             </div>
@@ -68,6 +69,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                             onUpdateProject={onUpdateProject} 
                             onDelete={onDeleteElement} 
                             onDeselect={() => onSelectElement('')} 
+                            onOpenTheme={onOpenTheme}
                         />
                     )}
                 </div>
