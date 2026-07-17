@@ -139,7 +139,7 @@ Produces theme assets plus optional Rockbox source modifications, build instruct
 
 Potential Firmware Mode targets include:
 
-- Custom USB screen treatment
+- Built-in USB fallback logo or placement beyond what SBS can theme
 - Deeper quick-screen layout changes
 - Hold-screen behavior beyond theme conditionals
 - Complete system UI simulation or modification
@@ -1683,7 +1683,8 @@ Clearly label hardcoded Rockbox layout behavior.
 
 ## 3.4 USB and hold previews
 
-- USB screen preview should be labeled as stock behavior or Firmware Mode preview.
+- USB connected presentation is an SBS activity scene selected by `%cs = 21`; themes may draw custom SBS viewports, images, text, colors, and conditionals for it.
+- The compiled Rockbox USB logo is a firmware fallback drawn inside the `%VI`-selected UI viewport after the SBS. Preview it as an external-authority boundary, and let a theme hide it with a deliberately small UI viewport when the source does so.
 - Hold is primarily a state for conditionals and behavior simulation.
 - Do not export a fictional `.usb` theme file.
 
@@ -1970,7 +1971,7 @@ Support optional custom firmware outputs for non-themeable screens and behavior.
 
 ## Candidate features
 
-- Custom USB logo and layout
+- Custom compiled USB fallback logo and placement beyond the SBS-authored scene
 - Deeper quick-screen layout changes
 - Alternative built-in icons
 - Custom system dialogs

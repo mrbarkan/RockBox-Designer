@@ -16,7 +16,7 @@ The initial catalog contains 19 definitions across all Phase 6 categories: batte
 
 Insertion is one immutable `ProjectState` history update:
 
-1. Refuse USB, unsupported screen files, unsupported targets, missing capabilities, or a source document with error diagnostics.
+1. Refuse unsupported screen files, unsupported targets, missing capabilities, or a source document with error diagnostics. The USB scene is also refused because a generic fragment cannot safely add the required `%cs = 21` guard to SBS.
 2. Allocate a deterministic component instance ID plus collision-free image handle and viewport name.
 3. Validate numeric properties as finite whole numbers within the target screen and refuse off-screen geometry.
 4. Reuse a generated asset only when both its intended archive path and content hash match. A conflicting imported path receives a numeric suffix and is never overwritten.
@@ -48,7 +48,7 @@ Components is a focused, lazy-loaded Pulp workspace rather than a small element 
 - an exact instance list with safe removal;
 - a quick Components entry from Screens.
 
-List/menu components position firmware-owned UI viewports; they do not invent authored menu rows. USB remains firmware controlled. Touch remains visible but unavailable for both current non-touch iPod profiles.
+List/menu components position firmware-owned UI viewports; they do not invent authored menu rows. USB is themeable through an explicit activity-guarded SBS branch, so generic insertion stays disabled there until the component transaction can build that branch safely. Touch remains visible but unavailable for both current non-touch iPod profiles.
 
 ## Official evidence
 

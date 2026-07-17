@@ -98,7 +98,7 @@ export const FirmwareMode: React.FC<FirmwareModeProps> = ({ profile, projectName
           <div className="flex h-12 w-12 items-center justify-center border-2 border-white bg-[#ff5800] text-lg font-black">FW</div>
           <div>
             <div className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400">Opt-in source modification</div>
-            <h1 className="mt-1 text-xl font-black uppercase tracking-tight">Firmware Mode · USB screen</h1>
+            <h1 className="mt-1 text-xl font-black uppercase tracking-tight">Firmware Assets · Built-in USB fallback</h1>
           </div>
         </div>
         <button type="button" onClick={onClose} className="border-2 border-white px-4 py-2 text-xs font-black uppercase hover:bg-white hover:text-black">Close</button>
@@ -108,7 +108,7 @@ export const FirmwareMode: React.FC<FirmwareModeProps> = ({ profile, projectName
         <aside className="overflow-y-auto border-r-2 border-black bg-[#ecebe7] p-5">
           <div className="border-2 border-black bg-[#ffd23f] p-4 shadow-[4px_4px_0_#111]">
             <div className="text-xs font-black uppercase">Requires custom firmware</div>
-            <p className="mt-2 text-[10px] leading-relaxed">This output cannot be installed through Rockbox theme settings. It changes source code and must be compiled for one exact target.</p>
+            <p className="mt-2 text-[10px] leading-relaxed">Ordinary themes can author the connected-USB presentation in SBS. This workspace changes only Rockbox's compiled fallback logo and placement for one exact target.</p>
           </div>
           <div className="mt-6">
             <Step number="01" title="Author" detail="Supply one 176 × 48 uncompressed 24-bit BMP and choose its firmware placement." />

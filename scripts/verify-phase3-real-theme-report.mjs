@@ -20,7 +20,12 @@ for (const screen of ['wps', 'sbs', 'fms']) {
     fail(`${screen.toUpperCase()} did not pass import, projection, edit, export, and preservation.`);
   }
 }
-if (!report.screens.find(screen => screen.screen === 'sbs')?.menuPreview ||
-    !report.screens.find(screen => screen.screen === 'sbs')?.quickScreenPreview) fail('SBS state previews are missing.');
+const sbs = report.screens.find(screen => screen.screen === 'sbs');
+if (!sbs?.menuPreview || !sbs?.quickScreenPreview || !sbs?.usbSbsPreview) {
+  fail('SBS menu, quick-screen, or theme-authored USB preview is missing.');
+}
+if (JSON.stringify(sbs.usbFallbackViewport) !== JSON.stringify({ x: 0, y: 0, width: 1, height: 1 })) {
+  fail('Adwaitapod no longer clips the compiled USB fallback through its 1 x 1 UI viewport.');
+}
 if (!report.screens.find(screen => screen.screen === 'fms')?.fmStatePreview) fail('FMS state preview is missing.');
 process.stdout.write('Verified Phase 3 real-theme WPS/SBS/FMS report.\n');

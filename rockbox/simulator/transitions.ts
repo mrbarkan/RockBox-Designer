@@ -3,6 +3,7 @@ import type {
   SimulatorAction,
   SimulatorSession
 } from './types';
+import { previewScreenForActivity, ROCKBOX_ACTIVITY } from '../screens';
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.max(minimum, Math.min(maximum, value));
@@ -65,7 +66,10 @@ export const enforceTargetCapabilities = (
     simulation.fmScanMode = false;
     simulation.fmStereo = false;
     simulation.fmRdsAvailable = false;
-    if (activeScreen === 'fms') activeScreen = 'wps';
+    if (activeScreen === 'fms') {
+      activeScreen = 'wps';
+      simulation.currentActivity = ROCKBOX_ACTIVITY.whilePlaying;
+    }
   }
   if (!profile.capabilities.touchscreen) {
     simulation.touchActive = false;
@@ -136,6 +140,18 @@ export const transitionSimulator = (
   let next = session;
   if (action.type === 'advance') {
     next = advance(session, action.milliseconds);
+  } else if (action.type === 'activity') {
+    const activeScreen = previewScreenForActivity(action.activity);
+    next = {
+      ...session,
+      activeScreen,
+      simulation: {
+        ...session.simulation,
+        currentActivity: action.activity,
+        isUsb: action.activity === ROCKBOX_ACTIVITY.usb ? true : session.simulation.isUsb,
+        externalPower: action.activity === ROCKBOX_ACTIVITY.usb ? true : session.simulation.externalPower
+      }
+    };
   } else if (action.type === 'playback') {
     next = {
       ...session,

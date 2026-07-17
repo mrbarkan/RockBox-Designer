@@ -194,11 +194,11 @@ git -C "$ROCKBOX_SOURCE_DIR" apply --check "$PACKAGE_DIR/patches/usb-screen-layo
 echo "Patch check passed for ${FIRMWARE_TARGET} at $EXPECTED_SHA."
 `;
 
-const createReadme = (options: UsbFirmwareOptions) => `# ${options.packageName || 'Rockbox Designer'} — Firmware Mode USB package
+const createReadme = (options: UsbFirmwareOptions) => `# ${options.packageName || 'Rockbox Designer'} — Firmware Assets USB fallback package
 
 ## Requires custom firmware
 
-This is **not** a normal Rockbox theme ZIP. It changes firmware-owned USB-screen behavior for the Apple iPod Video 5G/5.5G target only.
+This is **not** a normal Rockbox theme ZIP. Ordinary themes author the connected-USB presentation in SBS at activity 21. This package changes only the compiled fallback logo and its placement for the Apple iPod Video 5G/5.5G target.
 
 - Rockbox target: \`${FIRMWARE_TARGET}\`
 - Required upstream revision: \`${FIRMWARE_UPSTREAM_COMMIT}\`
@@ -262,7 +262,7 @@ export const createUsbFirmwarePackage = async (options: UsbFirmwareOptions) => {
   const manifest: FirmwarePackageManifest = {
     schemaVersion: FIRMWARE_PACKAGE_SCHEMA_VERSION,
     mode: 'firmware',
-    feature: 'usb-screen',
+    feature: 'usb-fallback-logo',
     packageName,
     target: {
       deviceProfileId: FIRMWARE_DEVICE_PROFILE_ID,
@@ -278,7 +278,7 @@ export const createUsbFirmwarePackage = async (options: UsbFirmwareOptions) => {
       containsRockboxBinary: false,
       containsProprietaryFirmware: false
     },
-    usbScreen: {
+    usbFallback: {
       logoPosition: options.logoPosition,
       logoAssetPath: USB_LOGO_SOURCE_PATH,
       logoWidth: 176,

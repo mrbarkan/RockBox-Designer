@@ -85,7 +85,7 @@ Phase 2 inspected `apps/gui/skin_engine/skin_tokens.c`, `skin_render.c`, and `sk
 
 ## Phase 3 screen and font reference
 
-Phase 3 re-inspected `lib/skin_parser/tag_table.c` and `apps/gui/skin_engine/skin_tokens.c` for SBS/FMS tag identity and current-screen behavior. It inspected `apps/misc.h`, `apps/root_menu.c`, and `apps/gui/icon.h` for activity values, root-menu ordering, and firmware icon IDs; `apps/gui/quickscreen.c` for the firmware-owned quick-screen layout; `apps/gui/usb_screen.c` for the stock USB boundary; and `apps/radio/radio_skin.c` for FMS state.
+Phase 3 re-inspected `lib/skin_parser/tag_table.c` and `apps/gui/skin_engine/skin_tokens.c` for SBS/FMS tag identity and current-screen behavior. It inspected `apps/misc.h`, `apps/root_menu.c`, and `apps/gui/icon.h` for activity values, root-menu ordering, and firmware icon IDs; `apps/gui/quickscreen.c` for the firmware-owned quick-screen layout; `apps/gui/usb_screen.c` for `ACTIVITY_USBSCREEN` 21, the theme-selected UI viewport parent, and the built-in fallback draw; and `apps/radio/radio_skin.c` for FMS state.
 
 The font workflow inspected `tools/convttf.c`, `firmware/font.c`, and `firmware/export/font.h`. The application independently parses the factual RB12 header and metrics. Development tooling builds and executes the unmodified converter from the separate pinned checkout, writes its executable outside the repository, and verifies generated output in an external Rockbox simulator. No upstream source, object, executable, or generated third-party font is committed or distributed.
 

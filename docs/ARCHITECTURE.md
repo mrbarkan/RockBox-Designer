@@ -168,7 +168,7 @@ WPS/SBS/FMS RockboxDocument
   -> native canvas + logic-aware layer panel
 ```
 
-SBS interpretation tracks current activity and active `%Vi` UI viewports. Menu/list rows, selector, scrollbar, and themeable icon-strip frames are derived from verified firmware state rather than flattened into source elements. The quick-screen uses the same SBS parent and is labeled as a firmware-controlled layout. USB is an explicit stock/firmware boundary, not a fictional source file. FMS interpretation projects the documented frequency, preset, signal, stereo, tuned/scan, and RDS subset.
+SBS interpretation tracks current activity and active `%Vi` UI viewports. Menu/list rows, selector, scrollbar, and themeable icon-strip frames are derived from verified firmware state rather than flattened into source elements. The quick-screen uses the same SBS parent and is labeled as a firmware-controlled layout. USB connected routes through the same SBS document at activity 21; authored scene pixels render normally, followed by a separate compiled-fallback operation clipped to the `%VI`-selected viewport. No fictional `.usb` source exists. FMS interpretation projects the documented frequency, preset, signal, stereo, tuned/scan, and RDS subset.
 
 Comments are a syntax concern only. They remain exact in the source document and serializer and are excluded from both compatibility elements and semantic layer inventory.
 
@@ -283,7 +283,7 @@ Theme Mode
 
 `rockbox/firmware/` owns the pure target contract, BMP inspection, patch/header generation, deterministic manifest, and package creation. `components/FirmwareMode.tsx` owns only opt-in interaction, recovery acknowledgement, preview placement, and download. `scripts/phase8/` extracts the actual generated package, verifies it against the pinned checkout, performs two complete device builds, and commits only derived hashes and metrics.
 
-The first patch replaces the stock USB logo positioning expression with a generated macro and overlays the target-selected 176 × 48 bitmap. It neither invents a standard theme file nor changes the browser's USB scenario semantics. ADR-0018 records the licensing, target, build, and recovery boundary.
+The first patch replaces the compiled USB fallback logo positioning expression with a generated macro and overlays the target-selected 176 × 48 bitmap. It neither invents a standard theme file nor owns the browser's SBS activity-21 scene semantics. ADR-0018 records the licensing, target, build, and recovery boundary; ADR-0019 records the split between the themeable scene and compiled fallback.
 
 The accepted delivery architecture is a loopback-only local companion:
 

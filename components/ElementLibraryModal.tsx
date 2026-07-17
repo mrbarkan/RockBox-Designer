@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { ProjectState, ScreenType } from '../types';
 import type { DeviceProfile } from '../rockbox/devices';
+import { previewSourceLabel } from '../rockbox/screens';
 import {
   getComponentAvailability,
   getRockboxComponent,
@@ -71,7 +72,7 @@ export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({
     const result = await onInsert(selected.id, propertyValues);
     setBusy(false);
     setMessage(result.ok
-      ? `${selected.name} inserted into ${activeScreen.toUpperCase()}. Undo is available.`
+      ? `${selected.name} inserted into ${previewSourceLabel(activeScreen)}. Undo is available.`
       : result.conflicts.join(' '));
   };
 
@@ -93,7 +94,7 @@ export const ElementLibraryModal: React.FC<ElementLibraryModalProps> = ({
           </div>
           <div className="ml-4 border-l border-[#666] pl-5 text-[10px] uppercase text-[#d3d5da]">
             <div>{deviceProfile.model}</div>
-            <div className="font-black text-white">{activeScreen.toUpperCase()} source</div>
+            <div className="font-black text-white">{previewSourceLabel(activeScreen)}</div>
           </div>
         </div>
         <button

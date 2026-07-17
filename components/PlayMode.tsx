@@ -12,6 +12,7 @@ import {
 } from '../rockbox/simulator';
 import type { ProjectState } from '../types';
 import type { SemanticResult } from '../rockbox/semantics';
+import { previewSourceLabel, ROCKBOX_ACTIVITY } from '../rockbox/screens';
 import { DeviceShell } from './DeviceShell';
 import { EditorCanvas } from './EditorCanvas';
 
@@ -68,6 +69,16 @@ export const PlayMode: React.FC<PlayModeProps> = ({
   const fmEnabled = profile.capabilities.fmRadio && profile.supportedScreenFiles.includes('fms');
   const remoteEnabled = profile.capabilities.remoteLcd && Boolean(profile.remoteScreen);
   const touchEnabled = profile.capabilities.touchscreen;
+  const activityOptions = [
+    { value: ROCKBOX_ACTIVITY.mainMenu, label: 'Main menu', available: true },
+    { value: ROCKBOX_ACTIVITY.whilePlaying, label: 'While playing', available: true },
+    { value: ROCKBOX_ACTIVITY.recording, label: 'Recording', available: profile.capabilities.recording },
+    { value: ROCKBOX_ACTIVITY.fm, label: 'FM radio', available: fmEnabled },
+    { value: ROCKBOX_ACTIVITY.quickScreen, label: 'Quick screen', available: true },
+    { value: ROCKBOX_ACTIVITY.optionSelect, label: 'Option select', available: true },
+    { value: ROCKBOX_ACTIVITY.system, label: 'System', available: true },
+    { value: ROCKBOX_ACTIVITY.usb, label: 'USB connected', available: true }
+  ];
 
   const copyScenarioLink = async () => {
     if (activeScenario === 'custom') return;
@@ -164,6 +175,33 @@ export const PlayMode: React.FC<PlayModeProps> = ({
             </div>
           </section>
 
+          <section className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-2 border-black bg-[#f5e7d6] p-4 shadow-[4px_4px_0_#111]">
+            <label className="block text-[9px] font-black uppercase tracking-[0.18em]">
+              Rockbox activity
+              <select
+                aria-label="Rockbox activity"
+                value={sim.currentActivity}
+                onChange={event => onAction({ type: 'activity', activity: Number(event.target.value) })}
+                className="mt-2 w-full border-2 border-black bg-white p-3 text-xs font-black uppercase"
+              >
+                {activityOptions.map(activity => (
+                  <option key={activity.value} value={activity.value} disabled={!activity.available}>
+                    {activity.value} · {activity.label}{activity.available ? '' : ' — unavailable'}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="border-2 border-black bg-[#242424] px-4 py-3 text-right text-white">
+              <div className="text-[8px] font-black uppercase tracking-[0.18em] text-[#20bd8b]">Theme projection</div>
+              <div className="mt-1 text-[10px] font-black uppercase">{previewSourceLabel(session.activeScreen)}</div>
+            </div>
+            {session.activeScreen === 'usb' && (
+              <p className="col-span-2 border-t border-[#8a7966] pt-3 text-[10px] text-[#55483b]">
+                USB presentation is authored in the SBS with <strong>%cs = 21</strong>. The firmware fallback is drawn afterward inside the SBS-selected UI viewport.
+              </p>
+            )}
+          </section>
+
           <div className="grid grid-cols-2 gap-4">
             <section className="border-2 border-black bg-[#f7f7f7] p-4">
               <h3 className="mb-3 text-xs font-black uppercase tracking-widest">Playback</h3>
@@ -215,6 +253,10 @@ export const PlayMode: React.FC<PlayModeProps> = ({
                 Battery {sim.batteryLevel}%
                 <input type="range" min={0} max={100} value={sim.batteryLevel} onChange={event => onAction({ type: 'simulation', updates: { batteryLevel: Number(event.target.value) } })} className="mt-1 block w-full" />
               </label>
+              <label className="mb-3 block text-[9px] font-black uppercase">
+                Brightness {sim.brightness ?? 70}%
+                <input type="range" min={0} max={100} value={sim.brightness ?? 70} onChange={event => onAction({ type: 'simulation', updates: { brightness: Number(event.target.value) } })} className="mt-1 block w-full" />
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 <Toggle label="Charging" checked={sim.isCharging} onChange={() => onAction({ type: 'simulation', updates: { isCharging: !sim.isCharging } })} />
                 <Toggle label="External power" checked={sim.externalPower} onChange={() => onAction({ type: 'simulation', updates: { externalPower: !sim.externalPower } })} />
@@ -226,6 +268,14 @@ export const PlayMode: React.FC<PlayModeProps> = ({
               <label className="mt-3 block text-[9px] font-black uppercase">
                 RTC
                 <input aria-label="RTC time" type="time" step={1} disabled={!profile.capabilities.rtc} value={sim.currentTime} onChange={event => onAction({ type: 'simulation', updates: { currentTime: event.target.value } })} className="mt-1 w-full border-2 border-black bg-white p-2" />
+              </label>
+              <label className="mt-3 block text-[9px] font-black uppercase">
+                Date
+                <input aria-label="RTC date" type="date" disabled={!profile.capabilities.rtc} value={sim.currentDate ?? '2026-07-17'} onChange={event => onAction({ type: 'simulation', updates: { currentDate: event.target.value } })} className="mt-1 w-full border-2 border-black bg-white p-2" />
+              </label>
+              <label className="mt-3 block text-[9px] font-black uppercase">
+                Sleep timer · seconds
+                <input type="number" min={0} value={sim.sleepTimerSeconds ?? 0} onChange={event => onAction({ type: 'simulation', updates: { sleepTimerSeconds: Math.max(0, Number(event.target.value)) } })} className="mt-1 w-full border-2 border-black bg-white p-2" />
               </label>
               <div className="mt-3 border border-[#999] bg-[#eee] p-2 text-[9px]">
                 Touch: {touchEnabled ? `${sim.touchX}, ${sim.touchY}${sim.touchActive ? ' active' : ''}` : `unavailable on ${profile.model}`}
@@ -278,6 +328,53 @@ export const PlayMode: React.FC<PlayModeProps> = ({
                   FM and RDS are unavailable on {profile.model}. Source remains preserved, but this target cannot simulate an FMS.
                 </div>
               )}
+            </section>
+
+            <section className="border-2 border-black bg-[#f7f7f7] p-4">
+              <h3 className="mb-3 text-xs font-black uppercase tracking-widest">Recording state</h3>
+              {profile.capabilities.recording ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="text-[9px] font-black uppercase">
+                      Format
+                      <select value={sim.recordingFormat ?? 'wav'} onChange={event => onAction({ type: 'simulation', updates: { recordingFormat: event.target.value as NonNullable<typeof sim.recordingFormat> } })} className="mt-1 w-full border-2 border-black bg-white p-2">
+                        <option value="wav">WAV</option><option value="aiff">AIFF</option><option value="wv">WavPack</option><option value="mp3">MP3</option>
+                      </select>
+                    </label>
+                    <label className="text-[9px] font-black uppercase">
+                      Frequency · kHz
+                      <select value={sim.recordingFrequencyKhz ?? 44.1} onChange={event => onAction({ type: 'simulation', updates: { recordingFrequencyKhz: Number(event.target.value) } })} className="mt-1 w-full border-2 border-black bg-white p-2">
+                        {[96, 88.2, 64, 48, 44.1, 32, 24, 22.05, 16, 12, 11.025, 8].map(value => <option key={value} value={value}>{value}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <label className="mt-3 block text-[9px] font-black uppercase">
+                    Elapsed · seconds
+                    <input type="number" min={0} value={sim.recordingElapsedSeconds ?? 0} onChange={event => onAction({ type: 'simulation', updates: { recordingElapsedSeconds: Math.max(0, Number(event.target.value)) } })} className="mt-1 w-full border-2 border-black bg-white p-2" />
+                  </label>
+                  <label className="mt-3 block text-[9px] font-black uppercase">
+                    Input level {Math.round((sim.recordingLevel ?? 0) * 100)}%
+                    <input type="range" min={0} max={100} value={Math.round((sim.recordingLevel ?? 0) * 100)} onChange={event => onAction({ type: 'simulation', updates: { recordingLevel: Number(event.target.value) / 100 } })} className="mt-1 block w-full" />
+                  </label>
+                </>
+              ) : (
+                <div className="border-2 border-dashed border-[#777] bg-[#eee] p-4 text-xs">Recording is unavailable on {profile.model}.</div>
+              )}
+            </section>
+
+            <section className="border-2 border-black bg-[#f7f7f7] p-4">
+              <h3 className="mb-3 text-xs font-black uppercase tracking-widest">SBS list context</h3>
+              <label className="block text-[9px] font-black uppercase">
+                Menu or setting title
+                <input value={sim.menuTitle} onChange={event => onAction({ type: 'simulation', updates: { menuTitle: event.target.value } })} className="mt-1 w-full border-2 border-black bg-white p-2 text-xs" />
+              </label>
+              <label className="mt-3 block text-[9px] font-black uppercase">
+                Selected row · {sim.menuSelectedIndex + 1}
+                <input type="range" min={0} max={Math.max(0, sim.menuItems.length - 1)} value={sim.menuSelectedIndex} onChange={event => onAction({ type: 'simulation', updates: { menuSelectedIndex: Number(event.target.value) } })} className="mt-1 block w-full" />
+              </label>
+              <div className="mt-2 border border-[#999] bg-white p-2 text-[9px] text-[#555]">
+                Activity 12 themes can branch on this title. Activity 16 exposes system-information branches such as Adwaitapod's custom System view.
+              </div>
             </section>
           </div>
         </aside>

@@ -3,6 +3,7 @@ import React from 'react';
 import { ProjectState, User, ScreenType, WpsElement } from '../types';
 import { ToolIconBtn } from './common/ToolButtons';
 import { getDeviceProfile, getMainScreenFiles } from '../rockbox/devices';
+import { previewSourceLabel } from '../rockbox/screens';
 
 interface EditorHeaderProps {
     project: ProjectState;
@@ -54,6 +55,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     ))}
                     <TabButton id="usb" label="USB" activeId={activeScreen} onClick={setActiveScreen} />
                 </div>
+                {activeScreen === 'usb' ? (
+                    <div className="hidden border-2 border-black bg-[#20bd8b] px-2 py-1 font-mono text-[9px] font-black uppercase leading-tight shadow-[2px_2px_0_#111] xl:block">
+                        {previewSourceLabel(activeScreen)}
+                    </div>
+                ) : null}
                 {selectedElement && rightPanelMode === 'inspector' && (
                     <div className="flex gap-1 border-l border-black/20 pl-2">
                         <ToolIconBtn onClick={() => onAlign('left')} title="Align Left">⇤</ToolIconBtn>
@@ -70,9 +76,9 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     type="button"
                     onClick={onOpenFirmware}
                     className="border-2 border-black bg-[#ffd23f] px-3 py-2 font-mono text-[10px] font-black uppercase text-black shadow-[3px_3px_0_#111] hover:bg-[#ffe271] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-                    title="Optional source patches for firmware-owned screens"
+                    title="Optional source packages for compiled Rockbox assets and fallback behavior"
                 >
-                    FW MODE
+                    FW ASSETS
                 </button>
                 <button
                     type="button"

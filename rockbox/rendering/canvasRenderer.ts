@@ -75,6 +75,8 @@ export const renderSemanticToCanvas = (
       continue;
     }
 
+    if (operation.type === 'drawFirmwareFallback') resetClip(ctx);
+
     ctx.save();
     const rect = operation.rect;
     if (operation.type === 'drawRect') {
@@ -145,6 +147,28 @@ export const renderSemanticToCanvas = (
         ctx.fillRect(Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height));
         ctx.strokeStyle = '#686868';
         ctx.strokeRect(Math.round(rect.x) + 0.5, Math.round(rect.y) + 0.5, Math.max(0, Math.round(rect.width) - 1), Math.max(0, Math.round(rect.height) - 1));
+      }
+    } else if (operation.type === 'drawFirmwareFallback') {
+      if (rect.width > 1 && rect.height > 1) {
+        ctx.beginPath();
+        ctx.rect(Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height));
+        ctx.clip();
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height));
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 1;
+        for (let offset = -rect.height; offset < rect.width; offset += 8) {
+          ctx.beginPath();
+          ctx.moveTo(Math.round(rect.x + offset), Math.round(rect.y + rect.height));
+          ctx.lineTo(Math.round(rect.x + offset + rect.height), Math.round(rect.y));
+          ctx.stroke();
+        }
+        if (rect.width >= 72 && rect.height >= 18) {
+          ctx.fillStyle = '#f3f3f3';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('FW USB FALLBACK', Math.round(rect.x + rect.width / 2), Math.round(rect.y + rect.height / 2 - 4));
+        }
       }
     } else if (operation.type === 'debugOverlay') {
       ctx.strokeStyle = '#ff5800';

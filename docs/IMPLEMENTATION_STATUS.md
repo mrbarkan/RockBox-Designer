@@ -1,15 +1,15 @@
 # Implementation Status
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 ## Current phase
 
-- **Phase:** Phase 8 Firmware Mode
-- **Branch:** `codex/phase-8-firmware-mode`
+- **Phase:** Post-Phase 8 theme-behavior correction
+- **Branch:** `codex/themeable-usb-sbs`
 - **Merged milestones:** Phase 0 through Phase 7; the external full-simulator feasibility evidence merged in [PR #23](https://github.com/mrbarkan/RockBox-Designer/pull/23) at `a204688`.
-- **Status:** Phase 8 acceptance passes. The editor exports a deterministic, opt-in iPod Video USB-screen source package; its patch applies to the exact upstream SHA, and two complete target builds produced byte-identical `rockbox.ipod` images.
-- **Scope boundary:** Firmware Mode exports patch/overlay/build inputs only. It bundles no Rockbox tree, compiled Rockbox firmware, Apple firmware, proprietary component, toolchain, or build output. iPod Classic remains target-gated.
-- **UX direction preserved:** Theme Mode and its ZIP remain unchanged. Firmware Mode is a separate lazy-loaded workspace that always says **Requires custom firmware** and requires explicit custom-firmware plus recovery acknowledgements.
+- **Status:** USB connected now renders as the authoritative SBS activity-21 scene. The existing Phase 8 package is correctly scoped to the compiled iPod Video fallback logo and placement; its patch still applies to the exact upstream SHA, and two complete target builds produced byte-identical `rockbox.ipod` images.
+- **Scope boundary:** Firmware Assets exports patch/overlay/build inputs only. It bundles no Rockbox tree, compiled Rockbox firmware, Apple firmware, proprietary component, toolchain, or build output. iPod Classic remains target-gated.
+- **UX direction preserved:** Theme Mode and its ZIP remain unchanged. Play exposes verified Rockbox activities and identifies USB as SBS. Firmware Assets remains separate, always says **Requires custom firmware**, and requires explicit custom-firmware plus recovery acknowledgements.
 - **Level C decision:** The owner chose external Level C. The actual pinned Rockbox simulator is authoritative for firmware UI/theme behavior on its target; the browser's Level A preview remains approximate, and hardware-only behavior still requires a device.
 
 ## Current architecture
@@ -17,6 +17,7 @@ Last updated: 2026-07-16
 - React 19 and Vite 6 provide the browser application and build pipeline.
 - `App.tsx` owns the active `ProjectState` through the `useHistory` hook and coordinates editing, simulation, import, export, and storage.
 - The project retains the legacy flat visual-element model for synthetic projects and fallback content, but imported WPS/SBS/FMS source now renders directly from its lossless document through shared screen-aware semantics.
+- UI screen routing maps USB to the SBS source document while preserving activity 21. Authored SBS pixels render first; a separate firmware-fallback operation uses the `%VI`-selected UI viewport and disappears when that viewport is deliberately 1 × 1.
 - ZIP import in `services/rockboxParser.ts` reads a lossless CFG, builds compatibility elements without comments, creates WPS/SBS/FMS source documents, imports render-relevant CFG settings, and retains package bytes.
 - ZIP export in `services/rockboxCompiler.ts` prefers serialized AST source when available and otherwise compiles the visual-element model.
 - WPS canvas rendering uses a source-linked render list at native target pixels with Rockbox-relative viewport dimensions, explicit clipping, font-slot sizing, conditional viewport activation, nearest-neighbor bitmap scaling, transparent bitmap keys, image-backed bars, and non-tinting source-derived editing overlays.
@@ -47,7 +48,7 @@ Last updated: 2026-07-16
 - The Compatibility Lab remains an advanced code-split evidence modal. The checked-in Pulp guideline now informs the first focused migration—Play—without widening Phase 5 into the remaining Theme/Components/Assets/Logic studio modes.
 - `rockbox/simulator/` owns deterministic scenarios, pure state transitions, capability enforcement, and stable scenario links. `timelineMs` replaces wall-clock reads for playback, seek, RTC, scrolling, `%mv`, and `%Tl`.
 - Play is a first-class, lazy-loaded Level A workflow. `DeviceShell` maps physical or verified touch input around the existing renderer without owning screen pixels. The old four-column simulation panel is removed; Screens retains a compact scenario strip.
-- The Phase 5 main chunk is 584.83 KB / 172.99 KB gzip and the Play chunk is 15.63 KB / 4.10 KB gzip. The checked compatibility catalog now records 101 interpreted/rendered tags and still only 12 source-aware edit surfaces.
+- The original Phase 5 main chunk was 584.83 KB / 172.99 KB gzip and Play was 15.63 KB / 4.10 KB gzip. The current checked compatibility catalog records 121 interpreted/rendered tags and still only 12 source-aware edit surfaces.
 - `rockbox/components/` owns the versioned catalog, target/screen gates, deterministic identity allocation, source transactions, binary component assets, conflict reporting, and conservative shared-asset removal.
 - Component instance metadata records exact root CST nodes, definition/version, resolved properties, allocated handle/viewport names, and asset identities. Imported package assets remain separate and cannot be deleted by component removal.
 - Components is a focused lazy-loaded mode. The main chunk is 582.02 KB / 172.23 KB gzip; the Components UI is 9.31 KB / 2.75 KB gzip and its shared component-domain chunk is 14.25 KB / 5.15 KB gzip.
@@ -55,7 +56,7 @@ Last updated: 2026-07-16
 - ADR-0017 keeps actual Rockbox runtime delivery outside the browser until GPL source delivery, hosted isolation, build, thread/main-loop, dynamic-code, persistence, audio, performance, target, and maintenance choices are approved.
 - The measured canonical external simulator is a 1,581,480-byte iPod Video core with a 2,058,415-byte/129-file prepared minimum runtime. It excludes codecs/plugins and is development evidence, not a distributed application asset.
 - `rockbox/firmware/` owns the target/SHA contract, exact USB BMP validation, patch/header generation, deterministic source-package manifest, safety metadata, and ZIP creation without touching `ProjectState` or the Theme Mode exporter.
-- Firmware Mode is a focused lazy-loaded workspace. It accepts the upstream-selected 176 × 48 uncompressed 24-bit BMP, previews left/center/right placement, refuses unsupported targets, and keeps recovery confirmations intentionally non-persistent. Its production chunk is 19.84 KB minified / 7.23 KB gzip; the main chunk is 583.01 KB / 172.47 KB gzip.
+- Firmware Assets is a focused lazy-loaded workspace. It accepts the upstream-selected 176 × 48 uncompressed 24-bit BMP, previews left/center/right fallback placement, refuses unsupported targets, and keeps recovery confirmations intentionally non-persistent.
 - `scripts/phase8/` extracts the actual generated package, runs its SHA and patch checks, and performs two full `ipodvideo` normal builds in external detached worktrees. Only sanitized hashes and metrics enter `reports/phase8-firmware/latest.json`.
 - ADR-0018 keeps the browser, GPL patch package, cross compiler, target build outputs, and hardware installation as separate trust boundaries.
 
@@ -95,16 +96,16 @@ Before Phase 0 changes:
 
 ## Validation
 
-Latest passing validation on 2026-07-16:
+Latest passing validation on 2026-07-17:
 
 ```text
 npm run typecheck      passed
-npm test               passed — 30 files, 167 tests
-npm run build          passed — Vite production build; 583.01 KB / 172.47 KB gzip main and 19.84 KB / 7.23 KB gzip Firmware Mode chunks
+npm test               passed — 30 files, 174 tests
+npm run build          passed — Vite production build; 587.13 KB / 173.94 KB gzip main, 21.35 KB / 5.13 KB gzip Play, and 20.00 KB / 7.27 KB gzip Firmware Assets chunks
 npm run validate       passed — registry/device/report verification, typecheck, test, and build
 npm run test:coverage  passed — coverage runner operational
 official validation   passed — 6 fixtures executed against `checkwps.ipodvideo`
-npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matches
+npm run test:themes    passed — 4 themes, 4 exact round trips, 4 manifest matches; pinned CheckWPS accepts Adwaitapod and Authored Full
 npm run test:visual    passed — deterministic 320×240 golden screenshot
 npm run test:phase2-real passed — AMusicPod and Adwaitapod visual edit/export/re-import
 Phase 2 official       passed — edited exported Authored Full WPS accepted by CheckWPS
@@ -168,7 +169,7 @@ Phase 2 dogfood-hardening evidence:
 Phase 3 evidence:
 
 - The ignored user-supplied Adwaitapod fixture imports WPS, SBS, and FMS with zero package diagnostics. Every untouched source is exact, a one-pixel viewport edit updates each semantic projection, and export/re-import retains the edited source path and every asset.
-- Comments remain lossless source-only constructs on all three screens. SBS projects the active `%Vi` menu or quick-screen viewport using source-verified activity and icon IDs, imported selector/icon/scrollbar settings, and stable firmware-derived rows. FMS projects frequency, preset, signal, stereo, and RDS simulation state.
+- Comments remain lossless source-only constructs on all three screens. SBS projects the active `%Vi` menu or quick-screen viewport using source-verified activity and icon IDs, imported selector/icon/scrollbar settings, and stable firmware-derived rows. It now also renders Adwaitapod's activity-21 USB notification text/bitmap viewports and records the exact 1 × 1 UI viewport that clips Rockbox's built-in logo. FMS projects frequency, preset, signal, stereo, and RDS simulation state.
 - The authored WPS, SBS, and FMS edited exports were each accepted by target-specific `checkwps.ipodvideo` built at the pinned upstream SHA. Deterministic SBS and FMS 320×240 goldens supplement the WPS golden.
 - The external native font workflow converted a licensed local TTF sample into a 5,337-byte RB12 file with 95 glyph slots, preserved those bytes through a theme package, and loaded it in a current Rockbox iPod Video simulator with matching 16-pixel height, first character, and glyph count.
 - Rockbox source, tools, binaries, generated font bytes, and private theme ZIPs remain outside the repository.
@@ -180,7 +181,7 @@ Phase 4 evidence:
 - ADR-0014 covers the required official-parser WebAssembly license, build, memory, filesystem, bundle, and upstream-update questions. No official parser or renderer code is shipped.
 - The authored iPod Video SBS is rendered by an unmodified Rockbox simulator through the upstream framebuffer-dump path. Two clean runs produce the same normalized official hash.
 - The browser and official 320×240 images differ at 6,315 of 76,800 pixels. All differences are classified; native font/text layout and selector approximation are non-zero, while the background outside the UI viewport matches.
-- The compatibility report contains 193 tags × 2 device profiles. Preservation and parsing stay separate from 101 interpreted/rendered tags, 12 user-facing source-aware edit surfaces, 13 officially evidenced Video tags, 11 officially evidenced Classic tags, and one currently known visual-difference tag.
+- The compatibility report contains 193 tags × 2 device profiles. Preservation and parsing stay separate from 121 interpreted/rendered tags, 12 user-facing source-aware edit surfaces, 13 officially evidenced Video tags, 11 officially evidenced Classic tags, and one currently known visual-difference tag.
 - iPod Classic radio tags are preserved and parsed but visibly unavailable because the verified target profile has no FM screen. Touch-only tags are also marked unavailable on both non-touch iPod profiles.
 - Browser, official, and diff images are generated locally and ignored. Checked-in reports retain only hashes, metrics, evidence IDs, and classifications.
 
@@ -191,7 +192,8 @@ Phase 5 evidence:
 - Scenario tests select real `%mp`, `%bc`, `%bp`, `%bu`, `%mh`, `%C`, `%Sr`, `%cc`, `%tp`, `%Tp`, `%Tl`, and `%mv` branches in the source-linked semantic interpreter.
 - iPod Classic cannot enter FM/FMS scenarios. Neither current profile can enter touch or remote-display scenarios, and the Play UI explains those restrictions without hiding preserved source.
 - The device shell and screen renderer are separate components. Play reuses the same semantic result and native-pixel canvas as Screens rather than implementing a second renderer.
-- Server-rendered UI tests verify Level A labeling, named scenario selection, complete state controls, and progressive capability explanations.
+- Play exposes source-verified activities 1, 2, 3, 4, 10, 12, 16, and 21 plus date, brightness, sleep, recording, FM/RDS, and SBS list context controls. USB maps to SBS while the firmware fallback remains a separate operation.
+- Server-rendered UI tests verify Level A labeling, named scenario selection, complete state controls, and progressive capability explanations. A local in-app browser smoke confirmed that activity 10 persists, activity 21 restores the USB scene and authority label, and no application error is emitted.
 
 Phase 6 evidence:
 
@@ -215,7 +217,7 @@ Phase 7 evidence:
 
 Phase 8 evidence:
 
-- Firmware Mode accepts only the exact upstream iPod Video USB bitmap contract and rejects wrong dimensions, depth, compression, or truncated pixel data before export.
+- Firmware Assets accepts only the exact upstream iPod Video USB fallback bitmap contract and rejects wrong dimensions, depth, compression, or truncated pixel data before export.
 - The generated package contains eight deterministic files: manifest, documentation/licensing, one source patch, one GPL source header overlay, one user bitmap overlay, and two verification/build scripts.
 - The generated verification script refuses any checkout except `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`; the build script uses a detached worktree and leaves the supplied checkout untouched.
 - The patch applied cleanly to `apps/gui/usb_screen.c`, replaced the target-selected `usblogo.176x48x16.bmp`, and compiled the normal `ipodvideo` target twice.
@@ -226,7 +228,7 @@ Phase 8 evidence:
 ## Known blockers
 
 - No Phase 8 acceptance blocker is open. The execution-plan phase gates are complete after merge.
-- Firmware Mode is verified only for iPod Video USB logo/layout output. iPod Classic, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
+- Firmware Assets is verified only for the iPod Video compiled USB fallback logo/layout output. iPod Classic fallback changes, quick-screen source changes, built-in icons, dialogs, and additional hooks need separate target-specific source/build evidence before exposure.
 - The generated firmware has not been installed on the user's physical iPod. Device-only USB behavior, boot/recovery, and hardware risk remain outside browser and simulator proof.
 - The acceptance compiler succeeded reproducibly but is not Rockbox's recommended version. Production builds should use the documented `arm-elf-eabi-gcc` 9.5.0 toolchain.
 - The current font helper still needs Git, a C compiler, and FreeType; a signed installer is future delivery polish rather than a functional blocker.
@@ -234,8 +236,8 @@ Phase 8 evidence:
 
 ## Next task
 
-Review and merge Phase 8. After merge, dogfood the separate USB Firmware Mode package first on the external pinned simulator/build workflow, then on hardware only with the documented backup and disk-mode recovery plan. Further firmware-owned features should be proposed as separately verified target slices rather than being implied by this USB acceptance.
+Dogfood the Adwaitapod SBS USB scene and other activity states in Play, then compare the same package in the pinned external Level C simulator. Use Firmware Assets only if changing the compiled fallback itself; hardware installation still requires the documented backup and disk-mode recovery plan.
 
 ## Compatibility summary
 
-Phase 8 preserves the Phase 7 dogfood-ready theme editor and adds an honest, opt-in source-package path for one firmware-owned screen. Theme ZIP behavior is unchanged; the USB patch applies at the pinned SHA and produces a reproducible real iPod Video firmware image. External Level C remains the authoritative firmware UI/theme reference, while device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.
+The editor now preserves the correct Rockbox split: the connected-USB presentation is an SBS activity scene, while only the built-in fallback logo and placement require the opt-in firmware package. Theme ZIP behavior is unchanged; the fallback patch applies at the pinned SHA and produces a reproducible real iPod Video firmware image. External Level C remains the authoritative firmware UI/theme reference, while device-only behavior, additional targets/features, bitmap-glyph parity, and broad tag rendering stay visible limitations rather than hidden compatibility claims.

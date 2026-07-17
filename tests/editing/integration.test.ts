@@ -69,4 +69,18 @@ describe('project lossless-source integration', () => {
     const updated = updateImageReference(document, image.id, 'new.bmp');
     expect(serializeRockbox(updated.document)).toBe('%x(Backdrop,new.bmp,4,5)');
   });
+
+  it('routes USB scene reads and edits through the authoritative SBS document', () => {
+    const source = '%?if(%cs, =, 21)<%Vd(USB)>\n%Vl(USB,0,0,320,240,-)Connected';
+    const project = { ...DEFAULT_PROJECT, sbsDocument: parseRockbox(source) };
+    const document = getProjectSyntaxDocument(project, 'usb');
+    if (!document) throw new Error('Missing USB scene SBS document');
+    const viewport = listSyntaxViewports(document)[0];
+    const edit = updateViewport(document, viewport.id, { x: 4, y: 5, width: 300, height: 220 });
+    const next = applyProjectSyntaxDocument(project, 'usb', edit.document);
+
+    expect(serializeRockbox(next.sbsDocument!)).toBe('%?if(%cs, =, 21)<%Vd(USB)>\n%Vl(USB,4,5,300,220,-)Connected');
+    expect(next.wpsDocument).toBe(project.wpsDocument);
+    expect(next.fmsDocument).toBe(project.fmsDocument);
+  });
 });

@@ -43,6 +43,7 @@ export type SimulatorSession = {
 
 export type SimulatorAction =
   | { type: 'advance'; milliseconds: number }
+  | { type: 'activity'; activity: number }
   | { type: 'playback'; status: SimulationState['playStatus'] }
   | { type: 'seek'; seconds: number }
   | { type: 'track'; direction: 'next' | 'previous' }

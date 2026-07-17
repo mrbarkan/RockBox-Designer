@@ -9,7 +9,7 @@ Phase 3 extends the source-linked semantic editor to WPS, SBS, and FMS while kee
 - The menu rows and icon IDs come from firmware state. The theme controls their viewports and presentation; it does not define the firmware menu contents.
 - The quick-screen preview is a clearly labeled simulation of Rockbox's firmware-controlled layout inside the active SBS UI viewport. Rockbox does not use a separate quick-screen theme file.
 - FMS projects frequency, preset, signal, stereo, tuned/scan, and RDS state for the documented tag subset.
-- USB remains a stock/firmware mode boundary. The editor does not invent a `.usb` skin file or imply that a full USB screen redesign is ordinary theme functionality.
+- USB connected is an SBS activity scene at `%cs = 21`. The theme may activate and draw custom SBS viewports; the built-in firmware logo is rendered afterward inside the `%VI`-selected UI viewport. The editor represents that fallback separately and never invents a `.usb` file.
 - Comments remain in the CST and serialized source but never become visual elements or layer rows.
 
 The semantic subset is independently implemented from behavior verified at Rockbox commit `078a506dfd0deb18165a3ed80c7fcbdb3afb0d31`. Relevant upstream paths are `lib/skin_parser/tag_table.c`, `apps/gui/skin_engine/skin_tokens.c`, `apps/misc.h`, `apps/gui/icon.h`, `apps/root_menu.c`, `apps/gui/quickscreen.c`, and `apps/gui/usb_screen.c`.

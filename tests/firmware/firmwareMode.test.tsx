@@ -90,7 +90,7 @@ describe('Phase 8 Firmware Mode', () => {
     expect(first.manifest).toMatchObject({
       schemaVersion: 1,
       mode: 'firmware',
-      feature: 'usb-screen',
+      feature: 'usb-fallback-logo',
       target: { upstreamCommit: FIRMWARE_UPSTREAM_COMMIT, rockboxTarget: 'ipodvideo' },
       output: {
         ordinaryThemeInstall: false,
@@ -127,13 +127,14 @@ describe('Phase 8 Firmware Mode', () => {
     expect(firmwareAvailability(classic)).toMatchObject({ available: false });
 
     const app = renderToStaticMarkup(<App />);
-    expect(app).toContain('FW MODE');
+    expect(app).toContain('FW ASSETS');
     expect(app).toContain('⬇ ZIP');
 
     const firmware = renderToStaticMarkup(
       <FirmwareMode profile={video} projectName="Adwaitapod" onClose={() => undefined} />
     );
     expect(firmware).toContain('Requires custom firmware');
+    expect(firmware).toContain('Ordinary themes can author the connected-USB presentation in SBS');
     expect(firmware).toContain('not an ordinary theme install');
     expect(firmware).toContain('disk-mode recovery instructions');
     expect(firmware).toContain('No Rockbox or proprietary firmware binary');

@@ -98,7 +98,9 @@ const availabilityConflicts = (
   profile: DeviceProfile
 ) => {
   const conflicts: string[] = [];
-  if (screen === 'usb') conflicts.push('USB is firmware controlled and cannot receive theme components.');
+  if (screen === 'usb') {
+    conflicts.push('USB is an SBS activity scene. Generic insertion cannot safely create a %cs = 21 branch; edit the source-linked SBS branch instead.');
+  }
   else if (!definition.supportedScreens.includes(screen)) {
     conflicts.push(`${definition.name} is not valid on the ${screen.toUpperCase()} screen.`);
   } else if (!profile.supportedScreenFiles.includes(screen)) {

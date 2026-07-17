@@ -4,6 +4,7 @@ import {
   RockboxDocument,
   serializeRockbox
 } from '../rockbox/syntax';
+import { themeScreenForPreview } from '../rockbox/screens';
 import { parseWpsToAst } from './rockboxAst';
 
 export type ParallelSyntaxDocuments = {
@@ -27,9 +28,10 @@ export const getProjectSyntaxDocument = (
   project: ProjectState,
   screen: ScreenType
 ): RockboxDocument | undefined => {
-  if (screen === 'wps') return project.wpsDocument ?? (project.wpsAst ? parseRockbox(project.wpsAst.raw) : undefined);
-  if (screen === 'sbs') return project.sbsDocument ?? (project.sbsAst ? parseRockbox(project.sbsAst.raw) : undefined);
-  if (screen === 'fms') return project.fmsDocument ?? (project.fmsAst ? parseRockbox(project.fmsAst.raw) : undefined);
+  const sourceScreen = themeScreenForPreview(screen);
+  if (sourceScreen === 'wps') return project.wpsDocument ?? (project.wpsAst ? parseRockbox(project.wpsAst.raw) : undefined);
+  if (sourceScreen === 'sbs') return project.sbsDocument ?? (project.sbsAst ? parseRockbox(project.sbsAst.raw) : undefined);
+  if (sourceScreen === 'fms') return project.fmsDocument ?? (project.fmsAst ? parseRockbox(project.fmsAst.raw) : undefined);
   return undefined;
 };
 
@@ -38,10 +40,11 @@ export const applyProjectSyntaxDocument = (
   screen: ScreenType,
   document: RockboxDocument
 ): ProjectState => {
+  const sourceScreen = themeScreenForPreview(screen);
   const source = serializeRockbox(document);
   const legacyDocument = parseWpsToAst(source);
-  if (screen === 'wps') return { ...project, wpsDocument: document, wpsAst: legacyDocument };
-  if (screen === 'sbs') return { ...project, sbsDocument: document, sbsAst: legacyDocument };
-  if (screen === 'fms') return { ...project, fmsDocument: document, fmsAst: legacyDocument };
+  if (sourceScreen === 'wps') return { ...project, wpsDocument: document, wpsAst: legacyDocument };
+  if (sourceScreen === 'sbs') return { ...project, sbsDocument: document, sbsAst: legacyDocument };
+  if (sourceScreen === 'fms') return { ...project, fmsDocument: document, fmsAst: legacyDocument };
   return project;
 };

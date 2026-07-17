@@ -56,22 +56,26 @@ type Context = {
 const SUPPORTED_TEXT_TAGS = new Set([
   'it', 'ia', 'id', 'iA', 'ig', 'iy', 'in', 'ik', 'ic', 'fn',
   'pc', 'pr', 'pt', 'pp', 'pe', 'fc', 'fb', 'bl', 'pv', 'mp',
-  'mm', 'ps', 'cH', 'cM', 'cS', 'cl', 'cP', 'cp', 'Sx', 'cs',
+  'mm', 'ps', 'cH', 'ck', 'cI', 'cM', 'cS', 'cl', 'cP', 'cp',
+  'cY', 'cy', 'cm', 'cd', 'ce', 'ca', 'cb', 'cu', 'cw', 'Sx', 'cs', 'bs',
   'Lt', 'LT', 'LN', 'LR', 'LC',
+  'Re', 'Rf', 'Rh', 'Rn', 'Rs',
   'tf', 'ta', 'tb', 'tr', 'tl', 'th', 'Tn', 'Tf', 'Ti', 'Tc', 'ty', 'tz',
   'QT', 'QB', 'QL', 'QR', 'Qt', 'Qb', 'Ql', 'Qr'
 ]);
 const SOURCE_ONLY_TAGS = new Set(['wd', 'we', 'Fl', 'VI', 's', 't', 'VB', 'Lb', 'Vp', 'Vs', 'Vg', 'wi']);
 const SUPPORTED_CONDITIONAL_TAGS = new Set([
   'if', 'and', 'or', 'mp', 'mm', 'bl', 'pv', 'ps', 'mh', 'bc', 'bp', 'bu',
-  'lh', 'C', 'mv', 'it', 'ia', 'id', 'pe', 'pt', 'fc', 'ss', 'cs',
+  'lh', 'C', 'mv', 'it', 'ia', 'id', 'pe', 'pt', 'fc', 'ss', 'cs', 'cu', 'cw',
+  'bs', 'pS', 'Re', 'Rf',
   'cf', 'cc', 'Lc', 'Sr', 'Tp', 'Tl', 'tp', 'tt', 'tm', 'ts', 'tx'
 ]);
 
 const DIRECTLY_INTERPRETED_TAGS = new Set([
   'V', 'Vl', 'Vi', 'Vd', 'VI', 'Vf', 'Vb', 'al', 'ac', 'ar', 'Fl', 'Fn', 's',
-  'xl', 'x', 'xd', 'Cl', 'Cd', 'pb', 'pv', 'tr', 'dr', 'T', 'LI', 'Li', 'LB'
+  'xl', 'x', 'xd', 'Cl', 'Cd', 'pb', 'pv', 'pR', 'St', 'tr', 'dr', 'T', 'LI', 'Li', 'LB'
 ]);
+const NUMERIC_BRANCH_TAGS = new Set(['cs', 'cu', 'cw', 'Re', 'Rf']);
 
 /**
  * Phase 4 compatibility evidence reads this catalog instead of inferring
@@ -116,6 +120,24 @@ const fontWeight = (font: string | undefined): 'normal' | 'bold' =>
 const args = (tag: TagNode) => splitRawArguments(tag).map(slot => slot.value);
 const sourceLink = (node: RockboxNode): SourceLink => ({ nodeId: node.id, span: node.span });
 
+const dateForSimulation = (options: InterpreterOptions) => {
+  const match = (options.sim.currentDate ?? '2026-07-17').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const year = Number(match?.[1] ?? 2026);
+  const month = Number(match?.[2] ?? 7);
+  const day = Number(match?.[3] ?? 17);
+  return new Date(Date.UTC(year, Math.max(0, month - 1), Math.max(1, day)));
+};
+
+const durationLabel = (seconds: number) => {
+  const safe = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const remainder = safe % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
+    : `${minutes}:${String(remainder).padStart(2, '0')}`;
+};
+
 const viewportRect = (values: string[], offset: number, options: InterpreterOptions): Rect => {
   const rawX = numberValue(values[offset], 0);
   const rawY = numberValue(values[offset + 1], 0);
@@ -151,6 +173,14 @@ const textForTag = (tag: TagNode, options: InterpreterOptions) => {
   const elapsed = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
   const [clockHour = '0', clockMinute = '00', clockSecond = '00'] = sim.currentTime.split(':');
   const hour = Number.parseInt(clockHour, 10) || 0;
+  const date = dateForSimulation(options);
+  const day = date.getUTCDate();
+  const month = date.getUTCMonth();
+  const year = date.getUTCFullYear();
+  const weekday = date.getUTCDay();
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const recordingSeconds = Math.max(0, Math.floor(sim.recordingElapsedSeconds ?? 0));
   const values: Record<string, string> = {
     it: song.title || 'No title', ia: song.artist || 'No artist', id: song.album || 'No album',
     iA: song.artist || 'No artist', ig: 'Genre', iy: '2026', in: String(song.trackNum), ik: '1',
@@ -160,12 +190,24 @@ const textForTag = (tag: TagNode, options: InterpreterOptions) => {
     pv: `${sim.volume} dB`, mp: sim.playStatus, mm: sim.repeat, ps: sim.shuffle ? 'Shuffle' : '',
     cH: String(hour).padStart(2, '0'), cM: clockMinute.slice(0, 2).padStart(2, '0'),
     cS: clockSecond.slice(0, 2).padStart(2, '0'),
+    ck: String(hour).padStart(2, ' '), cI: String(hour % 12 || 12).padStart(2, '0'),
     cl: String(hour % 12 || 12),
     cP: hour >= 12 ? 'PM' : 'AM',
     cp: hour >= 12 ? 'pm' : 'am',
-    cs: String(sim.currentActivity), Lt: sim.menuTitle,
+    cY: String(year), cy: String(year % 100).padStart(2, '0'), cm: String(month + 1).padStart(2, '0'),
+    cd: String(day).padStart(2, '0'), ce: String(day).padStart(2, ' '), ca: weekdays[weekday], cb: months[month],
+    // Rockbox's display text and conditional integer differ for these tags:
+    // %cu prints tm_wday + 1 but branches Monday-first; %cw prints tm_wday
+    // but branches Sunday-first.
+    cu: String(weekday + 1), cw: String(weekday),
+    cs: String(sim.currentActivity), bs: sim.sleepTimerSeconds ? durationLabel(sim.sleepTimerSeconds) : '', Lt: sim.menuTitle,
     LT: sim.menuItems[sim.menuSelectedIndex] ?? '', LN: String(sim.menuSelectedIndex + 1),
-    LR: String(sim.menuSelectedIndex), LC: '0',
+    LR: String(sim.menuSelectedIndex + 1), LC: '1',
+    Re: sim.recordingFormat === 'mp3' ? 'MP3' : sim.recordingFormat ?? 'wav',
+    Rf: (sim.recordingFrequencyKhz ?? 44.1).toFixed(3),
+    Rh: String(Math.floor(recordingSeconds / 3600)).padStart(2, '0'),
+    Rn: String(Math.floor(recordingSeconds / 60)).padStart(2, '0'),
+    Rs: String(recordingSeconds % 60).padStart(2, '0'),
     tf: sim.fmFrequency.toFixed(1), ta: '87.5', tb: '108.0', tr: String(sim.fmSignalStrength), tl: '0', th: '100',
     Tn: sim.fmPresetName, Tf: sim.fmFrequency.toFixed(1), Ti: String(sim.fmPresetIndex), Tc: String(sim.fmPresetCount),
     ty: sim.fmRdsName, tz: sim.fmRdsText,
@@ -260,6 +302,19 @@ function tagValue(tag: TagNode, options: InterpreterOptions): string | number | 
   if (tag.name === 'id') return song.album;
   if (tag.name === 'fc') return song.format;
   if (tag.name === 'cs') return sim.currentActivity;
+  if (tag.name === 'cu') {
+    const weekday = dateForSimulation(options).getUTCDay();
+    return weekday === 0 ? 7 : weekday;
+  }
+  if (tag.name === 'cw') return dateForSimulation(options).getUTCDay() + 1;
+  if (tag.name === 'bs') return sim.sleepTimerSeconds ?? 0;
+  if (tag.name === 'pS') return song.currentSec < Number.parseFloat(values[0] ?? '1');
+  if (tag.name === 'Re') return ({ wav: 1, aiff: 2, wv: 3, mp3: 4 })[sim.recordingFormat ?? 'wav'];
+  if (tag.name === 'Rf') {
+    const frequencies = [96, 88.2, 64, 48, 44.1, 32, 24, 22.05, 16, 12, 11.025, 8];
+    const index = frequencies.findIndex(value => Math.abs(value - (sim.recordingFrequencyKhz ?? 44.1)) < 0.01);
+    return index >= 0 ? index + 1 : 5;
+  }
   if (tag.name === 'cf') return sim.clock12Hour ? 2 : 1;
   if (tag.name === 'cc') return options.capabilities?.rtc ?? true;
   if (tag.name === 'Sr') return sim.textDirection === 'rtl';
@@ -299,7 +354,11 @@ const conditionalBranch = (node: ConditionalNode, options: InterpreterOptions): 
   if (name === 'cf') return Math.min(node.branches.length - 1, options.sim.clock12Hour ? 1 : 0);
   if (name === 'bl' && node.branches.length > 2) return Math.min(node.branches.length - 1, Math.floor(clamp01(options.sim.batteryLevel / 100) * node.branches.length));
   if (name === 'pv' && node.branches.length > 2) return Math.min(node.branches.length - 1, Math.floor(clamp01((options.sim.volume + 90) / 90) * node.branches.length));
-  const truthy = Boolean(tagValue(node.test, options));
+  const value = tagValue(node.test, options);
+  if (typeof value === 'number' && NUMERIC_BRANCH_TAGS.has(name) && node.branches.length > 1) {
+    return Math.max(0, Math.min(node.branches.length - 1, value - 1));
+  }
+  const truthy = Boolean(value);
   if (truthy) return 0;
   return node.branches.length > 1 ? 1 : undefined;
 };
@@ -315,6 +374,8 @@ const tagProperties = (tag: TagNode): SemanticProperty[] => {
     xd: [['handle', 'Handle', 'text'], ['index', 'Frame', 'text']],
     pb: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
     pv: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
+    pR: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
+    St: [['setting/x', 'Setting or X', 'text'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
     Cl: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number']],
     T: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['action', 'Action', 'text']],
     tr: [['x', 'X', 'number'], ['y', 'Y', 'number'], ['width', 'Width', 'number'], ['height', 'Height', 'number'], ['path', 'Bitmap path', 'text']],
@@ -610,6 +671,28 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
     });
   };
 
+  const appendUsbFirmwareFallback = (name: string, definition: { node: TagNode; rect: Rect }) => {
+    operations.push({
+      type: 'drawFirmwareFallback',
+      rect: definition.rect,
+      feature: 'usb-logo',
+      source: sourceLink(definition.node)
+    });
+    layers.push({
+      id: `source-only:${definition.node.id}:usb-fallback`,
+      sourceNodeId: definition.node.id,
+      depth: 0,
+      kind: 'source-only',
+      label: `Compiled USB fallback logo clipped to ${name}`,
+      active: true,
+      supported: true,
+      properties: [
+        { key: 'authority', label: 'Authority', value: 'External Rockbox firmware', input: 'readonly' },
+        { key: 'viewport', label: 'Theme-selected UI viewport', value: `${definition.rect.width} × ${definition.rect.height}`, input: 'readonly' }
+      ]
+    });
+  };
+
   const inactiveKind = (node: RockboxNode): SemanticLayer['kind'] => {
     if (node.kind === 'comment' || node.kind === 'escape') return 'source-only';
     if (node.kind === 'invalid') return 'unsupported';
@@ -800,16 +883,19 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
         const preload = current.preloads.get(values[0] ?? '');
         if (preload) {
           const rawFrame = values[1] ?? '1';
-          const drawable = !rawFrame.includes('%bs');
+          const offset = numberValue(values[2], 0);
           let frame = rawFrame.includes('%bl') ? Math.floor(clamp01(options.sim.batteryLevel / 100) * (preload.count - 1)) :
             rawFrame.includes('%mp') ? playbackBranch(options.sim.playStatus) :
-            rawFrame.includes('%ps') ? (options.sim.shuffle ? 1 : 0) :
+            rawFrame.includes('%ps') ? (options.sim.shuffle ? 0 : 1) :
             rawFrame.includes('%mm') ? ({ off: 0, all: 1, one: 2 })[options.sim.repeat] :
-            rawFrame.includes('%mh') ? (options.sim.isHold ? 1 : 0) :
+            rawFrame.includes('%mh') ? (options.sim.isHold ? 0 : 1) :
+            rawFrame.includes('%bs') ? ((options.sim.sleepTimerSeconds ?? 0) > 0 ? 0 : 1) :
             Math.max(0, numberValue(rawFrame, 1) - 1);
-          frame = Math.max(0, Math.min(preload.count - 1, frame));
+          frame += offset;
           const rect = { x: current.viewport.x + preload.x, y: current.viewport.y + preload.y, width: current.viewport.width, height: current.viewport.height };
-          if (drawable) operations.push({ type: 'drawBitmap', rect, assetPath: preload.path, frame, frameCount: preload.count, source: link });
+          if (frame >= 0 && frame < preload.count) {
+            operations.push({ type: 'drawBitmap', rect, assetPath: preload.path, frame, frameCount: preload.count, source: link });
+          }
         }
         addLayer(node, depth, preload ? 'element' : 'unsupported', `Sprite ${values[0] ?? ''}`, Boolean(preload), parentId, properties);
         continue;
@@ -824,23 +910,45 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
         addLayer(node, depth, 'element', 'Album art', true, parentId);
         continue;
       }
-      if (node.name === 'pb' || (node.name === 'pv' && values.length > 0) || (node.name === 'tr' && values.length > 0)) {
+      if (
+        node.name === 'pb' || node.name === 'pR' ||
+        (node.name === 'St' && values.length > 1) ||
+        (node.name === 'pv' && values.length > 0) ||
+        (node.name === 'tr' && values.length > 0)
+      ) {
         const hasGeometry = values.length >= 4 && values.slice(0, 4).some(value => value !== '');
         const rect = hasGeometry ? relativeRect(current, values, current.viewport) : current.viewport;
-        const value = node.name === 'pb'
-          ? clamp01(options.song.totalSec ? options.song.currentSec / options.song.totalSec : 0)
-          : node.name === 'tr' ? clamp01(options.sim.fmSignalStrength / 100) : clamp01((options.sim.volume + 90) / 90);
         const named: Record<string, string> = {};
         for (let index = 5; index < values.length - 1; index += 2) named[values[index].toLowerCase()] = values[index + 1];
+        const rawSetting = named.setting ? settingValue(named.setting, options) : undefined;
+        const settingProgress = typeof rawSetting === 'number'
+          ? clamp01(rawSetting > 1 ? rawSetting / 100 : rawSetting)
+          : rawSetting === true ? 1 : 0;
+        const value = node.name === 'pb'
+          ? clamp01(options.song.totalSec ? options.song.currentSec / options.song.totalSec : 0)
+          : node.name === 'tr' ? clamp01(options.sim.fmSignalStrength / 100)
+            : node.name === 'pR' ? clamp01(options.sim.recordingLevel ?? 0)
+              : node.name === 'St' ? settingProgress
+                : clamp01((options.sim.volume + 90) / 90);
+        const mode = node.name === 'pb' ? 'track' : node.name === 'tr' ? 'signal' :
+          node.name === 'pR' ? 'recording' : node.name === 'St' ? 'setting' : 'volume';
         operations.push({
           type: 'drawProgress', rect, value, foreground: current.foreground,
-          background: current.background, mode: node.name === 'pb' ? 'track' : node.name === 'tr' ? 'signal' : 'volume',
+          background: current.background, mode,
           image: values[4] && values[4] !== '-' ? values[4] : undefined,
           slider: named.slider ? current.preloads.get(named.slider)?.path ?? named.slider : undefined,
           backdrop: named.backdrop ? current.preloads.get(named.backdrop)?.path ?? named.backdrop : undefined,
           source: link
         });
-        addLayer(node, depth, 'element', node.name === 'pb' ? 'Track progress' : node.name === 'tr' ? 'FM signal bar' : 'Volume bar', true, parentId, properties);
+        const label = node.name === 'pb' ? 'Track progress' : node.name === 'tr' ? 'FM signal bar' :
+          node.name === 'pR' ? 'Recording level' : node.name === 'St' ? `Setting bar: ${named.setting ?? 'unknown'}` : 'Volume bar';
+        addLayer(node, depth, 'element', label, true, parentId, properties);
+        continue;
+      }
+      if (node.name === 'St') {
+        const setting = values[0] ?? '';
+        drawTextPart(node, String(settingValue(setting, options) ?? ''), node.span.startLine, current);
+        addLayer(node, depth, 'element', `Setting value: ${setting}`, true, parentId, properties);
         continue;
       }
       if (node.name === 'dr') {
@@ -905,6 +1013,7 @@ export const interpretSkin = (document: RockboxDocument, options: InterpreterOpt
     const name = activeUiNames[activeUiNames.length - 1];
     const definition = uiDefinitions.get(name);
     if (definition && options.sim.currentActivity === 10) appendQuickScreenPreview(name, definition);
+    else if (definition && options.sim.currentActivity === 21) appendUsbFirmwareFallback(name, definition);
     else if (definition && ![2, 3, 4, 21].includes(options.sim.currentActivity)) appendMenuPreview(name, definition);
   }
   return {
